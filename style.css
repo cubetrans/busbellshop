@@ -152,6 +152,19 @@ header {
     gap: 1.5rem;
 }
 
+/* 🔄 모든 페이지에서 버튼 순서를 강제로 통일 (메뉴 -> 달 버튼 -> 프로필) */
+.nav-group nav {
+    order: 1;
+}
+
+.nav-group .theme-toggle {
+    order: 2;
+}
+
+.nav-group #authContainer {
+    order: 3;
+}
+
 nav ul {
     display: flex;
     list-style: none;
