@@ -910,3 +910,28 @@ footer {
     from { opacity: 0; transform: translateY(-8px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* 로그인된 유저 정보 박스 다크모드 대응 */
+.user-info-box {
+    background: rgba(255, 255, 255, 0.05); /* 어두운 투명 배경 */
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 8px;
+    color: #ffffff; /* 글자색 흰색 */
+}
+
+.user-info-box .user-greeting,
+.user-info-box .user-role-badge {
+    color: #ffffff !important;
+}
+
+/* 라이트 모드일 때 (하얀 배경) 처리 */
+body.light-mode .user-info-box {
+    background: #f1f2f6;
+    color: #2f3542;
+}
+body.light-mode .user-info-box .user-greeting,
+body.light-mode .user-info-box .user-role-badge {
+    color: #2f3542 !important;
+}
