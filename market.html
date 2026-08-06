@@ -3,13 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>⚙️ MARKET - 부품 장터</title>
+    <title>⚙️ MARKET - 장터</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    
-    <!-- Supabase 라이브러리 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <script>
         if (localStorage.getItem('theme') === 'light') {
             window.addEventListener('DOMContentLoaded', () => {
@@ -22,7 +19,7 @@
 
     <header>
         <a class='logo' href='/' id="siteLogo">⚙️ <strong>MARKET</strong></a>
-        
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()"><i class="fas fa-bars"></i></button>
         <div class="nav-group" id="navGroup">
             <nav>
                 <ul>
@@ -31,172 +28,216 @@
                     <li><a href='community.html'><i class="fas fa-comments"></i> 커뮤니티</a></li>
                 </ul>
             </nav>
-            <div class="auth-container" id="authContainer">
-                <button class="auth-toggle-btn" id="authToggleBtn" onclick="toggleAuthDropdown()">
+            <div id="authContainer">
+                <button onclick="toggleAuthDropdown()" id="authToggleBtn" class="user-badge">
                     <i class="fas fa-user-circle"></i> 로그인 / 가입
                 </button>
-                <div class="auth-dropdown" id="authDropdown">
-                    <div id="authFormArea"></div>
-                </div>
+                <div id="authDropdown" class="auth-dropdown"><div id="authFormArea"></div></div>
             </div>
-            <!-- 🌙 다크모드 버튼 클래스 및 onclick 수정 -->
-            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
         </div>
-        <div class="mobile-menu-btn" onclick="toggleMobileMenu()"><i class="fas fa-bars"></i></div>
     </header>
 
     <main class="container">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <div>
-                <h2><i class="fas fa-bus"></i> 버스 부품 장터</h2>
-                <p style="font-size: 0.85rem; color: var(--text-sub);">필요한 버스 부품을 안전하게 거래하세요.</p>
-            </div>
-            <div id="registerButtonArea"></div>
-        </div>
-
-        <!-- 상품 등록 폼 -->
-        <section class="card glass-panel" id="productFormCard" style="display: none; margin-bottom: 20px;">
-            <h3><i class="fas fa-plus-circle"></i> 새 부품 등록</h3>
-            <input type="text" id="prodTitle" placeholder="상품명을 입력하세요" class="input-modern" style="margin-top: 10px;">
-            <input type="number" id="prodPrice" placeholder="가격을 숫자로 입력하세요 (예: 5000)" class="input-modern">
-            <input type="text" id="prodContact" placeholder="연락처 또는 이메일 (예: ansh110@naver.com)" class="input-modern">
-            <textarea id="prodDesc" placeholder="상품 상세 설명 입력" class="input-modern" style="height: 100px; resize: none; margin-bottom: 10px;"></textarea>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn-auth" onclick="uploadMarketItem()">등록 완료</button>
-                <button class="btn-logout" onclick="toggleProductForm()" style="background:#555; color:#fff;">취소</button>
+        <!-- 📝 상단: 검색 및 글쓰기 권한 영역 -->
+        <section class="card glass-panel search-section">
+            <div class="search-bar-group">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="searchInput" placeholder="상품 검색..." class="input-modern" onkeyup="filterItems()">
+                </div>
+                <div id="registerButtonArea">
+                    <!-- JS에서 권한 체크 후 글쓰기 버튼 렌더링 -->
+                </div>
             </div>
         </section>
 
-        <!-- 상품 목록 그리드 -->
+        <!-- 📦 목록 표시 영역 -->
         <section class="card glass-panel">
-            <div id="marketItemList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
-                <p>상품 목록을 불러오는 중...</p>
+            <h2><i class="fas fa-box-open"></i> 판매 목록</h2>
+            <div id="marketItemList" class="post-list">
+                <p style="text-align:center;">상품을 불러오는 중...</p>
             </div>
         </section>
     </main>
 
-    <footer>
-        <p>&copy; 2026 ⚙️ MARKET. All rights reserved.</p>
-    </footer>
+    <!-- 📝 상품 등록/수정 모달 -->
+    <div id="productFormModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h3 id="formModalTitle"><i class="fas fa-plus-circle"></i> 상품 등록</h3>
+            </div>
+            <form id="productForm" onsubmit="submitMarketItem(event)">
+                <input type="text" id="prodTitle" placeholder="상품명" class="input-modern" required>
+                <input type="number" id="prodPrice" placeholder="가격 (원)" class="input-modern" required>
+                
+                <label style="font-size:0.8rem; color:var(--text-sub); margin-top:10px; display:block;">상품 사진 (선택)</label>
+                <input type="file" id="prodImage" accept="image/*" class="input-modern" style="padding:8px; margin-bottom: 10px;">
+                
+                <input type="text" id="prodContact" placeholder="연락처 (오픈채팅/전화번호 등)" class="input-modern" required>
+                <textarea id="prodDesc" rows="5" placeholder="상품 상세 설명" class="input-modern" required></textarea>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeProductForm()">취소</button>
+                    <button type="submit" class="btn-auth">완료</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script src="app.js"></script>
     <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            const customTitle = localStorage.getItem('customSiteTitle');
-            if (customTitle) {
-                const logoElem = document.getElementById('siteLogo');
-                if (logoElem) logoElem.innerHTML = customTitle;
-            }
+        let allItems = [];
+        let editingItemId = null; // 수정 모드 판별 변수
 
-            fetchMarketItems();
+        window.addEventListener('DOMContentLoaded', () => {
             checkSellerPermission();
+            fetchMarketItems();
         });
 
+        // 1. 판매 권한 체크 (관리진, 특수회원, 판매자만 등록 가능)
         function checkSellerPermission() {
-            const role = localStorage.getItem('currentUserRole');
+            const role = localStorage.getItem('currentUserRole') || '일반회원';
             const area = document.getElementById('registerButtonArea');
             
-            if (role === '판매자' || role === '관리자') {
-                area.innerHTML = `<button class="btn-auth" style="padding: 8px 16px; font-size: 0.9rem;" onclick="toggleProductForm()"><i class="fas fa-pen"></i> 상품 등록</button>`;
+            if (['관리진', '특수회원', '판매자'].includes(role)) {
+                area.innerHTML = `<button class="btn-primary-large btn-write" onclick="openProductForm()"><i class="fas fa-pen"></i> 상품 등록</button>`;
             } else {
-                area.innerHTML = `<span style="font-size: 0.8rem; color: var(--text-sub);">* 상품 등록은 판매자/관리자만 가능합니다.</span>`;
+                area.innerHTML = `<span style="font-size: 0.8rem; color: var(--text-sub);">* 상품 등록은 판매자 이상만 가능합니다.</span>`;
             }
         }
 
-        function toggleProductForm() {
-            const card = document.getElementById('productFormCard');
-            if (card) {
-                card.style.display = card.style.display === 'none' ? 'block' : 'none';
+        // 2. 폼 열기 (새 글 or 수정)
+        function openProductForm(id = null) {
+            const modal = document.getElementById('productFormModal');
+            modal.style.display = 'flex';
+            
+            if (id) {
+                const item = allItems.find(i => i.id === id);
+                editingItemId = item.id;
+                document.getElementById('prodTitle').value = item.title;
+                document.getElementById('prodPrice').value = item.price;
+                document.getElementById('prodContact').value = item.contact;
+                document.getElementById('prodDesc').value = item.description;
+                document.getElementById('formModalTitle').innerHTML = '<i class="fas fa-edit"></i> 상품 수정';
+            } else {
+                editingItemId = null;
+                document.getElementById('productForm').reset();
+                document.getElementById('formModalTitle').innerHTML = '<i class="fas fa-plus-circle"></i> 새 상품 등록';
             }
         }
 
-        // 📦 기존 'market' 테이블에서 데이터 조회
+        function closeProductForm() {
+            document.getElementById('productFormModal').style.display = 'none';
+            editingItemId = null;
+        }
+
+        // 3. 상품 목록 불러오기 및 렌더링
         async function fetchMarketItems() {
             const listContainer = document.getElementById('marketItemList');
-            try {
-                const { data, error } = await db.from('market').select('*').order('id', { ascending: false });
-                if (error) throw error;
+            const currentUser = localStorage.getItem('currentUser');
+            const currentRole = localStorage.getItem('currentUserRole');
 
-                if (!data || data.length === 0) {
-                    listContainer.innerHTML = `<p style="grid-column: 1/-1; text-align:center; padding: 30px; color:var(--text-sub);">등록된 부품이 없습니다.</p>`;
+            try {
+                const { data, error } = await db.from('market').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                allItems = data;
+
+                if(data.length === 0) {
+                    listContainer.innerHTML = '<p style="text-align:center;">등록된 상품이 없습니다.</p>';
                     return;
                 }
 
-                listContainer.innerHTML = data.map(item => `
-                    <div style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 10px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between;">
-                        <div>
-                            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
-                                <h4 style="font-size: 1.1rem; margin:0;">${item.title}</h4>
-                                <span style="font-weight: bold; color: var(--accent-color, #2ed573);">${Number(item.price).toLocaleString()}원</span>
+                listContainer.innerHTML = data.map(item => {
+                    // 본인 글이거나 관리진이면 수정/삭제 버튼 렌더링
+                    const canEdit = (currentUser === item.author || currentRole === '관리진');
+                    const adminButtons = canEdit ? `
+                        <div style="margin-top: 10px; display:flex; gap:10px;">
+                            <button onclick='openProductForm(${item.id})' class="btn-auth" style="padding: 5px 10px; font-size: 0.8rem;">수정</button>
+                            <button onclick="deleteMarketItem(${item.id})" class="btn-logout" style="padding: 5px 10px; font-size: 0.8rem;">삭제</button>
+                        </div>
+                    ` : '';
+
+                    return `
+                        <div class="post-item" style="display:flex; flex-direction:column; gap:10px;">
+                            ${item.image_url ? `<img src="${item.image_url}" style="width: 100%; height: 200px; object-fit: cover; border-radius:8px;">` : ''}
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <h4>${item.title}</h4>
+                                <strong style="color:var(--primary-color);">${Number(item.price).toLocaleString()}원</strong>
                             </div>
-                            <p style="font-size: 0.85rem; color: var(--text-sub); margin-bottom: 6px;"><i class="fas fa-envelope"></i> 연락처: ${item.contact || '미입력'}</p>
-                            <p style="font-size: 0.88rem; color: var(--text-sub); margin-bottom: 12px; white-space: pre-wrap; word-break: break-all;">${item.description}</p>
+                            <p style="font-size:0.9rem; color:var(--text-sub);">판매자: ${item.author} | 연락처: ${item.contact}</p>
+                            <p style="white-space: pre-wrap;">${item.description}</p>
+                            ${adminButtons}
                         </div>
-                        <div style="border-top: 1px solid var(--border-color); padding-top: 10px; display:flex; justify-content:space-between; align-items:center; font-size: 0.8rem; color: var(--text-sub);">
-                            <span>판매자: <strong>${item.author}</strong></span>
-                            <button class="btn-auth" style="padding: 4px 10px; font-size: 0.8rem; width: auto;" onclick="buyItem('${item.title}', '${item.price}', '${item.author}', '${item.contact}')">구매 신청</button>
-                        </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
             } catch (err) {
                 console.error(err);
-                listContainer.innerHTML = `<p style="grid-column: 1/-1; text-align:center;">상품을 불러오는 중 오류가 발생했습니다.</p>`;
+                listContainer.innerHTML = '<p>데이터를 불러오는데 실패했습니다.</p>';
             }
         }
 
-        // ✍️ 기존 'market' 테이블에 데이터 인서트 (author, contact 컬럼 매칭)
-        async function uploadMarketItem() {
+        // 4. 상품 등록 / 수정 처리 (이미지 업로드 포함)
+        async function submitMarketItem(e) {
+            e.preventDefault();
             const currentUser = localStorage.getItem('currentUser');
-            if (!currentUser) return alert('로그인 후 이용해주세요.');
+            if (!currentUser) return alert('로그인 후 이용하세요.');
 
             const title = document.getElementById('prodTitle').value.trim();
-            const priceVal = document.getElementById('prodPrice').value.trim();
+            const price = document.getElementById('prodPrice').value.trim();
             const contact = document.getElementById('prodContact').value.trim();
             const description = document.getElementById('prodDesc').value.trim();
+            const imageInput = document.getElementById('prodImage');
 
-            if (!title || !priceVal || !description) return alert('상품명, 가격, 설명은 필수 입력입니다.');
+            let imageUrl = '';
+            
+            // 사진이 선택되었다면 업로드
+            if (imageInput.files && imageInput.files[0]) {
+                const file = imageInput.files[0];
+                const fileName = `market_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                const { error: uploadError } = await db.storage.from('images').upload(fileName, file);
+                
+                if (uploadError) return alert('이미지 업로드 실패: ' + uploadError.message);
+                imageUrl = db.storage.from('images').getPublicUrl(fileName).data.publicUrl;
+            }
 
-            const { error } = await db.from('market').insert([{
-                title,
-                price: parseInt(priceVal) || 0,
-                contact,
-                description,
-                author: currentUser
-            }]);
-
-            if (error) {
-                alert('등록 실패: ' + error.message);
+            let query;
+            if (editingItemId) {
+                // 기존 데이터 유지 로직 (새 이미지가 없으면 URL 업데이트 안 함)
+                const updateData = { title, price, contact, description };
+                if (imageUrl) updateData.image_url = imageUrl; 
+                query = db.from('market').update(updateData).eq('id', editingItemId);
             } else {
-                alert('부품이 성공적으로 등록되었습니다!');
-                document.getElementById('prodTitle').value = '';
-                document.getElementById('prodPrice').value = '';
-                document.getElementById('prodContact').value = '';
-                document.getElementById('prodDesc').value = '';
-                toggleProductForm();
+                query = db.from('market').insert([{ title, price, contact, description, author: currentUser, image_url: imageUrl }]);
+            }
+
+            const { error } = await query;
+            if (error) alert('처리 실패: ' + error.message);
+            else {
+                alert(editingItemId ? '수정되었습니다.' : '등록되었습니다.');
+                closeProductForm();
                 fetchMarketItems();
             }
         }
 
-        // 🛒 구매 신청 시 Supabase orders 테이블에 기록
-        async function buyItem(title, price, seller, contact) {
-            const currentUser = localStorage.getItem('currentUser');
-            if (!currentUser) return alert('구매 신청을 하시려면 로그인이 필요합니다.');
-
-            if (!confirm(`[${title}] (${Number(price).toLocaleString()}원)\n판매자: ${seller}님께 구매를 신청하시겠습니까?`)) return;
-
-            const { error } = await db.from('orders').insert([{
-                item_title: title,
-                price: parseInt(price) || 0,
-                buyer: currentUser,
-                seller: seller,
-                contact: contact || '미입력'
-            }]);
-
-            if (error) {
-                alert('구매 신청 실패: ' + error.message);
-            } else {
-                alert(`[${title}] 구매 신청이 완료되었습니다!\n판매자(${seller})가 확인 후 연락을 드릴 것입니다.`);
+        // 5. 상품 삭제
+        async function deleteMarketItem(id) {
+            if (!confirm('정말 삭제하시겠습니까?')) return;
+            const { error } = await db.from('market').delete().eq('id', id);
+            if (error) alert('삭제 실패: ' + error.message);
+            else {
+                alert('삭제되었습니다.');
+                fetchMarketItems();
             }
+        }
+
+        // 검색 기능
+        function filterItems() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const items = document.querySelectorAll('#marketItemList .post-item');
+            items.forEach(item => {
+                const text = item.innerText.toLowerCase();
+                item.style.display = text.includes(query) ? 'flex' : 'none';
+            });
         }
     </script>
 </body>
