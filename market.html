@@ -31,7 +31,7 @@
                     <li><a href='community.html'><i class="fas fa-comments"></i> 커뮤니티</a></li>
                 </ul>
             </nav>
-            <div class="auth-container">
+            <div class="auth-container" id="authContainer">
                 <button class="auth-toggle-btn" id="authToggleBtn" onclick="toggleAuthDropdown()">
                     <i class="fas fa-user-circle"></i> 로그인 / 가입
                 </button>
@@ -39,7 +39,8 @@
                     <div id="authFormArea"></div>
                 </div>
             </div>
-            <button class="theme-btn" id="themeBtn" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+            <!-- 🌙 다크모드 버튼 클래스 및 onclick 수정 -->
+            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
         </div>
         <div class="mobile-menu-btn" onclick="toggleMobileMenu()"><i class="fas fa-bars"></i></div>
     </header>
