@@ -25,7 +25,7 @@
 <body>
 
     <header>
-        <a class='logo' href='/'>⚙️ <strong>MARKET</strong></a>
+        <a class='logo' href='/' id="siteLogo">⚙️ <strong>MARKET</strong></a>
         
         <!-- 모바일 햄버거 버튼 (메뉴 3줄) -->
         <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
@@ -36,8 +36,8 @@
             <nav>
                 <ul>
                     <li><a href='/' class="active"><i class="fas fa-home"></i> 홈</a></li>
-                    <li><a href='/market'><i class="fas fa-shopping-cart"></i> 장터</a></li>
-                    <li><a href='/community'><i class="fas fa-comments"></i> 커뮤니티</a></li>
+                    <li><a href='market.html'><i class="fas fa-shopping-cart"></i> 장터</a></li>
+                    <li><a href='community.html'><i class="fas fa-comments"></i> 커뮤니티</a></li>
                 </ul>
             </nav>
             <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()" aria-label="테마 변경">
@@ -56,28 +56,25 @@
     </header>
 
     <main class="container">
+        <!-- 🚨 관리자 전용 긴급 공지 배너 (입력된 내용이 있을 때만 크게 표시됨) -->
+        <div id="emergencyNoticeBanner" style="display: none; background: rgba(255, 71, 87, 0.15); border: 2px solid var(--accent-red, #ff4757); border-radius: 12px; padding: 20px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(255,71,87,0.2);">
+            <h3 style="margin: 0 0 8px 0; color: var(--accent-red, #ff4757); font-size: 1.2rem;">
+                <i class="fas fa-bullhorn"></i> 긴급 공지사항
+            </h3>
+            <p id="emergencyNoticeText" style="margin: 0; font-size: 1.05rem; font-weight: bold; word-break: break-all;"></p>
+        </div>
+
         <!-- 메인 배너 -->
         <section class="hero glass-panel" id="mainBanner">
             <h1 id="siteTitle" class="hero-title">거품 없는 수집의 시작</h1>
             <p id="siteDesc" class="hero-subtitle">왜곡된 버스 부품 세계관을 뜯어고칩니다!</p>
             <div class="hero-actions">
-                <button class="btn-primary-large" onclick="location.href='/market'">부품 구경하기</button>
+                <button class="btn-primary-large" onclick="location.href='market.html'">부품 구경하기</button>
             </div>
-        </section>
-
-        <!-- 📢 공지사항 섹션 -->
-        <section class="card notice-card">
-            <div class="card-header">
-                <h2><i class="fas fa-bullhorn"></i> 주요 공지사항</h2>
-                <span class="badge">필독</span>
-            </div>
-            <ul class="notice-list" id="noticeList">
-                <li style="color: var(--text-sub); text-align: center; padding: 10px;">공지사항을 불러오는 중...</li>
-            </ul>
         </section>
 
         <!-- 📊 실시간 현황 통계 -->
-        <section class="card">
+        <section class="card" style="margin-top: 20px;">
             <h2><i class="fas fa-chart-pie"></i> MARKET 실시간 현황</h2>
             <div class="stats-grid">
                 <div class="stat-box glass-panel">
@@ -94,7 +91,7 @@
         </section>
 
         <!-- 크레딧 -->
-        <section class="credit-box glass-panel">
+        <section class="credit-box glass-panel" style="margin-top: 20px;">
             <h4>💡 MARKET 제작/관리진</h4>
             <div class="credit-grid">
                 <p><i class="fas fa-code"></i> <b>개발:</b> 서울교덕</p>
@@ -119,8 +116,26 @@
     <!-- 2. index.html 전용 스크립트 -->
     <script>
         window.addEventListener('DOMContentLoaded', () => {
+            // 커스텀 사이트 타이틀 적용
+            const customTitle = localStorage.getItem('customSiteTitle');
+            if (customTitle) {
+                const logoElem = document.getElementById('siteLogo');
+                if (logoElem) logoElem.innerHTML = customTitle;
+            }
+
+            // 관리자 설정 긴급 공지 불러오기
+            const savedNotice = localStorage.getItem('siteNotice');
+            const banner = document.getElementById('emergencyNoticeBanner');
+            const textElem = document.getElementById('emergencyNoticeText');
+
+            if (savedNotice && savedNotice.trim() !== '') {
+                textElem.textContent = savedNotice;
+                banner.style.display = 'block';
+            } else {
+                banner.style.display = 'none';
+            }
+
             fetchStats();
-            fetchNotices();
         });
 
         // 실시간 통계 불러오기
@@ -137,25 +152,6 @@
             } catch (err) {
                 console.error("통계 로드 오류:", err);
             }
-        }
-
-        // 공지사항 간략히 불러오기
-        function fetchNotices() {
-            const noticeList = document.getElementById('noticeList');
-            if (!noticeList) return;
-
-            const notices = [
-                { title: "안전결제 시스템(에스크로) 도입 안내", date: "2026.08.06" },
-                { title: "사진 첨부 기능 업데이트 예정 안내", date: "2026.08.06" },
-                { title: "관리자, 판매자 등급 권한 조정의 건", date: "2026.08.05" }
-            ];
-            
-            noticeList.innerHTML = notices.map(notice => 
-                `<li>
-                    <span class="notice-title">${notice.title}</span>
-                    <span class="notice-date">${notice.date}</span>
-                </li>`
-            ).join('');
         }
     </script>
 </body>
