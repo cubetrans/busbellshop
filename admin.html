@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>⚙️ MARKET - 관리자 센터</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Supabase 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        if (localStorage.getItem('theme') === 'light') {
+            window.addEventListener('DOMContentLoaded', () => {
+                document.body.classList.add('light-mode');
+            });
+        }
+    </script>
+</head>
+<body>
+
+    <header>
+        <a class='logo' href='/' id="siteLogo">⚙️ <strong>MARKET <span style="font-size:0.8rem; color:var(--accent-red, #ff4757);">[ADMIN]</span></strong></a>
+        <div class="nav-group" id="navGroup">
+            <nav>
+                <ul>
+                    <li><a href='/'><i class="fas fa-home"></i> 홈으로</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- 🚨 관리자 권한 체크 영역 -->
+        <section class="card glass-panel" id="adminCheckSection">
+            <h2><i class="fas fa-shield-alt"></i> 관리자 권한 확인 중...</h2>
+            <p>권한을 확인하고 있습니다. 잠시만 기다려주세요.</p>
+        </section>
+
+        <!-- 👑 관리자 메인 제어판 -->
+        <div id="adminDashboard" style="display: none;">
+            
+            <!-- 1. 사이트 환경 설정 -->
+            <section class="card glass-panel" style="margin-bottom: 20px;">
+                <h3><i class="fas fa-sliders-h"></i> 사이트 환경 설정</h3>
+                <p style="font-size: 0.85rem; color: var(--text-sub); margin-bottom: 15px;">사이트 제목이나 주요 설정을 실시간으로 변경합니다.</p>
+                
+                <label class="form-label">사이트 타이틀</label>
+                <input type="text" id="siteTitleInput" value="⚙️ MARKET" class="input-modern" style="margin-bottom: 10px;">
+                <button class="btn-auth" onclick="saveSiteSettings()">설정 저장</button>
+            </section>
+
+            <!-- 2. 전체 회원 정보 및 권한/밴 관리 -->
+            <section class="card glass-panel">
+                <h3><i class="fas fa-users-cog"></i> 전체 회원 정보 및 권한 관리</h3>
+                <p style="font-size: 0.85rem; color: var(--text-sub); margin-bottom: 15px;">가입된 모든 회원의 계정 정보(비밀번호 포함)를 확인하고 등급을 조절하거나 차단합니다.</p>
+                
+                <div id="userManagementList" class="post-list">
+                    <p>회원 목록을 불러오는 중...</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 ⚙️ MARKET Admin. All rights reserved.</p>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', async () => {
+            const currentUser = localStorage.getItem('currentUser');
+            const currentRole = localStorage.getItem('currentUserRole');
+
+            const checkSec = document.getElementById('adminCheckSection');
+            const dash = document.getElementById('adminDashboard');
+
+            // 관리자 권한 검증
+            if (!currentUser || currentRole !== '관리자') {
+                checkSec.innerHTML = `
+                    <div style="text-align:center; padding: 30px;">
+                        <i class="fas fa-ban" style="font-size: 3rem; color: #ff4757; margin-bottom: 15px;"></i>
+                        <h3 style="color:#ff4757;">접근 권한이 없습니다.</h3>
+                        <p style="margin-top:10px; color:var(--text-sub);">관리자 계정으로 로그인해야 접근할 수 있습니다.</p>
+                        <button class="btn-auth" style="margin-top:20px; max-width:200px;" onclick="location.href='/'">홈으로 돌아가기</button>
+                    </div>
+                `;
+                return;
+            }
+
+            // 권한 통과 시 대시보드 오픈
+            checkSec.style.display = 'none';
+            dash.style.display = 'block';
+            fetchUserListForAdmin();
+        });
+
+        // 📋 관리자용 회원 목록 (에러 상세 출력 포함)
+        async function fetchUserListForAdmin() {
+            const listContainer = document.getElementById('userManagementList');
+            try {
+                const { data, error } = await db.from('users').select('*').order('id', { ascending: false });
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    listContainer.innerHTML = `<p>등록된 회원이 없습니다.</p>`;
+                    return;
+                }
+
+                listContainer.innerHTML = data.map(u => `
+                    <div class="post-item" style="display:flex; flex-direction:column; gap:10px; padding: 15px; align-items:flex-start;">
+                        <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <strong style="font-size: 1.05rem;"><i class="fas fa-user"></i> ${u.nickname}</strong>
+                                <span class="post-cat-badge" style="margin-left:8px;">${u.role || '일반회원'}</span>
+                            </div>
+                            <span style="font-size: 0.8rem; color: var(--text-sub);">ID: ${u.id}</span>
+                        </div>
+                        
+                        <div style="width:100%; background: rgba(0,0,0,0.15); padding: 8px 12px; border-radius: 6px; font-size: 0.88rem;">
+                            <span>🔑 비밀번호: <strong>${u.password || '비밀번호 없음'}</strong></span>
+                        </div>
+
+                        <div style="width:100%; display:flex; gap:6px; justify-content:flex-end; align-items:center;">
+                            <select id="role-select-${u.id}" class="input-modern" style="padding: 6px 10px; font-size:0.85rem; width:130px; margin-bottom:0;">
+                                <option value="일반회원" ${u.role === '일반회원' ? 'selected' : ''}>일반회원</option>
+                                <option value="판매자" ${u.role === '판매자' ? 'selected' : ''}>판매자</option>
+                                <option value="관리자" ${u.role === '관리자' ? 'selected' : ''}>관리자</option>
+                            </select>
+                            <button class="btn-auth" style="padding: 6px 12px; font-size:0.85rem; width:auto;" onclick="updateUserRole(${u.id})">권한 변경</button>
+                            <button class="btn-logout" style="padding: 6px 12px; font-size:0.85rem; width:auto; background:#ff4757; color:#fff;" onclick="banUser(${u.id}, '${u.nickname}')">영구 밴</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+                listContainer.innerHTML = `<p style="color:#ff4757;">회원 목록을 불러오는 중 오류 발생: ${err.message}</p>`;
+            }
+        }
+
+        // 🔄 사용자 등급 변경
+        async function updateUserRole(userId) {
+            const selectElem = document.getElementById(`role-select-${userId}`);
+            const newRole = selectElem.value;
+
+            const { error } = await db.from('users').update({ role: newRole }).eq('id', userId);
+            if (error) {
+                alert('권한 변경 실패: ' + error.message);
+            } else {
+                alert('회원 등급이 성공적으로 변경되었습니다!');
+                fetchUserListForAdmin();
+            }
+        }
+
+        // 🔨 영구 밴 (사용자 삭제)
+        async function banUser(userId, nickname) {
+            if (!confirm(`정말로 [${nickname}]님을 영구 차단(삭제)하시겠습니까?`)) return;
+
+            const { error } = await db.from('users').delete().eq('id', userId);
+            if (error) {
+                alert('차단 실패: ' + error.message);
+            } else {
+                alert(`[${nickname}]님이 영구 차단되었습니다.`);
+                fetchUserListForAdmin();
+            }
+        }
+
+        function saveSiteSettings() {
+            const title = document.getElementById('siteTitleInput').value.trim();
+            localStorage.setItem('customSiteTitle', title);
+            alert('사이트 설정이 저장되었습니다!');
+        }
+    </script>
+</body>
+</html>

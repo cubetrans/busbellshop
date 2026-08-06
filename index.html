@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>⚙️ MARKET - 홈</title>
+    <!-- 폰트어썸 (아이콘용) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Supabase 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // 초기 테마 설정 (깜빡임 방지)
+        if (localStorage.getItem('theme') === 'light') {
+            window.addEventListener('DOMContentLoaded', () => {
+                document.body.classList.add('light-mode');
+                const themeBtn = document.getElementById('themeBtn');
+                if (themeBtn) themeBtn.innerHTML = '<i class="fas fa-sun"></i>';
+            });
+        }
+    </script>
+</head>
+<body>
+
+    <header>
+        <a class='logo' href='/'>⚙️ <strong>MARKET</strong></a>
+        
+        <!-- 모바일 햄버거 버튼 (메뉴 3줄) -->
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <div class="nav-group" id="navGroup">
+            <nav>
+                <ul>
+                    <li><a href='/' class="active"><i class="fas fa-home"></i> 홈</a></li>
+                    <li><a href='/market'><i class="fas fa-shopping-cart"></i> 장터</a></li>
+                    <li><a href='/community'><i class="fas fa-comments"></i> 커뮤니티</a></li>
+                </ul>
+            </nav>
+            <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()" aria-label="테마 변경">
+                <i class="fas fa-moon"></i>
+            </button>
+            
+            <div id="authContainer">
+                <button onclick="toggleAuthDropdown()" id="authToggleBtn" class="user-badge">
+                    <i class="fas fa-user-circle"></i> 로그인 / 가입
+                </button>
+                <div id="authDropdown" class="auth-dropdown">
+                    <div id="authFormArea"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- 메인 배너 -->
+        <section class="hero glass-panel" id="mainBanner">
+            <h1 id="siteTitle" class="hero-title">거품 없는 수집의 시작</h1>
+            <p id="siteDesc" class="hero-subtitle">왜곡된 버스 부품 세계관을 뜯어고칩니다!</p>
+            <div class="hero-actions">
+                <button class="btn-primary-large" onclick="location.href='/market'">부품 구경하기</button>
+            </div>
+        </section>
+
+        <!-- 📢 공지사항 섹션 -->
+        <section class="card notice-card">
+            <div class="card-header">
+                <h2><i class="fas fa-bullhorn"></i> 주요 공지사항</h2>
+                <span class="badge">필독</span>
+            </div>
+            <ul class="notice-list" id="noticeList">
+                <li style="color: var(--text-sub); text-align: center; padding: 10px;">공지사항을 불러오는 중...</li>
+            </ul>
+        </section>
+
+        <!-- 📊 실시간 현황 통계 -->
+        <section class="card">
+            <h2><i class="fas fa-chart-pie"></i> MARKET 실시간 현황</h2>
+            <div class="stats-grid">
+                <div class="stat-box glass-panel">
+                    <i class="fas fa-box-open stat-icon"></i>
+                    <p>등록된 부품</p>
+                    <h3 id="marketCount">...</h3>
+                </div>
+                <div class="stat-box glass-panel">
+                    <i class="fas fa-pen-nib stat-icon"></i>
+                    <p>커뮤니티 글</p>
+                    <h3 id="postCount">...</h3>
+                </div>
+            </div>
+        </section>
+
+        <!-- 크레딧 -->
+        <section class="credit-box glass-panel">
+            <h4>💡 MARKET 제작/관리진</h4>
+            <div class="credit-grid">
+                <p><i class="fas fa-code"></i> <b>개발:</b> 서울교덕</p>
+                <p><i class="fas fa-lightbulb"></i> <b>아이디어:</b> 평택버덕</p>
+                <p><i class="fas fa-check-circle"></i> <b>피드백:</b> 하차벨 매니아</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- 플로팅 챗봇/상담 버튼 -->
+    <button class="floating-chat-btn" onclick="alert('실시간 채팅 상담 기능은 준비 중입니다!')" aria-label="상담하기">
+        <i class="fas fa-comment-dots"></i>
+    </button>
+
+    <footer>
+        <p>&copy; 2026 ⚙️ MARKET. All rights reserved.</p>
+    </footer>
+
+    <!-- 1. 공통 로직 파일 (app.js) 불러오기 -->
+    <script src="app.js"></script>
+
+    <!-- 2. index.html 전용 스크립트 -->
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchStats();
+            fetchNotices();
+        });
+
+        // 실시간 통계 불러오기
+        async function fetchStats() {
+            try {
+                const { count: marketTotal } = await db.from('market').select('*', { count: 'exact', head: true });
+                const { count: postTotal } = await db.from('posts').select('*', { count: 'exact', head: true });
+                
+                const marketEl = document.getElementById('marketCount');
+                const postEl = document.getElementById('postCount');
+                
+                if (marketEl) marketEl.innerText = `${marketTotal || 0}개`;
+                if (postEl) postEl.innerText = `${postTotal || 0}개`;
+            } catch (err) {
+                console.error("통계 로드 오류:", err);
+            }
+        }
+
+        // 공지사항 간략히 불러오기
+        function fetchNotices() {
+            const noticeList = document.getElementById('noticeList');
+            if (!noticeList) return;
+
+            const notices = [
+                { title: "안전결제 시스템(에스크로) 도입 안내", date: "2026.08.06" },
+                { title: "사진 첨부 기능 업데이트 예정 안내", date: "2026.08.06" },
+                { title: "관리자, 판매자 등급 권한 조정의 건", date: "2026.08.05" }
+            ];
+            
+            noticeList.innerHTML = notices.map(notice => 
+                `<li>
+                    <span class="notice-title">${notice.title}</span>
+                    <span class="notice-date">${notice.date}</span>
+                </li>`
+            ).join('');
+        }
+    </script>
+</body>
+</html>

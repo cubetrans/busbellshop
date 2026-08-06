@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>⚙️ MARKET - 커뮤니티</title>
+    <!-- 폰트어썸 (아이콘용) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Supabase 라이브러리 (최상단 1회 로드) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // 초기 테마 설정 (깜빡임 방지)
+        if (localStorage.getItem('theme') === 'light') {
+            window.addEventListener('DOMContentLoaded', () => {
+                document.body.classList.add('light-mode');
+                const themeBtn = document.getElementById('themeBtn');
+                if (themeBtn) themeBtn.innerHTML = '<i class="fas fa-sun"></i>';
+            });
+        }
+    </script>
+</head>
+<body>
+
+    <header>
+        <a class='logo' href='/'>⚙️ <strong>MARKET</strong></a>
+        
+        <!-- 모바일 햄버거 버튼 -->
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <div class="nav-group" id="navGroup">
+            <nav>
+                <ul>
+                    <li><a href='/'><i class="fas fa-home"></i> 홈</a></li>
+                    <li><a href='/market'><i class="fas fa-shopping-cart"></i> 장터</a></li>
+                    <li><a href='/community' class="active"><i class="fas fa-comments"></i> 커뮤니티</a></li>
+                </ul>
+            </nav>
+            <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()" aria-label="테마 변경">
+                <i class="fas fa-moon"></i>
+            </button>
+            
+            <div id="authContainer">
+                <button onclick="toggleAuthDropdown()" id="authToggleBtn" class="user-badge">
+                    <i class="fas fa-user-circle"></i> 로그인 / 가입
+                </button>
+                <div id="authDropdown" class="auth-dropdown">
+                    <div id="authFormArea"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- 🔍 검색 및 카테고리 헤더 -->
+        <section class="card glass-panel search-section">
+            <div class="search-bar-group">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="searchInput" placeholder="게시글 제목, 내용, 작성자 검색..." class="input-modern" onkeyup="filterPosts()">
+                </div>
+                <button class="btn-primary-large btn-write" onclick="openWriteModal()">
+                    <i class="fas fa-pen"></i> 글쓰기
+                </button>
+            </div>
+
+            <div class="filter-tabs">
+                <button class="tab-btn active" onclick="setCategory('전체', this)">전체</button>
+                <button class="tab-btn" onclick="setCategory('자유게시판', this)">자유게시판</button>
+                <button class="tab-btn" onclick="setCategory('수집/인증', this)">수집/인증</button>
+                <button class="tab-btn" onclick="setCategory('질문/답변', this)">질문/답변</button>
+                <button class="tab-btn" onclick="setCategory('공지/정보', this)">공지/정보</button>
+            </div>
+        </section>
+
+        <!-- 📋 게시글 리스트 영역 -->
+        <section class="card glass-panel">
+            <div class="post-list-header">
+                <span>카테고리 / 제목</span>
+                <span class="desktop-only">작성자 / 일자</span>
+            </div>
+            <div id="postList" class="post-list">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i> 게시글을 불러오는 중...
+                </div>
+            </div>
+        </section>
+
+        <!-- 크레딧 -->
+        <section class="credit-box glass-panel">
+            <h4>💡 MARKET 제작/관리진</h4>
+            <div class="credit-grid">
+                <p><i class="fas fa-code"></i> <b>개발:</b> 서울교덕</p>
+                <p><i class="fas fa-lightbulb"></i> <b>아이디어:</b> 평택버덕</p>
+                <p><i class="fas fa-check-circle"></i> <b>피드백:</b> 하차벨 매니아</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- 📝 게시글 작성 모달 레이어 -->
+    <div id="writeModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h3><i class="fas fa-pen-nib"></i> 새 게시글 작성</h3>
+                <button class="modal-close" onclick="closeWriteModal()">&times;</button>
+            </div>
+            <form id="postForm" onsubmit="submitPost(event)">
+                <label class="form-label">카테고리</label>
+                <select id="postCategory" class="input-modern" required>
+                    <option value="자유게시판">자유게시판</option>
+                    <option value="수집/인증">수집/인증</option>
+                    <option value="질문/답변">질문/답변</option>
+                    <option value="공지/정보">공지/정보</option>
+                </select>
+
+                <label class="form-label">제목</label>
+                <input type="text" id="postTitle" placeholder="제목을 입력하세요" class="input-modern" required>
+
+                <label class="form-label">이미지 URL (선택)</label>
+                <input type="url" id="postImageUrl" placeholder="https://example.com/image.jpg" class="input-modern">
+
+                <label class="form-label">내용</label>
+                <textarea id="postContent" rows="6" placeholder="자유롭게 이야기를 나누어 보세요!" class="input-modern" required></textarea>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeWriteModal()">취소</button>
+                    <button type="submit" id="submitBtn" class="btn-auth">작성 완료</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 🔍 게시글 상세 보기 및 댓글 모달 -->
+    <div id="detailModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content glass-panel" id="detailContent">
+            <!-- 자바스크립트로 동적 채워짐 -->
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 ⚙️ MARKET. All rights reserved.</p>
+    </footer>
+
+    <!-- 1. 공통 로직 스크립트 (app.js) -->
+    <script src="app.js"></script>
+
+    <!-- 2. 커뮤니티 페이지 전용 스크립트 -->
+    <script>
+        let allPosts = [];
+        let currentCategory = '전체';
+        let currentPostId = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchPosts();
+        });
+
+        // 📋 게시글 목록 불러오기
+        async function fetchPosts() {
+            const postList = document.getElementById('postList');
+            try {
+                const { data, error } = await db.from('posts').select('*').order('id', { ascending: false });
+                if (error) throw error;
+
+                allPosts = data || [];
+                renderPosts(allPosts);
+            } catch (err) {
+                console.error(err);
+                if (postList) postList.innerHTML = `<div class="empty-msg">게시글 목록을 불러오는 중 오류가 발생했습니다.</div>`;
+            }
+        }
+
+        // 🎨 게시글 목록 렌더링
+        function renderPosts(posts) {
+            const postList = document.getElementById('postList');
+            if (!postList) return;
+
+            if (!posts || posts.length === 0) {
+                postList.innerHTML = `<div class="empty-msg">등록된 게시글이 없습니다. 첫 글을 작성해 보세요!</div>`;
+                return;
+            }
+
+            postList.innerHTML = posts.map(post => `
+                <div class="post-item" onclick="openDetailModal(${post.id})">
+                    <div class="post-main">
+                        <span class="post-cat-badge">${post.category || '자유게시판'}</span>
+                        <h4 class="post-item-title">${post.title}</h4>
+                    </div>
+                    <div class="post-meta">
+                        <span class="post-author">${typeof formatName === 'function' ? formatName(post.author || '익명') : (post.author || '익명')}</span>
+                        <span class="post-date">${(post.created_at || '').substring(0, 10)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 🔍 검색 및 카테고리 필터링
+        function filterPosts() {
+            const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
+            const filtered = allPosts.filter(post => {
+                const matchesCat = (currentCategory === '전체') || (post.category === currentCategory);
+                const matchesSearch = !keyword || 
+                    (post.title && post.title.toLowerCase().includes(keyword)) ||
+                    (post.content && post.content.toLowerCase().includes(keyword)) ||
+                    (post.author && post.author.toLowerCase().includes(keyword));
+                return matchesCat && matchesSearch;
+            });
+            renderPosts(filtered);
+        }
+
+        function setCategory(catName, btnElem) {
+            currentCategory = catName;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btnElem.classList.add('active');
+            filterPosts();
+        }
+
+        // 📝 모달 제어
+        function openWriteModal() {
+            const user = localStorage.getItem('currentUser');
+            if (!user) return alert('로그인 후 글을 작성할 수 있습니다.');
+            document.getElementById('writeModal').style.display = 'flex';
+        }
+
+        function closeWriteModal() {
+            document.getElementById('writeModal').style.display = 'none';
+            document.getElementById('postForm').reset();
+        }
+
+        // 💾 게시글 등록
+        async function submitPost(e) {
+            e.preventDefault();
+            const user = localStorage.getItem('currentUser');
+            if (!user) return alert('로그인이 필요합니다.');
+
+            const category = document.getElementById('postCategory').value;
+            const title = document.getElementById('postTitle').value.trim();
+            const image_url = document.getElementById('postImageUrl').value.trim();
+            const content = document.getElementById('postContent').value.trim();
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerText = '작성 중...';
+
+            const { error } = await db.from('posts').insert([{
+                category,
+                title,
+                image_url,
+                content,
+                author: user
+            }]);
+
+            submitBtn.disabled = false;
+            submitBtn.innerText = '작성 완료';
+
+            if (error) {
+                alert('글 작성 중 오류 발생: ' + error.message);
+            } else {
+                alert('게시글이 성공적으로 등록되었습니다!');
+                closeWriteModal();
+                fetchPosts();
+            }
+        }
+
+        // 🔍 게시글 상세 보기 및 댓글 불러오기
+        async function openDetailModal(id) {
+            currentPostId = id;
+            const post = allPosts.find(p => p.id === id);
+            if (!post) return;
+
+            const modal = document.getElementById('detailModal');
+            const content = document.getElementById('detailContent');
+            const imgHtml = post.image_url ? `<img src="${post.image_url}" class="detail-img" onerror="this.style.display='none'">` : '';
+            const authorFormatted = typeof formatName === 'function' ? formatName(post.author) : post.author;
+
+            content.innerHTML = `
+                <div class="modal-header">
+                    <span class="post-cat-badge">${post.category || '자유게시판'}</span>
+                    <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+                </div>
+                <h3 class="detail-title">${post.title}</h3>
+                <div class="detail-meta-bar">
+                    <span>작성자: <strong>${authorFormatted}</strong></span>
+                    <span>작성일: ${(post.created_at || '').substring(0, 10)}</span>
+                </div>
+                <div class="detail-body">
+                    ${imgHtml}
+                    <p class="post-text">${(post.content || '').replace(/\n/g, '<br>')}</p>
+                </div>
+                
+                <hr class="divider-line">
+
+                <!-- 💬 댓글 섹션 -->
+                <div class="comments-section">
+                    <h4><i class="fas fa-comments"></i> 댓글</h4>
+                    <div id="commentsList" class="comments-list">
+                        <p style="color:var(--text-sub); font-size:0.85rem;">댓글을 불러오는 중...</p>
+                    </div>
+                    
+                    <div class="comment-input-group">
+                        <input type="text" id="commentInput" placeholder="따뜻한 댓글을 남겨주세요." class="input-modern">
+                        <button class="btn-auth" onclick="submitComment()">등록</button>
+                    </div>
+                </div>
+            `;
+
+            modal.style.display = 'flex';
+            fetchComments(id);
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').style.display = 'none';
+            currentPostId = null;
+        }
+
+        // 💬 댓글 불러오기
+        async function fetchComments(postId) {
+            const listElem = document.getElementById('commentsList');
+            try {
+                const { data, error } = await db.from('comments').select('*').eq('post_id', postId).order('id', { ascending: true });
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    listElem.innerHTML = `<p style="color:var(--text-sub); font-size:0.88rem; padding: 10px 0;">아직 댓글이 없습니다. 첫 댓글을 달아보세요!</p>`;
+                    return;
+                }
+
+                listElem.innerHTML = data.map(c => `
+                    <div class="comment-item">
+                        <div class="comment-header">
+                            <span class="comment-author">${typeof formatName === 'function' ? formatName(c.author) : c.author}</span>
+                            <span class="comment-date">${(c.created_at || '').substring(0, 10)}</span>
+                        </div>
+                        <p class="comment-text">${c.content}</p>
+                    </div>
+                `).join('');
+            } catch (err) {
+                listElem.innerHTML = `<p style="color:var(--text-sub); font-size:0.85rem;">댓글 시스템을 준비 중입니다.</p>`;
+            }
+        }
+
+        // 💬 댓글 작성하기
+        async function submitComment() {
+            const user = localStorage.getItem('currentUser');
+            if (!user) return alert('로그인 후 댓글을 작성할 수 있습니다.');
+
+            const input = document.getElementById('commentInput');
+            const content = input.value.trim();
+            if (!content) return alert('댓글 내용을 입력하세요.');
+
+            const { error } = await db.from('comments').insert([{
+                post_id: currentPostId,
+                author: user,
+                content: content
+            }]);
+
+            if (error) {
+                alert('댓글 작성 중 오류 발생: ' + error.message);
+            } else {
+                input.value = '';
+                fetchComments(currentPostId);
+            }
+        }
+    </script>
+</body>
+</html>
