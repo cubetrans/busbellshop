@@ -22,10 +22,10 @@ function toggleMobileMenu() {
     if (navGroup) navGroup.classList.toggle('active');
 }
 
-// ☀️/🌙 테마 전환
+// ☀️/🌙 테마 전환 (themeBtn과 themeToggle 둘 다 인식하도록 수정)
 function toggleTheme() {
     const body = document.body;
-    const themeBtn = document.getElementById('themeBtn');
+    const themeBtn = document.getElementById('themeBtn') || document.getElementById('themeToggle');
     body.classList.toggle('light-mode');
     
     if (body.classList.contains('light-mode')) {
@@ -37,8 +37,14 @@ function toggleTheme() {
     }
 }
 
+// 페이지 로드 시 저장된 테마에 맞춰 아이콘 초기 세팅 동기화
 window.addEventListener('DOMContentLoaded', () => {
     checkLoginState();
+    
+    const themeBtn = document.getElementById('themeBtn') || document.getElementById('themeToggle');
+    if (themeBtn && document.body.classList.contains('light-mode')) {
+        themeBtn.innerHTML = '<i class="fas fa-sun"></i>';
+    }
 });
 
 function toggleAuthDropdown() {
