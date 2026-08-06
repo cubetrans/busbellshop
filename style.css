@@ -211,6 +211,27 @@ nav a:hover, nav a.active {
     background: var(--primary-hover);
 }
 
+/* 🛠️ 로그인/프로필 토글 버튼 스타일 지정 (하얀색 박스 깨짐 해결) */
+#authToggleBtn {
+    background: var(--bg-card) !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--border-color) !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    font-size: 0.88rem !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    box-shadow: var(--card-shadow) !important;
+}
+
+#authToggleBtn:hover {
+    background: var(--bg-glass-hover) !important;
+    border-color: var(--primary) !important;
+}
+
 .auth-dropdown {
     position: absolute;
     right: 0;
