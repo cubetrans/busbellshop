@@ -1,155 +1,56 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>로그인 - 버스벨샵</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인 - 하차벨 장터 & 커뮤니티</title>
+    <link rel="stylesheet" href="style.css"> <!-- 기존 디자인 스타일 유지 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+    <!-- 단일 헤더 -->
+    <header class="site-header">
+        <div class="logo-container">
+            <a href="index.html"><img src="logo.png" alt="Bus Bell Shop" class="header-logo"></a>
+        </div>
+    </header>
 
-  <header>
-    <div class="header-left">
-      <a href="index.html" class="logo">
-        <img src="icon.png" alt="logo" onerror="this.style.display='none'">
-      </a>
-      <ul class="nav-menu">
-        <li><a href="index.html">홈</a></li>
-        <li><a href="market.html">장터</a></li>
-        <li><a href="community.html">커뮤니티</a></li>
-        <li><a href="support.html">고객센터</a></li>
-      </ul>
-    </div>
+    <main class="auth-container">
+        <div class="auth-box">
+            <h2>로그인</h2>
+            <form id="login-form">
+                <div class="input-group">
+                    <label for="email">이메일</label>
+                    <input type="email" id="email" required placeholder="이메일을 입력하세요">
+                </div>
+                <div class="input-group">
+                    <label for="password">비밀번호</label>
+                    <input type="password" id="password" required placeholder="비밀번호를 입력하세요">
+                </div>
+                <button type="submit" class="btn-primary">로그인</button>
+            </form>
+            <p class="auth-switch">계정이 없으신가요? <a href="signup.html">회원가입</a></p>
+        </div>
+    </main>
 
-    <div class="header-right">
-      <button class="theme-toggle-btn">🌙</button>
-      <button class="hamburger">☰</button>
-    </div>
+    <script>
+        const SUPABASE_URL = 'https://ipgzhipiebcnkfqzufgm.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwZ3poaXBpZWJjbmtmcXp1ZmdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5ODMxMTgsImV4cCI6MjEwMTU1OTExOH0.byzqUDMvoAIbybPYbyKsR6KoPnpLPs0jsdawAnW0Eww';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    <div class="mobile-menu">
-      <ul>
-        <li><a href="index.html">홈</a></li>
-        <li><a href="market.html">장터</a></li>
-        <li><a href="community.html">커뮤니티</a></li>
-        <li><a href="support.html">고객센터</a></li>
-      </ul>
-    </div>
-  </header>
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
 
-  <div class="container" style="max-width: 400px; margin-top: 60px;">
-    <div class="card">
-      <h2>로그인</h2>
-      <form id="login-form" style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px;">
-        <input type="text" id="login-username" placeholder="사용자명 (예: 서울교덕 또는 관리자)" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
-        <input type="password" id="login-password" placeholder="비밀번호" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
-        <button type="submit" class="btn btn-primary">로그인</button>
-      </form>
-      <div style="margin-top: 15px; font-size: 0.9rem; text-align: center;">
-        <p>체험용 계정: <strong>서울교덕</strong> / 비밀번호: <strong>password123</strong></p>
-        <p style="margin-top: 5px;">관리자 계정: <strong>관리자</strong> / 비밀번호: <strong>adminpassword</strong></p>
-      </div>
-    </div>
-  </div>
-
-  <script src="app.js"></script>
-  <script>
-    document.getElementById('login-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const usernameInput = document.getElementById('login-username').value.trim();
-      const passwordInput = document.getElementById('login-password').value.trim();
-
-      const users = JSON.parse(localStorage.getItem('all_users')) || [
-        { id: 'user1', username: '서울교덕', accountNum: '110-123-456789', password: 'password123', role: 'user' },
-        { id: 'admin1', username: '관리자', accountNum: '333-987-654321', password: 'adminpassword', role: 'admin' },
-        { id: 'user2', username: '교통동호인', accountNum: '1002-555-778899', password: 'password456', role: 'user' }
-      ];
-
-      const found = users.find(u => u.username === usernameInput && u.password === passwordInput);
-      if (found) {
-        localStorage.setItem('currentUser', JSON.stringify(found));
-        alert(`${found.username}님 환영합니다!`);
-        window.location.href = 'index.html';
-      } else {
-        alert('아이디 또는 비밀번호가 일치하지 않습니다.');
-      }
-    });
-  </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>로그인 - 버스벨샵</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-  <header>
-    <div class="header-left">
-      <a href="index.html" class="logo">
-        <img src="icon.png" alt="logo" onerror="this.style.display='none'">
-      </a>
-      <ul class="nav-menu">
-        <li><a href="index.html">홈</a></li>
-        <li><a href="market.html">장터</a></li>
-        <li><a href="community.html">커뮤니티</a></li>
-        <li><a href="support.html">고객센터</a></li>
-      </ul>
-    </div>
-
-    <div class="header-right">
-      <button class="theme-toggle-btn">🌙</button>
-      <button class="hamburger">☰</button>
-    </div>
-
-    <div class="mobile-menu">
-      <ul>
-        <li><a href="index.html">홈</a></li>
-        <li><a href="market.html">장터</a></li>
-        <li><a href="community.html">커뮤니티</a></li>
-        <li><a href="support.html">고객센터</a></li>
-      </ul>
-    </div>
-  </header>
-
-  <div class="container" style="max-width: 400px; margin-top: 60px;">
-    <div class="card">
-      <h2>로그인</h2>
-      <form id="login-form" style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px;">
-        <input type="text" id="login-username" placeholder="사용자명 (예: 서울교덕 또는 관리자)" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
-        <input type="password" id="login-password" placeholder="비밀번호" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
-        <button type="submit" class="btn btn-primary">로그인</button>
-      </form>
-      <div style="margin-top: 15px; font-size: 0.9rem; text-align: center;">
-        <p>체험용 계정: <strong>서울교덕</strong> / 비밀번호: <strong>password123</strong></p>
-        <p style="margin-top: 5px;">관리자 계정: <strong>관리자</strong> / 비밀번호: <strong>adminpassword</strong></p>
-      </div>
-    </div>
-  </div>
-
-  <script src="app.js"></script>
-  <script>
-    document.getElementById('login-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const usernameInput = document.getElementById('login-username').value.trim();
-      const passwordInput = document.getElementById('login-password').value.trim();
-
-      const users = JSON.parse(localStorage.getItem('all_users')) || [
-        { id: 'user1', username: '서울교덕', accountNum: '110-123-456789', password: 'password123', role: 'user' },
-        { id: 'admin1', username: '관리자', accountNum: '333-987-654321', password: 'adminpassword', role: 'admin' },
-        { id: 'user2', username: '교통동호인', accountNum: '1002-555-778899', password: 'password456', role: 'user' }
-      ];
-
-      const found = users.find(u => u.username === usernameInput && u.password === passwordInput);
-      if (found) {
-        localStorage.setItem('currentUser', JSON.stringify(found));
-        alert(`${found.username}님 환영합니다!`);
-        window.location.href = 'index.html';
-      } else {
-        alert('아이디 또는 비밀번호가 일치하지 않습니다.');
-      }
-    });
-  </script>
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) {
+                alert('로그인 실패: ' + error.message);
+            } else {
+                alert('로그인 성공!');
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
 </body>
 </html>
