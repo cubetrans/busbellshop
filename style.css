@@ -5,7 +5,7 @@
   --text-secondary: #868e96;
   --header-bg: #ffffff;
   --border-color: #dee2e6;
-  --gradient-main: linear-gradient(-45deg, #38bdf8, #a855f7); /* 하늘/보라 -45도 그라데이션 */
+  --gradient-main: linear-gradient(-45deg, #38bdf8, #a855f7);
 }
 
 html.dark {
@@ -43,7 +43,6 @@ header {
   z-index: 1000;
 }
 
-/* 로고 이미지 스타일 (150*800 비율 대응) */
 .logo img {
   height: 36px;
   width: auto;
@@ -51,12 +50,11 @@ header {
   display: block;
 }
 
-/* 하늘/보라 -45도 그라데이션 테두리 검색창 */
 .search-gradient-wrap {
   flex: 1;
   max-width: 500px;
   margin: 0 20px;
-  padding: 2px; /* 그라데이션 두께 */
+  padding: 2px;
   background: var(--gradient-main);
   border-radius: 6px;
 }
@@ -142,14 +140,52 @@ main {
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 20px;
+  margin-bottom: 16px;
 }
 
 .btn-primary {
   background: var(--gradient-main);
   color: white;
   border: none;
-  padding: 10px 16px;
+  padding: 8px 16px;
   border-radius: 4px;
   font-weight: bold;
   cursor: pointer;
+}
+
+.btn-danger {
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+input[type="text"], input[type="password"], input[type="number"], textarea, select {
+  width: 100%;
+  padding: 8px;
+  margin-top: 6px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--card-bg);
+  color: var(--text-color);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  border: 1px solid var(--border-color);
+  padding: 10px;
+  text-align: left;
+  font-size: 14px;
+}
+
+th {
+  background-color: var(--border-color);
 }
