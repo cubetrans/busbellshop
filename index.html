@@ -11,16 +11,15 @@
 <body>
   <header>
     <div class="logo">
-      <a href="index.html"><img src="icon.svg" alt="버스벨샵 로고"></a>
+      <a href="index.html"><img src="icon.png" alt="버스벨샵 로고"></a>
     </div>
     <div class="search-gradient-wrap">
       <div class="search-container">
-        <input type="text" placeholder="상품명, 지역, 부품 검색">
+        <input type="text" placeholder="통합 검색">
       </div>
     </div>
-    <div class="header-actions">
+    <div class="header-actions" id="auth-menu-area">
       <button onclick="toggleTheme()">테마 변경</button>
-      <a href="mypage.html">마이페이지</a>
     </div>
   </header>
 
@@ -35,16 +34,8 @@
     <div class="section-title">버스벨샵에 오신 것을 환영합니다!</div>
     <div class="content-box">
       <p>나이, 성별, 국적 제한 없이 누구나 자유롭게 버스 부품을 사고팔 수 있는 공간입니다.</p>
-      <p style="margin-top: 10px; color: var(--text-secondary);">상단 메뉴를 통해 중고마켓과 커뮤니티를 이용해보세요.</p>
+      <p style="margin-top: 10px; color: var(--text-secondary);">에스크로 안전결제 시스템과 특수회원 쿠폰 할인 혜택을 지원합니다.</p>
     </div>
   </main>
-
-  <script>
-    // 관리자 권한 메뉴 노출 제어
-    const user = getCurrentUser();
-    if (user && user.role === '관리자') {
-      document.getElementById('admin-nav').style.display = 'block';
-    }
-  </script>
 </body>
 </html>
