@@ -3,79 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>버스벨 샵 - 커뮤니티</title>
+    <title>하차벨 커뮤니티</title>
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { font-family: 'Apple SD Gothic Neo', sans-serif; margin: 0; padding: 0; background-color: #f8f9fa; color: #333; }
-        header { background: #fff; padding: 15px 20px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
-        .logo img { height: 40px; display: block; }
-        nav a { margin-left: 20px; text-decoration: none; color: #555; font-weight: bold; }
-        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
-        .tab-btn { background: none; border: none; font-size: 16px; font-weight: bold; cursor: pointer; padding: 8px 15px; border-radius: 4px; color: #555; }
-        .tab-btn.active { background: #007bff; color: white; }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .btn { background: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn:hover { background: #0056b3; }
-        .post-list { background: white; border-radius: 8px; border: 1px solid #ddd; overflow: hidden; }
-        .post-item { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .post-item:last-child { border-bottom: none; }
-        .post-title { font-weight: bold; font-size: 16px; }
-        .post-info { font-size: 12px; color: #777; margin-top: 5px; }
-        /* 모달 */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 30px; border-radius: 8px; width: 400px; max-width: 90%; }
-        .modal-content input, .modal-content textarea, .modal-content select { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-    </style>
 </head>
 <body>
-
-    <header>
-        <div class="logo">
-            <img src="logo.png" alt="Logo">
+    <header class="site-header">
+        <div class="logo-container">
+            <a href="index.html"><img src="logo.png" alt="Bus Bell Shop" class="header-logo"></a>
         </div>
         <nav>
-            <a href="index.html">홈</a>
             <a href="market.html">장터</a>
             <a href="community.html">커뮤니티</a>
         </nav>
     </header>
 
-    <div class="container">
-        <!-- 게시판 탭 -->
-        <div class="tabs">
+    <main class="community-container">
+        <h2>하차벨 커뮤니티</h2>
+        
+        <!-- 게시판 카테고리 탭 -->
+        <div class="board-tabs">
             <button class="tab-btn active" onclick="switchCategory('notice')">공지게시판</button>
             <button class="tab-btn" onclick="switchCategory('qna')">질문게시판</button>
             <button class="tab-btn" onclick="switchCategory('showcase')">수집/자랑게시판</button>
         </div>
 
-        <div class="top-bar">
-            <h2 id="boardTitle">공지게시판</h2>
-            <button class="btn" onclick="openWriteModal()">글쓰기</button>
+        <div class="community-actions">
+            <button id="open-write-btn" class="btn-primary">글쓰기</button>
+        </div>
+
+        <!-- 글 작성 모달 -->
+        <div id="write-modal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <h3>새 게시글 작성</h3>
+                <form id="post-form">
+                    <select id="post-category" required>
+                        <option value="notice">공지게시판 (관리자 전용)</option>
+                        <option value="qna">질문게시판</option>
+                        <option value="showcase">수집/자랑게시판</option>
+                    </select>
+                    <input type="text" id="post-title" placeholder="제목" required>
+                    <textarea id="post-content" placeholder="내용을 입력하세요" required></textarea>
+                    <button type="submit" class="btn-primary">작성완료</button>
+                    <button type="button" id="close-write-btn" class="btn-secondary">취소</button>
+                </form>
+            </div>
         </div>
 
         <!-- 게시글 목록 -->
         <div id="post-list" class="post-list">
-            <p style="padding: 20px; text-align: center;">게시글을 불러오는 중...</p>
+            <!-- 게시글 동적 로드 -->
         </div>
-    </div>
-
-    <!-- 글쓰기 모달 -->
-    <div id="writeModal" class="modal">
-        <div class="modal-content">
-            <h3>글 작성하기</h3>
-            <select id="wCategory">
-                <option value="notice">공지게시판 (관리자 전용)</option>
-                <option value="qna">질문게시판</option>
-                <option value="showcase">수집/자랑게시판</option>
-            </select>
-            <input type="text" id="wTitle" placeholder="제목">
-            <input type="text" id="wAuthor" placeholder="작성자명 (또는 관리자 여부)">
-            <textarea id="wContent" placeholder="내용을 입력하세요" rows="5"></textarea>
-            <button class="btn" style="width: 100%;" onclick="createPost()">등록</button>
-            <button class="btn" style="width: 100%; background: #6c757d; margin-top: 5px;" onclick="closeWriteModal()">취소</button>
-        </div>
-    </div>
+    </main>
 
     <script>
         const SUPABASE_URL = 'https://ipgzhipiebcnkfqzufgm.supabase.co';
@@ -84,100 +63,119 @@
 
         let currentCategory = 'notice';
 
-        document.addEventListener("DOMContentLoaded", () => {
-            fetchPosts();
-        });
-
-        function switchCategory(category) {
+        async function switchCategory(category) {
             currentCategory = category;
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
-            
-            const titles = { notice: '공지게시판', qna: '질문게시판', showcase: '수집/자랑게시판' };
-            document.getElementById('boardTitle').innerText = titles[category];
-            fetchPosts();
+            loadPosts();
         }
 
-        async function fetchPosts() {
-            const listEl = document.getElementById('post-list');
+        async function loadPosts() {
+            const postListEl = document.getElementById('post-list');
+            postListEl.innerHTML = '<p>글 목록을 불러오는 중...</p>';
+
             const { data, error } = await supabaseClient
-                .from('community_posts')
+                .from('posts')
                 .select('*')
                 .eq('category', currentCategory)
                 .order('created_at', { ascending: false });
 
             if (error) {
-                listEl.innerHTML = '<p style="padding: 20px;">게시글을 불러오지 못했습니다.</p>';
+                postListEl.innerHTML = '<p>게시글을 불러오지 못했습니다.</p>';
                 return;
             }
 
-            if (!data || data.length === 0) {
-                listEl.innerHTML = '<p style="padding: 20px; text-align: center; color: #777;">작성된 글이 없습니다.</p>';
+            if (data.length === 0) {
+                postListEl.innerHTML = '<p>등록된 게시글이 없습니다.</p>';
                 return;
             }
 
-            listEl.innerHTML = data.map(post => `
-                <div class="post-item">
-                    <div>
-                        <div class="post-title">${escapeHtml(post.title)}</div>
-                        <div class="post-info">작성자: ${escapeHtml(post.author)} | 작성일: ${new Date(post.created_at).toLocaleDateString()}</div>
+            const { data: { user } } = await supabaseClient.auth.getUser();
+
+            postListEl.innerHTML = '';
+            data.forEach(post => {
+                const item = document.createElement('div');
+                item.className = 'post-item';
+                
+                let actionButtons = '';
+                // 작성자 본인 혹은 관리자일 경우 수정/삭제 버튼 노출 (관리자 여부는 profiles 테이블의 role 또는 이메일 등으로 체크 가능)
+                if (user && user.id === post.user_id) {
+                    actionButtons = `
+                        <button onclick="deletePost('${post.id}')" class="btn-danger-sm">삭제</button>
+                    `;
+                }
+
+                item.innerHTML = `
+                    <div class="post-header-info">
+                        <h4>${post.title}</h4>
+                        <span class="post-date">${new Date(post.created_at).toLocaleDateString()}</span>
                     </div>
-                    <div>
-                        <button class="btn" style="background: #dc3545; padding: 5px 10px; font-size: 12px;" onclick="deletePost('${post.id}', '${post.author}')">삭제</button>
+                    <p class="post-body">${post.content}</p>
+                    <div class="post-footer">
+                        <span>작성자: ${post.author_name || '익명'}</span>
+                        ${actionButtons}
                     </div>
-                </div>
-            `).join('');
+                `;
+                postListEl.appendChild(item);
+            });
         }
 
-        function openWriteModal() { document.getElementById('writeModal').style.display = 'flex'; }
-        function closeWriteModal() { document.getElementById('writeModal').style.display = 'none'; }
-
-        async function createPost() {
-            const category = document.getElementById('wCategory').value;
-            const title = document.getElementById('wTitle').value;
-            const author = document.getElementById('wAuthor').value;
-            const content = document.getElementById('wContent').value;
-
-            if (!title || !author || !content) {
-                alert('모든 항목을 입력해주세요.');
+        const writeModal = document.getElementById('write-modal');
+        document.getElementById('open-write-btn').addEventListener('click', async () => {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (!user) {
+                alert('로그인이 필요합니다.');
+                window.location.href = 'login.html';
                 return;
             }
 
-            // 공지게시판 권한 검증 예시 (실제 관리자 검증 로직에 맞게 조정 가능)
-            if (category === 'notice' && !author.includes('관리자')) {
-                alert('공지게시판은 관리자만 작성할 수 있습니다.');
-                return;
+            // 공지게시판은 관리자만 작성 가능 체크 예시 (유저 메타데이터 혹은 권한 확인)
+            if (currentCategory === 'notice') {
+                // 필요시 관리자 이메일 또는 권한 검증 로직 추가
             }
 
-            const { error } = await supabaseClient.from('community_posts').insert([{ category, title, author, content }]);
+            writeModal.style.display = 'flex';
+        });
+
+        document.getElementById('close-write-btn').addEventListener('click', () => { writeModal.style.display = 'none'; });
+
+        document.getElementById('post-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            const category = document.getElementById('post-category').value;
+            const title = document.getElementById('post-title').value;
+            const content = document.getElementById('post-content').value;
+
+            if (category === 'notice') {
+                // 관리자 권한 확인 로직 추가 가능
+            }
+
+            const { error } = await supabaseClient.from('posts').insert([
+                { category, title, content, user_id: user.id, author_name: user.email.split('@')[0] }
+            ]);
+
             if (error) {
-                alert('글 작성 실패: ' + error.message);
+                alert('작성 실패: ' + error.message);
             } else {
-                alert('글이 등록되었습니다.');
-                closeWriteModal();
-                fetchPosts();
+                alert('게시글이 등록되었습니다.');
+                writeModal.style.display = 'none';
+                loadPosts();
+            }
+        });
+
+        async function deletePost(postId) {
+            if (confirm('정말 삭제하시겠습니까?')) {
+                const { error } = await supabaseClient.from('posts').delete().eq('id', postId);
+                if (error) {
+                    alert('삭제 실패: ' + error.message);
+                } else {
+                    alert('삭제되었습니다.');
+                    loadPosts();
+                }
             }
         }
 
-        async function deletePost(id, author) {
-            const passwordOrAuth = prompt('작성자 본인 또는 관리진일 경우 삭제 권한이 있습니다. 확인용 이름을 입력하세요:');
-            if (passwordOrAuth !== author && !passwordOrAuth.includes('관리자')) {
-                alert('삭제 권한이 없습니다.');
-                return;
-            }
-
-            const { error } = await supabaseClient.from('community_posts').delete().eq('id', id);
-            if (error) {
-                alert('삭제 실패: ' + error.message);
-            } else {
-                alert('게시글이 삭제되었습니다.');
-                fetchPosts();
-            }
-        }
-
-        function escapeHtml(str) {
-            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
-        }
+        loadPosts();
     </script>
 </body>
 </html>
