@@ -4,18 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>버스벨샵 - 홈</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
-    <div class="logo"><a href="index.html">버스벨샵</a></div>
-    <div class="search-container">
-      <input type="text" placeholder="상품명, 지역, 브랜드 등 통합검색">
+    <div class="logo">
+      <a href="index.html"><img src="icon.png" alt="버스벨샵 로고"></a>
+    </div>
+    <div class="search-gradient-wrap">
+      <div class="search-container">
+        <input type="text" placeholder="상품명, 지역, 부품 검색">
+      </div>
     </div>
     <div class="header-actions">
       <button onclick="toggleTheme()">테마 변경</button>
-      <a href="mypage.html">내정보</a>
+      <a href="mypage.html">마이페이지</a>
     </div>
   </header>
 
@@ -23,29 +28,23 @@
     <a href="index.html" class="active">홈</a>
     <a href="market.html">중고마켓</a>
     <a href="community.html">커뮤니티</a>
-    <a href="admin.html">관리자</a>
+    <a href="admin.html" id="admin-nav" style="display:none;">관리자</a>
   </nav>
 
   <main>
-    <div class="section-title">오늘의 추천 상품</div>
-    <div class="product-grid">
-      <a href="market.html" class="product-card">
-        <div class="product-thumb">상품 이미지</div>
-        <div class="product-info">
-          <div class="product-title">하차벨 컨트롤 박스 커스텀 부품 세트 판매</div>
-          <div class="product-price">15,000원</div>
-          <div class="product-meta">서울시 · 5분 전</div>
-        </div>
-      </a>
-      <a href="market.html" class="product-card">
-        <div class="product-thumb">상품 이미지</div>
-        <div class="product-info">
-          <div class="product-title">대중교통 안내방송 음원 및 철도 굿즈 일괄</div>
-          <div class="product-price">30,000원</div>
-          <div class="product-meta">경기도 · 1시간 전</div>
-        </div>
-      </a>
+    <div class="section-title">버스벨샵에 오신 것을 환영합니다!</div>
+    <div class="content-box">
+      <p>나이, 성별, 국적 제한 없이 누구나 자유롭게 버스 부품을 사고팔 수 있는 공간입니다.</p>
+      <p style="margin-top: 10px; color: var(--text-secondary);">상단 메뉴를 통해 중고마켓과 커뮤니티를 이용해보세요.</p>
     </div>
   </main>
+
+  <script>
+    // 관리자 권한 메뉴 노출 제어
+    const user = getCurrentUser();
+    if (user && user.role === '관리자') {
+      document.getElementById('admin-nav').style.display = 'block';
+    }
+  </script>
 </body>
 </html>
