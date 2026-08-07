@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>장터 - 버스벨샵</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <div class="header-left">
+      <a href="index.html" class="logo">
+        <img src="icon.png" alt="logo" width="30" height="30" onerror="this.style.display='none'"> Bus Bell Shop
+      </a>
+      <ul class="nav-menu">
+        <li><a href="index.html">홈</a></li>
+        <li><a href="market.html">장터</a></li>
+        <li><a href="community.html">커뮤니티</a></li>
+        <li><a href="support.html">고객센터</a></li>
+      </ul>
+    </div>
+
+    <div class="header-right">
+      <span class="user-info user-greeting">로그인이 필요합니다</span>
+      <button class="theme-toggle-btn">🌙 다크모드</button>
+      <a href="mypage.html" class="btn btn-outline auth-action">마이페이지</a>
+      <a href="login.html" class="btn btn-primary auth-action">로그인</a>
+      <button class="hamburger">☰</button>
+    </div>
+
+    <div class="mobile-menu">
+      <div class="user-greeting mobile-user-greeting">로그인이 필요합니다</div>
+      <ul>
+        <li><a href="index.html">홈</a></li>
+        <li><a href="market.html">장터</a></li>
+        <li><a href="community.html">커뮤니티</a></li>
+        <li><a href="support.html">고객센터</a></li>
+        <li><a href="mypage.html">마이페이지</a></li>
+        <li><a href="#" class="logout-btn">로그아웃</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <div class="container">
+    <h2>중고 장터</h2>
+    <p style="margin-bottom: 20px;">교통 부품 및 용품을 안전하게 거래하세요.</p>
+
+    <!-- 장터 검색 기능 -->
+    <div class="search-container">
+      <input type="text" id="search-input" placeholder="장터 검색 (제목, 내용)...">
+      <button id="search-btn" class="btn btn-primary">검색</button>
+    </div>
+
+    <div class="card">
+      <h3>상품 등록하기</h3>
+      <form id="market-post-form" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+        <input type="text" id="post-title" placeholder="상품명을 입력하세요" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
+        <input type="text" id="post-price" placeholder="가격을 입력하세요 (예: 15,000원)" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
+        <textarea id="post-content" placeholder="상품 설명을 입력하세요" rows="4" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;"></textarea>
+        <button type="submit" class="btn btn-primary" style="align-self: flex-start;">등록하기</button>
+      </form>
+    </div>
+
+    <div id="market-list"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

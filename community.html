@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>커뮤니티 - 버스벨샵</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <div class="header-left">
+      <a href="index.html" class="logo">
+        <img src="icon.png" alt="logo" onerror="this.style.display='none'">
+      </a>
+      <ul class="nav-menu">
+        <li><a href="index.html">홈</a></li>
+        <li><a href="market.html">장터</a></li>
+        <li><a href="community.html">커뮤니티</a></li>
+        <li><a href="support.html">고객센터</a></li>
+      </ul>
+    </div>
+
+    <div class="header-right">
+      <span class="user-info user-greeting">로그인이 필요합니다</span>
+      <button class="theme-toggle-btn">🌙</button>
+      <a href="mypage.html" class="btn btn-outline auth-action">마이페이지</a>
+      <a href="login.html" class="btn btn-primary auth-action">로그인</a>
+      <button class="hamburger">☰</button>
+    </div>
+
+    <div class="mobile-menu">
+      <div class="user-greeting mobile-user-greeting">로그인이 필요합니다</div>
+      <ul>
+        <li><a href="index.html">홈</a></li>
+        <li><a href="market.html">장터</a></li>
+        <li><a href="community.html">커뮤니티</a></li>
+        <li><a href="support.html">고객센터</a></li>
+        <li><a href="mypage.html">마이페이지</a></li>
+        <li><a href="#" class="logout-btn">로그아웃</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <div class="container">
+    <h2>동호인 커뮤니티</h2>
+    <p style="margin-bottom: 20px;">버스 및 대중교통에 대한 이야기를 나누는 공간입니다.</p>
+
+    <div class="search-container">
+      <input type="text" id="search-input" placeholder="커뮤니티 검색...">
+      <button id="search-btn" class="btn btn-primary">검색</button>
+    </div>
+
+    <div id="community-list">
+      <div class="card">
+        <h3>서울 시내버스 노선 개편 토론</h3>
+        <p><strong>작성자:</strong> 서울교덕</p>
+        <p style="margin-top: 10px;">이번에 신설되는 노선 다들 어떻게 보시나요?</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
