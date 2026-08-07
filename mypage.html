@@ -1,58 +1,76 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js"></script>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>마이페이지 - 버스벨샵</title>
+  <link rel="stylesheet" href="style.css">
 </head>
+<body>
+
   <header>
-  <div class="logo">
-    <a href="index.html"><img src="icon.png" alt="로고"></a>
-  </div>
-  
-  <div class="search-gradient-wrap">
-    <div class="search-container">
-      <input type="text" id="search-input" placeholder="검색...">
+    <div class="header-left">
+      <a href="index.html" class="logo">
+        <img src="icon.png" alt="logo" width="30" height="30" onerror="this.style.display='none'"> Bus Bell Shop
+      </a>
+      <ul class="nav-menu">
+        <li><a href="index.html">홈</a></li>
+        <li><a href="market.html">장터</a></li>
+        <li><a href="community.html">커뮤니티</a></li>
+        <li><a href="support.html">고객센터</a></li>
+      </ul>
+    </div>
+
+    <div class="header-right">
+      <span class="user-info user-greeting">로그인이 필요합니다</span>
+      <button class="theme-toggle-btn">🌙 다크모드</button>
+      <a href="mypage.html" class="btn btn-outline auth-action">마이페이지</a>
+      <a href="login.html" class="btn btn-primary auth-action">로그인</a>
+      <button class="hamburger">☰</button>
+    </div>
+
+    <div class="mobile-menu">
+      <div class="user-greeting mobile-user-greeting">로그인이 필요합니다</div>
+      <ul>
+        <li><a href="index.html">홈</a></li>
+        <li><a href="market.html">장터</a></li>
+        <li><a href="community.html">커뮤니티</a></li>
+        <li><a href="support.html">고객센터</a></li>
+        <li><a href="mypage.html">마이페이지</a></li>
+        <li><a href="#" class="logout-btn">로그아웃</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <div class="container">
+    <h2>마이페이지</h2>
+    
+    <div class="card" style="margin-top: 20px;">
+      <h3>회원 정보</h3>
+      <p id="mypage-user-info" style="margin-top: 10px;">로그인 정보를 불러오는 중...</p>
+    </div>
+
+    <div class="card">
+      <h2>내 주문 내역</h2>
+      <div style="margin-top: 15px;">
+        <p>상품: 현대 짧은 도어스위치 | 가격: 5,000원</p>
+        <p>상태: 처리 불가</p>
+      </div>
     </div>
   </div>
 
-  <!-- 이 영역이 자바스크립트에 의해 동적으로 채워집니다 -->
-  <div class="header-actions" id="auth-menu-area"></div>
-</header>
-
-<nav class="sub-nav" id="sub-nav">
-  <a href="index.html">홈</a>
-  <a href="market.html">중고마켓</a>
-  <a href="community.html">커뮤니티</a>
-  <a href="mypage.html">마이페이지</a>
-  <a href="admin.html" id="admin-nav" style="display:none;">관리자</a>
-</nav>
-<body>
-  <main>
-    <h2>내 주문 내역</h2>
-    <div id="my-orders" class="content-box"></div>
-  </main>
-
+  <script src="app.js"></script>
   <script>
-    async function loadMyOrders() {
-      const user = getLoggedInUser();
-      if(!user) { alert('로그인 필요'); return; }
-      
-      const { data } = await supabaseClient
-        .from('orders')
-        .select('*')
-        .eq('buyer_nickname', user.nickname);
-
-      const area = document.getElementById('my-orders');
-      area.innerHTML = data.map(o => `
-        <div style="border-bottom:1px solid #ccc; padding:10px;">
-          <p>상품: ${o.item_title} | 가격: ${o.amount.toLocaleString()}원</p>
-          <p>상태: <strong>${o.status}</strong></p>
-        </div>
-      `).join('');
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (currentUser) {
+      document.getElementById('mypage-user-info').innerHTML = `
+        아이디(이름): <strong>${currentUser.username}</strong><br>
+        계좌번호: <strong>${currentUser.accountNum || '미등록'}</strong><br>
+        회원 등급: <strong>${currentUser.role === 'admin' ? '관리자' : '일반 회원'}</strong>
+      `;
+    } else {
+      document.getElementById('mypage-user-info').innerHTML = '로그인이 필요합니다. <a href="login.html">로그인하기</a>';
     }
-    loadMyOrders();
   </script>
 </body>
 </html>
