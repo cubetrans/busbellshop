@@ -3,27 +3,368 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>버스벨 샵</title>
-    <link rel="stylesheet" href="style.css">
+    <title>버스 하차벨 전문 쇼핑몰 - Bus Bell Shop</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-    <header>
-        <div class="logo"><a href="index.html">버스벨 샵</a></div>
-        <nav>
-            <a href="index.html" class="active">홈</a>
-            <a href="market.html">장터</a>
-            <a href="community.html">커뮤니티</a>
-            <a href="mypage.html">마이페이지</a>
-            <a href="support.html">고객센터</a>
-            <a href="admin.html">관리자</a>
-            <a href="login.html">로그인</a>
-        </nav>
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+    <!-- 상단 네비게이션 -->
+    <header class="bg-blue-600 text-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-bus text-2xl"></i>
+                <span class="text-xl font-bold tracking-tight">Bus Bell Shop</span>
+            </div>
+            <nav class="hidden md:flex space-x-6 text-sm font-medium">
+                <a href="#shop" class="hover:text-blue-200 transition">스토어</a>
+                <a href="#customizer" class="hover:text-blue-200 transition">하차벨 커스텀 제작</a>
+                <a href="#cart" class="hover:text-blue-200 transition">장바구니</a>
+                <a href="#support" class="hover:text-blue-200 transition">고객센터</a>
+            </nav>
+            <div class="flex items-center space-x-4">
+                <button onclick="openCartModal()" class="relative bg-blue-700 hover:bg-blue-800 px-3 py-2 rounded-lg transition">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span id="cart-badge" class="absolute -top-1 -right-1 bg-red-500 text-xs w-5 h-5 flex items-center justify-center rounded-full font-bold">0</span>
+                </button>
+            </div>
+        </div>
     </header>
-    <div class="container" style="text-align: center; margin-top: 80px;">
-        <h1>버스벨 샵에 오신 것을 환영합니다!</h1>
-        <p style="color: #666; margin-bottom: 30px;">교통 소품 거래 및 소통을 위한 공간입니다.</p>
-        <a href="market.html" class="btn">장터 구경하기</a>
-        <a href="community.html" class="btn" style="background: #6c757d; margin-left: 10px;">커뮤니티 가기</a>
+
+    <!-- 메인 컨테이너 -->
+    <main class="container mx-auto px-4 py-8 space-y-12">
+
+        <!-- 히어로 섹션 -->
+        <section class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white rounded-2xl p-8 md:p-12 shadow-lg flex flex-col md:flex-row items-center justify-between">
+            <div class="space-y-4 max-w-xl">
+                <span class="bg-blue-500 bg-opacity-50 text-blue-100 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Custom Mobility Parts</span>
+                <h1 class="text-3xl md:text-5xl font-extrabold leading-tight">나만의 하차벨 & ABS 컨트롤 박스 제작</h1>
+                <p class="text-blue-100 text-sm md:text-base">실제 버스 부품부터 커스텀 무선 하차벨까지, 완벽한 싱크로율의 하차벨 시스템을 만나보세요.</p>
+                <div class="pt-2">
+                    <a href="#customizer" class="bg-white text-blue-700 font-bold px-6 py-3 rounded-xl shadow hover:bg-blue-50 transition">커스텀 제작 시작하기</a>
+                </div>
+            </div>
+            <div class="mt-8 md:mt-0">
+                <div class="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20 text-center shadow-inner">
+                    <i class="fa-solid fa-bell text-yellow-400 text-6xl mb-3 animate-bounce"></i>
+                    <p class="font-semibold text-lg">실제 작동형 스마트 하차벨</p>
+                    <p class="text-xs text-blue-200 mt-1">블루투스 및 무선 연동 지원</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 상품 목록 섹션 (스토어) -->
+        <section id="shop" class="space-y-6">
+            <div class="flex justify-between items-end">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">추천 하차벨 및 부품</h2>
+                    <p class="text-sm text-gray-500 mt-1">엄선된 고품질 하차벨과 컨트롤 박스 라인업입니다.</p>
+                </div>
+                <div class="text-sm text-blue-600 font-semibold cursor-pointer hover:underline">전체보기 &rarr;</div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <!-- 상품 1 -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition flex flex-col">
+                    <div class="bg-gray-100 h-48 flex items-center justify-center text-gray-400">
+                        <i class="fa-solid fa-box-open text-5xl"></i>
+                    </div>
+                    <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+                        <div>
+                            <span class="text-xs text-blue-600 font-semibold uppercase">컨트롤 박스</span>
+                            <h3 class="font-bold text-lg text-gray-800 mt-1">ABS 커스텀 컨트롤 박스 (타공형)</h3>
+                            <p class="text-gray-500 text-xs mt-1">하차벨 장착을 위한 최적의 ABS 재질 컨트롤 박스</p>
+                        </div>
+                        <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                            <span class="font-extrabold text-lg text-gray-900">15,000원</span>
+                            <button onclick="addToCart('ABS 커스텀 컨트롤 박스', 15000)" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition">담기</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 상품 2 -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition flex flex-col">
+                    <div class="bg-gray-100 h-48 flex items-center justify-center text-gray-400">
+                        <i class="fa-solid fa-bell text-5xl text-red-500"></i>
+                    </div>
+                    <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+                        <div>
+                            <span class="text-xs text-blue-600 font-semibold uppercase">하차벨 부품</span>
+                            <h3 class="font-bold text-lg text-gray-800 mt-1">현대/대우 시내버스용 정품형 하차벨</h3>
+                            <p class="text-gray-500 text-xs mt-1">LED 내장형, 딸깍 소리가 선명한 표준형 하차벨</p>
+                        </div>
+                        <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                            <span class="font-extrabold text-lg text-gray-900">12,500원</span>
+                            <button onclick="addToCart('시내버스용 정품형 하차벨', 12500)" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition">담기</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 상품 3 -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition flex flex-col">
+                    <div class="bg-gray-100 h-48 flex items-center justify-center text-gray-400">
+                        <i class="fa-solid fa-microchip text-5xl text-indigo-500"></i>
+                    </div>
+                    <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+                        <div>
+                            <span class="text-xs text-blue-600 font-semibold uppercase">제어 모듈</span>
+                            <h3 class="font-bold text-lg text-gray-800 mt-1">아두이노 무선 하차벨 수신 키트</h3>
+                            <p class="text-gray-500 text-xs mt-1">음성 출력 및 LED 점등을 제어하는 마이크로 컨트롤러 세트</p>
+                        </div>
+                        <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                            <span class="font-extrabold text-lg text-gray-900">28,000원</span>
+                            <button onclick="addToCart('아두이노 무선 하차벨 수신 키트', 28000)" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition">담기</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 상품 4 -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition flex flex-col">
+                    <div class="bg-gray-100 h-48 flex items-center justify-center text-gray-400">
+                        <i class="fa-solid fa-volume-high text-5xl text-green-500"></i>
+                    </div>
+                    <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+                        <div>
+                            <span class="text-xs text-blue-600 font-semibold uppercase">음향 장치</span>
+                            <h3 class="font-bold text-lg text-gray-800 mt-1">차내 안내방송 멜로디 모듈</h3>
+                            <p class="text-gray-500 text-xs mt-1">"잠시 후 뵙겠습니다" 및 하차음 내장형 스피커</p>
+                        </div>
+                        <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                            <span class="font-extrabold text-lg text-gray-900">19,000원</span>
+                            <button onclick="addToCart('차내 안내방송 멜로디 모듈', 19000)" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition">담기</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 하차벨 커스텀 제작 및 시뮬레이터 섹션 (빠진 핵심 기능 추가) -->
+        <section id="customizer" class="bg-white rounded-2xl p-6 md:p-10 shadow-sm border border-gray-100 space-y-6">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">하차벨 맞춤 커스텀 제작 시뮬레이터</h2>
+                <p class="text-sm text-gray-500 mt-1">원하는 사양을 선택하여 나만의 하차벨 컨트롤 박스를 구성하고 즉시 주문하세요.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <!-- 옵션 선택 폼 -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">1. 컨트롤 박스 케이스 선택</label>
+                        <select id="custom-case" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <option value="15000">ABS 소형 컨트롤 박스 (1구) - 15,000원</option>
+                            <option value="22000">ABS 중형 컨트롤 박스 (2구) - 22,000원</option>
+                            <option value="30000">특수 확장형 컨트롤 박스 (멀티) - 30,000원</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">2. 하차벨 타입</label>
+                        <select id="custom-bell" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <option value="12500">신형 LED 원형 하차벨 - 12,500원</option>
+                            <option value="10000">구형 사각 하차벨 - 10,000원</option>
+                            <option value="18000">점자/음성동시지원 하차벨 - 18,000원</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">3. 추가 모듈 선택</label>
+                        <div class="space-y-2 text-sm">
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" value="8000" class="custom-addon rounded text-blue-600" checked>
+                                <span>무선 리모컨 연동 모듈 (+8,000원)</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" value="5000" class="custom-addon rounded text-blue-600">
+                                <span>고출력 부저 스피커 (+5,000원)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-gray-100 flex items-center justify-between">
+                        <div>
+                            <span class="text-xs text-gray-500 block">예상 견적 금액</span>
+                            <span id="custom-total-price" class="text-2xl font-extrabold text-blue-600">35,500원</span>
+                        </div>
+                        <button onclick="addCustomToCart()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-3 rounded-xl transition shadow">커스텀 제품 장바구니 담기</button>
+                    </div>
+                </div>
+
+                <!-- 실시간 시뮬레이션 미리보기 패널 -->
+                <div class="bg-gray-900 text-white rounded-2xl p-6 flex flex-col items-center justify-center space-y-6 relative overflow-hidden min-h-[300px]">
+                    <div class="absolute top-4 left-4 text-xs text-gray-400 font-mono">LIVE PREVIEW SIMULATOR</div>
+                    
+                    <!-- 시뮬레이션 벨 버튼 -->
+                    <div id="sim-bell-btn" onclick="triggerBellSound()" class="w-32 h-32 rounded-full bg-red-600 shadow-2xl flex items-center justify-center cursor-pointer hover:bg-red-500 active:scale-95 transition border-4 border-red-400">
+                        <span class="text-white font-bold text-lg tracking-widest drop-shadow">하 차</span>
+                    </div>
+
+                    <div class="text-center space-y-1">
+                        <p id="sim-status-text" class="text-sm font-medium text-gray-300">버튼을 눌러 하차벨 동작을 테스트해보세요.</p>
+                        <p class="text-xs text-gray-500">컨트롤 박스 타공 및 회로 연동 상태 시뮬레이션</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="bg-gray-900 text-gray-400 py-10 mt-20">
+        <div class="container mx-auto px-4 text-center space-y-4">
+            <p class="font-bold text-white text-lg">Bus Bell Shop & 큐브트랜스</p>
+            <p class="text-xs">버스와 대중교통을 사랑하는 크리에이터와 메이커를 위한 전문 쇼핑 플랫폼</p>
+            <p class="text-xs text-gray-600">&copy; 2026 Bus Bell Shop. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- 장바구니 모달 -->
+    <div id="cart-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl w-full max-w-lg p-6 space-y-6 shadow-2xl m-4">
+            <div class="flex justify-between items-center border-b pb-4">
+                <h3 class="text-xl font-bold text-gray-900">장바구니</h3>
+                <button onclick="closeCartModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div id="cart-items-container" class="space-y-3 max-h-60 overflow-y-auto">
+                <!-- 장바구니 아이템 목록이 동적으로 들어감 -->
+                <p class="text-gray-500 text-center py-8 text-sm">장바구니가 비어 있습니다.</p>
+            </div>
+            <div class="border-t pt-4 flex justify-between items-center">
+                <span class="font-bold text-gray-700">총 결제금액:</span>
+                <span id="cart-total-price" class="text-xl font-extrabold text-blue-600">0원</span>
+            </div>
+            <button onclick="checkout()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition">주문하기</button>
+        </div>
     </div>
+
+    <!-- 스크립트 로직 -->
+    <script>
+        let cart = [];
+
+        // 장바구니 추가 함수
+        function addToCart(name, price) {
+            cart.push({ name, price });
+            updateCartBadge();
+            alert(`"${name}" 상품이 장바구니에 담겼습니다.`);
+        }
+
+        // 커스텀 제품 가격 계산 및 장바구니 담기
+        const caseSelect = document.getElementById('custom-case');
+        const bellSelect = document.getElementById('custom-bell');
+        const checkboxes = document.querySelectorAll('.custom-addon');
+        const totalPriceEl = document.getElementById('custom-total-price');
+
+        function updateCustomPrice() {
+            let total = parseInt(caseSelect.value) + parseInt(bellSelect.value);
+            checkboxes.forEach(cb => {
+                if (cb.checked) total += parseInt(cb.value);
+            });
+            totalPriceEl.textContent = total.toLocaleString() + '원';
+        }
+
+        caseSelect.addEventListener('change', updateCustomPrice);
+        bellSelect.addEventListener('change', updateCustomPrice);
+        checkboxes.forEach(cb => cb.addEventListener('change', updateCustomPrice));
+        updateCustomPrice();
+
+        function addCustomToCart() {
+            let total = parseInt(caseSelect.value) + parseInt(bellSelect.value);
+            checkboxes.forEach(cb => {
+                if (cb.checked) total += parseInt(cb.value);
+            });
+            cart.push({ name: '커스텀 하차벨 컨트롤 박스 세트', price: total });
+            updateCartBadge();
+            alert('커스텀 제작 상품이 장바구니에 담겼습니다.');
+        }
+
+        // 장바구니 모달 제어
+        function updateCartBadge() {
+            document.getElementById('cart-badge').textContent = cart.length;
+        }
+
+        function openCartModal() {
+            const container = document.getElementById('cart-items-container');
+            const totalEl = document.getElementById('cart-total-price');
+            
+            if (cart.length === 0) {
+                container.innerHTML = `<p class="text-gray-500 text-center py-8 text-sm">장바구니가 비어 있습니다.</p>`;
+                totalEl.textContent = '0원';
+            } else {
+                container.innerHTML = '';
+                let total = 0;
+                cart.forEach((item, index) => {
+                    total += item.price;
+                    container.innerHTML += `
+                        <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg text-sm">
+                            <span>${item.name}</span>
+                            <div class="flex items-center space-x-3">
+                                <span class="font-bold">${item.price.toLocaleString()}원</span>
+                                <button onclick="removeItem(${index})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+                totalEl.textContent = total.toLocaleString() + '원';
+            }
+            document.getElementById('cart-modal').classList.remove('hidden');
+            document.getElementById('cart-modal').classList.add('flex');
+        }
+
+        function closeCartModal() {
+            document.getElementById('cart-modal').classList.remove('flex');
+            document.getElementById('cart-modal').classList.add('hidden');
+        }
+
+        function removeItem(index) {
+            cart.splice(index, 1);
+            updateCartBadge();
+            openCartModal();
+        }
+
+        function checkout() {
+            if (cart.length === 0) {
+                alert('장바구니가 비어 있습니다.');
+                return;
+            }
+            alert('주문이 정상적으로 완료되었습니다! 이용해 주셔서 감사합니다.');
+            cart = [];
+            updateCartBadge();
+            closeCartModal();
+        }
+
+        // 시뮬레이터 벨 사운드 및 효과
+        function triggerBellSound() {
+            const statusText = document.getElementById('sim-status-text');
+            const bellBtn = document.getElementById('sim-bell-btn');
+            
+            bellBtn.classList.add('scale-95', 'bg-red-700');
+            statusText.textContent = "🔔 '띵동~' 차내 하차벨이 울립니다!";
+            statusText.classList.add('text-yellow-400', 'font-bold');
+
+            // Web Audio API를 이용한 하차벨 소리 재생 (효과음 시뮬레이션)
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 음
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.8);
+            } catch (e) {
+                console.log('Audio context not supported or blocked');
+            }
+
+            setTimeout(() => {
+                bellBtn.classList.remove('scale-95', 'bg-red-700');
+                statusText.textContent = "버튼을 눌러 하차벨 동작을 테스트해보세요.";
+                statusText.classList.remove('text-yellow-400', 'font-bold');
+            }, 800);
+        }
+    </script>
 </body>
 </html>
