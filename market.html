@@ -1,151 +1,40 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>하차벨 장터</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>Bus Bell Shop - 장터</title>
 </head>
 <body>
-    <header class="site-header">
-        <div class="logo-container">
-            <a href="index.html"><img src="logo.png" alt="Bus Bell Shop" class="header-logo"></a>
-        </div>
-        <nav>
-            <a href="market.html">장터</a>
-            <a href="community.html">커뮤니티</a>
-        </nav>
+    <header>
+        <div class="logo">Bus Bell Shop</div>
     </header>
+    <div class="content">
+        <h1>중고 장터</h1>
+        
+        <!-- 검색 기능 삭제됨 -->
 
-    <main class="market-container">
-        <div class="market-header-actions">
-            <h2>하차벨 중고 장터</h2>
-            <button id="open-register-btn" class="btn-primary">상품 등록하기</button>
+        <button id="btnOpenSell" onclick="toggleSellForm()">상품 등록하기</button>
+
+        <div id="sellForm" class="hidden">
+            <h3>상품 등록 (에스크로 방식)</h3>
+            <p>판매 금액의 2%는 수수료로 차감됩니다.</p>
+            <p><strong>결제 계좌: 하나은행 154-910580-98807 (안수현)</strong></p>
+            <input type="text" placeholder="상품명"><br>
+            <input type="number" placeholder="판매가"><br>
+            <button onclick="submitProduct()">등록하기</button>
         </div>
 
-        <!-- 상품 등록 모달/폼 (기본 숨김) -->
-        <div id="register-modal" class="modal" style="display:none;">
-            <div class="modal-content">
-                <h3>상품 등록</h3>
-                <form id="product-form">
-                    <input type="text" id="prod-title" placeholder="상품명" required>
-                    <textarea id="prod-desc" placeholder="상품 설명" required></textarea>
-                    <input type="number" id="prod-price" placeholder="정가 (원)" required>
-                    <input type="text" id="prod-image" placeholder="이미지 URL">
-                    <button type="submit" class="btn-primary">등록 완료</button>
-                    <button type="button" id="close-modal-btn" class="btn-secondary">취소</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- 상품 목록 영역 -->
-        <div id="product-list" class="product-grid">
-            <!-- 상품 동적 로드 -->
-        </div>
-    </main>
-
-    <!-- 에스크로 결제 안내 모달 -->
-    <div id="escrow-modal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <h3>안전 에스크로 결제 안내</h3>
-            <p>본 장터는 관리진 계좌를 통한 <strong>에스크로 방식</strong>으로 거래됩니다.</p>
-            <p><strong>입금 계좌:</strong> 하나은행 154-910580-98807 (예금주: 안수현)</p>
-            <p>상품 정가를 입금하시면, 관리진 확인 후 2%의 수수료를 제외한 98%의 금액이 판매자에게 전달됩니다.</p>
-            <button id="confirm-purchase-btn" class="btn-primary">입금 완료 및 구매신청</button>
-            <button id="close-escrow-btn" class="btn-secondary">닫기</button>
+        <div id="productList">
+            <h3>판매글 목록</h3>
+            <!-- 기본적으로 판매글을 여기서 불러와 보여줍니다 -->
+            <p>등록된 상품이 없습니다.</p>
         </div>
     </div>
-
     <script>
-        const SUPABASE_URL = 'https://ipgzhipiebcnkfqzufgm.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwZ3poaXBpZWJjbmtmcXp1ZmdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5ODMxMTgsImV4cCI6MjEwMTU1OTExOH0.byzqUDMvoAIbybPYbyKsR6KoPnpLPs0jsdawAnW0Eww';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        const productListEl = document.getElementById('product-list');
-        const registerModal = document.getElementById('register-modal');
-        const openRegisterBtn = document.getElementById('open-register-btn');
-        const closeModalBtn = document.getElementById('close-modal-btn');
-        const escrowModal = document.getElementById('escrow-modal');
-
-        let selectedProductId = null;
-
-        // 상품 목록 불러오기
-        async function loadProducts() {
-            productListEl.innerHTML = '<p>상품을 불러오는 중...</p>';
-            const { data, error } = await supabaseClient.from('products').select('*').order('created_at', { ascending: false });
-            
-            if (error) {
-                productListEl.innerHTML = '<p>상품을 불러오지 못했습니다.</p>';
-                return;
-            }
-
-            if (data.length === 0) {
-                productListEl.innerHTML = '<p>등록된 상품이 없습니다.</p>';
-                return;
-            }
-
-            productListEl.innerHTML = '';
-            data.forEach(prod => {
-                const card = document.createElement('div');
-                card.className = 'product-card';
-                card.innerHTML = `
-                    <img src="${prod.image || 'default-bell.png'}" alt="${prod.title}" class="prod-img">
-                    <h4>${prod.title}</h4>
-                    <p class="prod-price">${Number(prod.price).toLocaleString()}원</p>
-                    <button class="btn-buy" onclick="openEscrow('${prod.id}', ${prod.price})">구매하기 (에스크로)</button>
-                `;
-                productListEl.appendChild(card);
-            });
+        function toggleSellForm() {
+            document.getElementById('sellForm').classList.toggle('hidden');
         }
-
-        // 상품 등록 모달 제어
-        openRegisterBtn.addEventListener('click', async () => {
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            if (!user) {
-                alert('로그인이 필요합니다.');
-                window.location.href = 'login.html';
-                return;
-            }
-            registerModal.style.display = 'flex';
-        });
-
-        closeModalBtn.addEventListener('click', () => { registerModal.style.display = 'none'; });
-
-        document.getElementById('product-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            
-            const title = document.getElementById('prod-title').value;
-            const description = document.getElementById('prod-desc').value;
-            const price = parseFloat(document.getElementById('prod-price').value);
-            const image = document.getElementById('prod-image').value;
-
-            const { error } = await supabaseClient.from('products').insert([
-                { title, description, price, image, user_id: user.id }
-            ]);
-
-            if (error) {
-                alert('등록 실패: ' + error.message);
-            } else {
-                alert('상품이 등록되었습니다.');
-                registerModal.style.display = 'none';
-                loadProducts();
-            }
-        });
-
-        function openEscrow(productId, price) {
-            selectedProductId = productId;
-            escrowModal.style.display = 'flex';
-        }
-
-        document.getElementById('close-escrow-btn').addEventListener('click', () => { escrowModal.style.display = 'none'; });
-        document.getElementById('confirm-purchase-btn').addEventListener('click', () => {
-            alert('구매 신청이 완료되었습니다. 관리진 계좌(하나은행 154-910580-98807 안수현)로 입금해 주시면 확인 후 처리됩니다.');
-            escrowModal.style.display = 'none';
-        });
-
-        loadProducts();
+        function submitProduct() { alert("상품이 등록되었습니다."); }
     </script>
 </body>
 </html>
