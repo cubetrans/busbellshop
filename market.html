@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>중고마켓 - 버스벨샵</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- app.js 파일이 올바른 경로에 있는지 확인하세요! -->
   <script src="app.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -65,17 +66,27 @@
   <script>
     let currentSelectedPrice = 0, currentSelectedItem = '', currentSeller = '';
 
+    // 페이지 로드 시 실행
     document.addEventListener('DOMContentLoaded', () => {
+      console.log("페이지 로드됨");
       loadMarketItems();
     });
 
     async function loadMarketItems() {
+      console.log("목록 불러오는 중...");
       const { data, error } = await supabaseClient.from('market').select('*').order('created_at', { ascending: false });
       const listArea = document.getElementById('market-list');
-      if (error || !data || data.length === 0) {
+      
+      if (error) {
+        console.error("데이터 로딩 에러:", error);
+        return;
+      }
+
+      if (!data || data.length === 0) {
         listArea.innerHTML = '<div class="content-box"><p>등록된 상품이 없습니다.</p></div>';
         return;
       }
+      
       const currentUser = getLoggedInUser();
       let html = '';
       data.forEach(item => {
@@ -118,65 +129,16 @@
       document.getElementById('write-box').style.display = 'none';
     }
 
-    function editItem(id, title, price, contact, desc) {
-      document.getElementById('edit-market-id').value = id;
-      document.getElementById('item-title').value = title;
-      document.getElementById('item-price').value = price;
-      document.getElementById('item-contact').value = contact;
-      document.getElementById('item-desc').value = desc;
-      document.getElementById('modal-mode-title').innerText = '판매글 수정';
-      document.getElementById('write-box').style.display = 'block';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    async function saveMarketItem() {
-      const id = document.getElementById('edit-market-id').value;
-      const title = document.getElementById('item-title').value.trim();
-      const price = parseInt(document.getElementById('item-price').value) || 0;
-      const contact = document.getElementById('item-contact').value.trim();
-      const description = document.getElementById('item-desc').value.trim();
-      const user = getLoggedInUser();
-
-      if (!title || !contact) {
-        alert('제목과 연락처를 입력해주세요.');
-        return;
-      }
-
-      if (id) {
-        const { error } = await supabaseClient.from('market').update({ title, price, contact, description }).eq('id', id);
-        if (error) alert('수정 실패');
-        else { alert('수정되었습니다.'); closeWriteModal(); loadMarketItems(); }
-      } else {
-        const { error } = await supabaseClient.from('market').insert([{ title, price, contact, description, author: user.nickname }]);
-        if (error) alert('등록 실패');
-        else { alert('등록되었습니다.'); closeWriteModal(); loadMarketItems(); }
-      }
-    }
-
-    async function deleteItem(id) {
-      if (!confirm('정말 삭제하시겠습니까?')) return;
-      const { error } = await supabaseClient.from('market').delete().eq('id', id);
-      if (error) alert('삭제 실패');
-      else { alert('삭제되었습니다.'); loadMarketItems(); }
-    }
-
     function openEscrowModal(title, price, seller) {
       const user = getLoggedInUser();
-      if (!user) {
-        alert('로그인이 필요한 서비스입니다.');
-        window.location.href = 'login.html';
-        return;
-      }
+      if (!user) { alert('로그인 필요'); return; }
       currentSelectedPrice = price; 
       currentSelectedItem = title; 
       currentSeller = seller;
-      
       const ref = (user.nickname.substring(0,2)) + (seller.substring(0,2)) + (title.substring(0,4));
-      
       document.getElementById('escrow-item-info').innerText = `상품: ${title} / 금액: ${price.toLocaleString()}원`;
       document.getElementById('deposit-ref-text').innerText = `입금자명(필수): ${ref}`;
       document.getElementById('escrow-box').style.display = 'block';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function closeEscrowModal() {
@@ -192,12 +154,7 @@
         amount: currentSelectedPrice, 
         status: '입금대기' 
       }]);
-      
-      if (error) {
-        alert('주문 신청 중 오류가 발생했습니다.');
-      } else {
-        alert('주문 신청이 완료되었습니다! 안내된 입금자명으로 입금해 주세요.');
-      }
+      if(error) alert('신청 실패'); else alert('신청 완료!');
       closeEscrowModal();
     }
   </script>
