@@ -1,971 +1,129 @@
-/* ==========================================================================
-   ⚙️ MARKET - Global Stylesheet (Modern Dark/Light UI)
-   ========================================================================== */
-
-/* 🎨 디자인 변수 (다크 모드 기본) */
 :root {
-    --bg-main: #0f172a;
-    --bg-card: #1e293b;
-    --bg-glass: rgba(30, 41, 59, 0.75);
-    --bg-glass-hover: rgba(51, 65, 85, 0.85);
-    --border-color: rgba(255, 255, 255, 0.1);
-    --text-main: #f8fafc;
-    --text-sub: #94a3b8;
-    
+    --bg-color: #f8f9fa;
+    --card-bg: #ffffff;
+    --text-color: #212529;
+    --text-sub: #6c757d;
+    --primary: #0044cc;
+    --border-color: #dee2e6;
+}
+
+body.dark-mode {
+    --bg-color: #12161a;
+    --card-bg: #1e242b; /* 다크모드 시 카드 배경을 어둡게 설정하여 글씨가 보이도록 함 */
+    --text-color: #f8f9fa;
+    --text-sub: #adb5bd;
     --primary: #3b82f6;
-    --primary-hover: #2563eb;
-    --primary-glow: rgba(59, 130, 246, 0.35);
-    
-    --accent: #f59e0b;
-    --accent-glow: rgba(245, 158, 11, 0.2);
-    --danger: #ef4444;
-    
-    --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
-    --modal-backdrop: rgba(15, 23, 42, 0.8);
-    --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* ☀️ 라이트 모드 변수 오버라이드 */
-body.light-mode {
-    --bg-main: #f1f5f9;
-    --bg-card: #ffffff;
-    --bg-glass: rgba(255, 255, 255, 0.85);
-    --bg-glass-hover: rgba(241, 245, 249, 0.95);
-    --border-color: rgba(0, 0, 0, 0.08);
-    --text-main: #0f172a;
-    --text-sub: #64748b;
-    
-    --primary: #2563eb;
-    --primary-hover: #1d4ed8;
-    --primary-glow: rgba(37, 99, 235, 0.2);
-    
-    --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
-    --modal-backdrop: rgba(0, 0, 0, 0.5);
-}
-
-/* --------------------------------------------------------------------------
-   1. Reset & Global Base
-   -------------------------------------------------------------------------- */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    -webkit-tap-highlight-color: transparent;
+    --border-color: #2c3440;
 }
 
 body {
-    background-color: var(--bg-main);
-    color: var(--text-main);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    transition: background-color 0.3s ease, color 0.3s ease;
-    line-height: 1.5;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Pretendard', sans-serif;
+    margin: 0;
+    padding: 0;
 }
 
-a {
-    color: inherit;
-    text-decoration: none;
-}
-
-button, input, select, textarea {
-    outline: none;
-    border: none;
-    font-size: 0.95rem;
-}
-
-button {
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.container {
-    width: 100%;
-    max-width: 1080px;
-    margin: 0 auto;
-    padding: 1.5rem 1rem;
-    flex: 1;
-}
-
-/* 🧊 글래스모피즘 효과 카드 */
-.glass-panel {
-    background: var(--bg-glass);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+/* 공통 카드 스타일 */
+.card, .glass-panel {
+    background-color: var(--card-bg);
     border: 1px solid var(--border-color);
-    box-shadow: var(--card-shadow);
-    border-radius: 16px;
-}
-
-.card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    box-shadow: var(--card-shadow);
-}
-
-/* --------------------------------------------------------------------------
-   2. Header & Navigation (모바일 햄버거 메뉴 포함)
-   -------------------------------------------------------------------------- */
-header {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.85rem 1.5rem;
-    background: var(--bg-glass);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.logo {
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: var(--text-main);
-    letter-spacing: -0.5px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.logo strong {
-    color: var(--primary);
-}
-
-.mobile-menu-btn {
-    display: none;
-    background: transparent;
-    color: var(--text-main);
-    font-size: 1.4rem;
-    padding: 4px 8px;
-}
-
-.nav-group {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-}
-
-/* 🔄 모든 페이지에서 버튼 순서를 강제로 통일 (메뉴 -> 달 버튼 -> 프로필) */
-.nav-group nav {
-    order: 1;
-}
-
-.nav-group .theme-toggle {
-    order: 2;
-}
-
-.nav-group #authContainer {
-    order: 3;
-}
-
-nav ul {
-    display: flex;
-    list-style: none;
-    gap: 0.5rem;
-}
-
-nav a {
-    padding: 0.5rem 0.85rem;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 0.92rem;
-    color: var(--text-sub);
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-nav a:hover, nav a.active {
-    color: var(--text-main);
-    background: rgba(59, 130, 246, 0.12);
-}
-
-.theme-toggle {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
-    color: var(--accent);
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-}
-
-.theme-toggle:hover {
-    transform: rotate(15deg) scale(1.05);
-}
-
-/* 🔐 인증 드롭다운 모듈 */
-#authContainer {
-    position: relative;
-}
-
-.user-badge {
-    background: var(--primary);
-    color: #ffffff;
-    padding: 0.5rem 0.9rem;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 0.88rem;
-    box-shadow: 0 4px 12px var(--primary-glow);
-}
-
-.user-badge:hover {
-    background: var(--primary-hover);
-}
-
-/* 🛠️ 로그인/프로필 토글 버튼 스타일 지정 (하얀색 박스 깨짐 해결) */
-#authToggleBtn {
-    background: var(--bg-card) !important;
-    color: var(--text-main) !important;
-    border: 1px solid var(--border-color) !important;
-    padding: 0.5rem 1rem !important;
-    border-radius: 12px !important;
-    font-weight: 600 !important;
-    font-size: 0.88rem !important;
-    cursor: pointer !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    box-shadow: var(--card-shadow) !important;
-}
-
-#authToggleBtn:hover {
-    background: var(--bg-glass-hover) !important;
-    border-color: var(--primary) !important;
-}
-
-.auth-dropdown {
-    position: absolute;
-    right: 0;
-    top: calc(100% + 12px);
-    width: 280px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 1.25rem;
-    box-shadow: var(--card-shadow);
-    display: none;
-    z-index: 100;
-}
-
-.auth-dropdown.active {
-    display: block;
-    animation: fadeIn 0.2s ease;
-}
-
-.auth-title {
-    font-size: 1rem;
-    margin-bottom: 1rem;
-    text-align: center;
-}
-
-.user-info-box {
-    margin-bottom: 1rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.user-role-badge {
-    font-size: 0.8rem;
-    color: var(--text-sub);
-    margin-top: 4px;
-}
-
-.role-text {
-    color: var(--accent);
-    font-weight: 700;
-}
-
-.auth-action-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.btn-mypage, .btn-logout {
-    width: 100%;
-    padding: 0.6rem;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 0.85rem;
-}
-
-.btn-mypage {
-    background: rgba(59, 130, 246, 0.15);
-    color: var(--primary);
-}
-
-.btn-logout {
-    background: rgba(239, 68, 68, 0.15);
-    color: var(--danger);
-}
-
-.divider {
-    display: flex;
-    align-items: center;
-    text-align: center;
-    margin: 12px 0;
-    color: var(--text-sub);
-    font-size: 0.75rem;
-}
-
-.divider::before, .divider::after {
-    content: '';
-    flex: 1;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.divider span {
-    padding: 0 8px;
-}
-
-.btn-google {
-    width: 100%;
-    padding: 0.65rem;
-    background: #ffffff;
-    color: #1f2937;
-    font-weight: 600;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-.auth-links {
-    margin-top: 10px;
-    font-size: 0.8rem;
-    text-align: center;
-    color: var(--primary);
-    cursor: pointer;
-}
-
-/* --------------------------------------------------------------------------
-   3. Inputs & Buttons (Modern Elements)
-   -------------------------------------------------------------------------- */
-.input-modern {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    background: rgba(0, 0, 0, 0.15);
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    color: var(--text-main);
-    margin-bottom: 0.75rem;
-    transition: var(--transition);
-}
-
-body.light-mode .input-modern {
-    background: rgba(0, 0, 0, 0.03);
-}
-
-.input-modern:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px var(--primary-glow);
-}
-
-.btn-auth {
-    width: 100%;
-    padding: 0.75rem;
-    background: var(--primary);
-    color: #fff;
-    font-weight: 700;
-    border-radius: 10px;
-}
-
-.btn-primary-large {
-    padding: 0.85rem 1.75rem;
-    background: var(--primary);
-    color: #fff;
-    font-weight: 700;
+    color: var(--text-color);
     border-radius: 12px;
-    box-shadow: 0 6px 20px var(--primary-glow);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
 
-.btn-primary-large:hover {
-    transform: translateY(-2px);
-    background: var(--primary-hover);
-}
-
-/* --------------------------------------------------------------------------
-   4. Home & Banner Components
-   -------------------------------------------------------------------------- */
-.hero {
-    text-align: center;
-    padding: 3.5rem 1.5rem;
-    margin-bottom: 2rem;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(15, 23, 42, 0.4) 100%);
-    border: 1px solid var(--border-color);
-}
-
-.hero-title {
-    font-size: 2.2rem;
-    font-weight: 900;
-    letter-spacing: -1px;
-    margin-bottom: 0.75rem;
-    background: linear-gradient(to right, #60a5fa, #a855f7);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.hero-subtitle {
-    color: var(--text-sub);
-    font-size: 1.05rem;
-    margin-bottom: 1.75rem;
-}
-
-/* 📢 공지사항 카드 */
-.notice-card .card-header {
+/* 헤더 및 로고 */
+header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    padding: 15px 30px;
+    background-color: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
 }
 
-.badge {
-    background: var(--danger);
-    color: #fff;
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 6px;
+.site-logo {
+    height: 42px;
+    width: auto;
+    object-fit: contain;
 }
 
-.notice-list {
-    list-style: none;
-}
-
-.notice-list li {
-    display: flex;
-    justify-content: space-between;
-    padding: 0.65rem 0;
-    border-bottom: 1px dashed var(--border-color);
-    font-size: 0.92rem;
-}
-
-.notice-list li:last-child {
-    border-bottom: none;
-}
-
-.notice-title {
-    color: var(--text-main);
-}
-
-.notice-date {
-    color: var(--text-sub);
-    font-size: 0.8rem;
-}
-
-/* 📊 현황 통계 그리드 */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.stat-box {
-    padding: 1.25rem;
-    text-align: center;
-}
-
-.stat-icon {
-    font-size: 1.75rem;
-    color: var(--primary);
-    margin-bottom: 0.5rem;
-}
-
-.stat-box h3 {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--text-main);
-    margin-top: 4px;
-}
-
-/* --------------------------------------------------------------------------
-   5. Market / Community Filter & Cards
-   -------------------------------------------------------------------------- */
-.search-section {
-    padding: 1.25rem;
-}
-
-.search-bar-group {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 1rem;
-}
-
-.search-input-wrapper {
-    position: relative;
-    flex: 1;
-}
-
-.search-icon {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-sub);
-}
-
-.search-input-wrapper input {
-    padding-left: 42px;
-    margin-bottom: 0;
-}
-
-.filter-tabs {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding-bottom: 4px;
-}
-
-.tab-btn {
-    padding: 0.5rem 1rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
-    border-radius: 20px;
-    color: var(--text-sub);
-    font-size: 0.85rem;
-    white-space: nowrap;
-}
-
-.tab-btn.active, .tab-btn:hover {
-    background: var(--primary);
-    color: #fff;
-    border-color: var(--primary);
-}
-
-/* 📦 장터 카드 그리드 */
-.market-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-    gap: 1.25rem;
-}
-
-.market-card {
-    cursor: pointer;
-    overflow: hidden;
-    transition: var(--transition);
-}
-
-.market-card:hover {
-    transform: translateY(-5px);
-    border-color: var(--primary);
-}
-
-.card-img-wrapper {
-    position: relative;
+/* Admin 상단 배너 영역 */
+.top-banner-container {
     width: 100%;
-    height: 160px;
+    max-height: 250px;
     overflow: hidden;
-    background: #000;
+    margin-bottom: 20px;
 }
 
-.card-img {
+.top-banner-container img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.3s ease;
 }
 
-.market-card:hover .card-img {
-    transform: scale(1.05);
+/* 중고나라 스타일 마켓 UI (가로형 리스트/그리드) */
+.market-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
 }
 
-.safe-badge {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background: rgba(16, 185, 129, 0.9);
-    color: #fff;
-    font-size: 0.72rem;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 6px;
-    backdrop-filter: blur(4px);
+.joonggonara-card {
+    display: flex;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 15px;
+    gap: 20px;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.2s;
 }
 
-.card-body {
-    padding: 1rem;
+.joonggonara-card:hover {
+    transform: translateY(-2px);
 }
 
-.card-company {
-    font-size: 0.75rem;
-    color: var(--text-sub);
-    margin-bottom: 4px;
+.market-thumb {
+    width: 110px;
+    height: 110px;
+    border-radius: 8px;
+    object-fit: cover;
+    background-color: var(--border-color);
+    flex-shrink: 0;
 }
 
-.card-title {
-    font-size: 0.98rem;
-    font-weight: 700;
-    color: var(--text-main);
-    margin-bottom: 6px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.market-info {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
-.card-price {
+.market-title {
     font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin: 0;
+}
+
+.market-price {
+    font-size: 1.25rem;
     font-weight: 800;
     color: var(--primary);
-    margin-bottom: 8px;
+    margin: 0;
 }
 
-.card-footer {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.78rem;
-    color: var(--text-sub);
-    border-top: 1px solid var(--border-color);
-    padding-top: 8px;
-}
-
-/* 💬 커뮤니티 리스트 */
-.post-list-header {
-    display: flex;
-    justify-content: space-between;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--border-color);
-    color: var(--text-sub);
+.market-meta {
     font-size: 0.85rem;
-    font-weight: 600;
-}
-
-.post-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.85rem 0;
-    border-bottom: 1px solid var(--border-color);
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.post-item:hover {
-    padding-left: 6px;
-}
-
-.post-main {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.post-cat-badge {
-    background: rgba(59, 130, 246, 0.15);
-    color: var(--primary);
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 6px;
-    white-space: nowrap;
-}
-
-.post-item-title {
-    font-size: 0.95rem;
-    color: var(--text-main);
-}
-
-.post-meta {
+    color: var(--text-sub);
     display: flex;
     gap: 12px;
-    font-size: 0.8rem;
-    color: var(--text-sub);
-}
-
-/* --------------------------------------------------------------------------
-   6. Mypage & Specific Layouts
-   -------------------------------------------------------------------------- */
-.profile-card {
-    padding: 1.75rem;
-}
-
-.profile-header {
-    display: flex;
-    align-items: center;
-    gap: 1.25rem;
-}
-
-.profile-avatar {
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, var(--primary), #a855f7);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.8rem;
-    color: #fff;
-}
-
-.role-tag {
-    display: inline-block;
-    margin-top: 4px;
-    padding: 2px 10px;
-    background: var(--primary);
-    color: #fff;
-    font-size: 0.75rem;
-    font-weight: 700;
-    border-radius: 12px;
-}
-
-.tier-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.tier-box {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 1rem;
-}
-
-.tier-box h4 {
-    margin-bottom: 4px;
-    color: var(--text-main);
-}
-
-.tier-box p {
-    font-size: 0.8rem;
-    color: var(--text-sub);
-}
-
-/* --------------------------------------------------------------------------
-   7. Modals & Popups
-   -------------------------------------------------------------------------- */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: var(--modal-backdrop);
-    backdrop-filter: blur(6px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 1rem;
-}
-
-.modal-content {
-    width: 100%;
-    max-width: 520px;
-    max-height: 90vh;
-    overflow-y: auto;
-    background: var(--bg-card);
-    padding: 1.5rem;
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.25rem;
-}
-
-.modal-close {
-    background: transparent;
-    color: var(--text-sub);
-    font-size: 1.5rem;
-}
-
-.form-label {
-    display: block;
-    font-size: 0.85rem;
-    color: var(--text-sub);
-    margin-bottom: 4px;
-}
-
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.safe-pay-box {
-    background: rgba(16, 185, 129, 0.08);
-    border: 1px solid rgba(16, 185, 129, 0.2);
-    padding: 1rem;
-    border-radius: 10px;
-    margin-bottom: 1rem;
-}
-
-.checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    font-size: 0.9rem;
-}
-
-.fee-notice {
-    font-size: 0.8rem;
-    color: var(--text-sub);
-    margin-top: 6px;
-}
-
-.highlight-text {
-    color: #10b981;
-    font-weight: 700;
-}
-
-.modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 1.25rem;
-}
-
-.btn-secondary {
-    padding: 0.65rem 1.25rem;
-    background: transparent;
-    color: var(--text-sub);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-}
-
-/* --------------------------------------------------------------------------
-   8. Footer & Floating Elements
-   -------------------------------------------------------------------------- */
-.credit-box {
-    padding: 1.25rem;
-    margin-top: 2rem;
-}
-
-.credit-grid {
-    display: flex;
-    gap: 1.5rem;
-    margin-top: 0.5rem;
-    font-size: 0.85rem;
-    color: var(--text-sub);
-}
-
-.floating-chat-btn {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    width: 54px;
-    height: 54px;
-    border-radius: 50%;
-    background: var(--primary);
-    color: #fff;
-    font-size: 1.3rem;
-    box-shadow: 0 8px 24px var(--primary-glow);
-    z-index: 90;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.floating-chat-btn:hover {
-    transform: scale(1.1);
-}
-
-footer {
-    text-align: center;
-    padding: 1.5rem;
-    color: var(--text-sub);
-    font-size: 0.82rem;
-    border-top: 1px solid var(--border-color);
-    margin-top: auto;
-}
-
-/* --------------------------------------------------------------------------
-   9. Mobile Responsiveness (반응형 모바일 지원)
-   -------------------------------------------------------------------------- */
-@media (max-width: 768px) {
-    .mobile-menu-btn {
-        display: block;
-    }
-
-    .nav-group {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        width: 100%;
-        background: var(--bg-card);
-        border-bottom: 1px solid var(--border-color);
-        flex-direction: column;
-        padding: 1rem;
-        display: none;
-        box-shadow: var(--card-shadow);
-    }
-
-    .nav-group.active {
-        display: flex;
-    }
-
-    nav ul {
-        flex-direction: column;
-        width: 100%;
-        text-align: center;
-    }
-
-    .search-bar-group {
-        flex-direction: column;
-    }
-
-    .btn-write {
-        width: 100%;
-    }
-
-    .desktop-only {
-        display: none;
-    }
-
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-
-    .credit-grid {
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-8px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* 로그인된 유저 정보 박스 다크모드 대응 */
-.user-info-box {
-    background: rgba(255, 255, 255, 0.05); /* 어두운 투명 배경 */
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 10px;
-    margin-bottom: 8px;
-    color: #ffffff; /* 글자색 흰색 */
-}
-
-.user-info-box .user-greeting,
-.user-info-box .user-role-badge {
-    color: #ffffff !important;
-}
-
-/* 라이트 모드일 때 (하얀 배경) 처리 */
-body.light-mode .user-info-box {
-    background: #f1f2f6;
-    color: #2f3542;
-}
-body.light-mode .user-info-box .user-greeting,
-body.light-mode .user-info-box .user-role-badge {
-    color: #2f3542 !important;
 }
