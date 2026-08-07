@@ -38,7 +38,6 @@
     </header>
 
     <main class="container">
-        <!-- 📝 상단: 검색 및 글쓰기 영역 -->
         <section class="card glass-panel search-section">
             <div class="search-bar-group">
                 <div class="search-input-wrapper">
@@ -49,7 +48,6 @@
             </div>
         </section>
 
-        <!-- 💬 목록 표시 영역 -->
         <section class="card glass-panel">
             <div id="postList" class="post-list">
                 <p style="text-align:center;">게시글을 불러오는 중...</p>
@@ -65,7 +63,7 @@
             </div>
             <form id="postForm" onsubmit="submitPost(event)">
                 <select id="postCategory" class="input-modern" required>
-                    <!-- JS에서 권한별 옵션 동적 렌더링 -->
+                    <!-- JS에서 권한별로 자동 생성됨 -->
                 </select>
                 <input type="text" id="postTitle" placeholder="제목" class="input-modern" required>
                 
@@ -97,20 +95,21 @@
             fetchPosts();
         });
 
-        // 1. 게시판 권한별 글쓰기 모달 셋팅
+        // 1. 공지게시판 노출 로직 (관리진/관리자 오류 수정)
         function openWriteModal(postId = null) {
             const user = localStorage.getItem('currentUser');
             const role = localStorage.getItem('currentUserRole') || '일반회원';
+            
             if (!user) return alert('로그인 후 이용 가능합니다.');
 
+            const isAdmin = (role === '관리진' || role === '관리자'); // 역할명 유연하게 허용
             const catSelect = document.getElementById('postCategory');
             
-            // 공지는 관리진만
             let options = `
                 <option value="질문게시판">질문게시판</option>
                 <option value="자랑게시판">자랑게시판</option>
             `;
-            if (role === '관리진') {
+            if (isAdmin) {
                 options = `<option value="공지게시판">공지게시판</option>` + options;
             }
             catSelect.innerHTML = options;
@@ -137,7 +136,6 @@
             editingPostId = null;
         }
 
-        // 2. 게시글 불러오기
         async function fetchPosts() {
             try {
                 const { data, error } = await db.from('posts').select('*').order('created_at', { ascending: false });
@@ -165,14 +163,13 @@
             }
         }
 
-        // 3. 상세 보기 (본인/관리자 수정·삭제 기능 포함)
         function openDetailModal(id) {
             const post = allPosts.find(p => p.id === id);
             const user = localStorage.getItem('currentUser');
             const role = localStorage.getItem('currentUserRole');
+            const isAdmin = (role === '관리진' || role === '관리자');
             
-            // 본인 or 관리진 체크
-            const canEdit = (user === post.author || role === '관리진');
+            const canEdit = (user === post.author || isAdmin);
             
             const adminButtons = canEdit ? `
                 <div style="display:flex; gap:10px; margin-top: 15px;">
@@ -202,7 +199,7 @@
             document.getElementById('detailModal').style.display = 'none';
         }
 
-        // 4. 작성 및 수정 처리 (이미지 포함)
+        // 2. 파일 업로드 오류 해결 (확장자 추가 로직)
         async function submitPost(e) {
             e.preventDefault();
             const user = localStorage.getItem('currentUser');
@@ -213,10 +210,12 @@
 
             let imageUrl = '';
             
-            // 이미지 업로드
+            // 이미지 업로드 로직
             if (imageInput.files && imageInput.files[0]) {
                 const file = imageInput.files[0];
-                const fileName = `post_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                const fileExt = file.name.split('.').pop(); // 확장자 추출
+                const fileName = `post_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+                
                 const { error: uploadError } = await db.storage.from('images').upload(fileName, file);
                 
                 if (uploadError) return alert('이미지 업로드 실패: ' + uploadError.message);
@@ -233,7 +232,7 @@
             }
 
             const { error } = await query;
-            if (error) alert('실패: ' + error.message);
+            if (error) alert('등록 실패: ' + error.message);
             else {
                 alert(editingPostId ? '수정되었습니다.' : '작성 완료!');
                 closeWriteModal();
@@ -241,7 +240,6 @@
             }
         }
 
-        // 5. 게시글 삭제
         async function deletePost(id) {
             if (!confirm('정말 삭제하시겠습니까?')) return;
             
@@ -254,7 +252,6 @@
             }
         }
 
-        // 검색
         function filterPosts() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const items = document.querySelectorAll('.post-item');
