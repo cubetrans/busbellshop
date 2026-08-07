@@ -3,153 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚙️ ADMIN - 관리자 페이지</title>
+    <title>관리자 페이지 - 주문 및 사이트 관리</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        if (localStorage.getItem('theme') === 'light') {
-            window.addEventListener('DOMContentLoaded', () => {
-                document.body.classList.add('light-mode');
-            });
+    <style>
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.95rem;
         }
-    </script>
+        .admin-table th, .admin-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .status-select {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--input-bg, #fff);
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-
     <header>
-        <a class='logo' href='/' id="siteLogo">⚙️ <strong>ADMIN PANEL</strong></a>
-        <div class="nav-group" id="navGroup">
+        <a class='logo' href='/'>⚙️ <strong>관리자 페이지</strong></a>
+        <div class="nav-group">
             <nav>
                 <ul>
-                    <li><a href='/'><i class="fas fa-home"></i> 홈으로</a></li>
+                    <li><a href='/'><i class="fas fa-home"></i> 홈</a></li>
+                    <li><a href='market.html'><i class="fas fa-shopping-cart"></i> 장터</a></li>
+                    <li><a href='community.html'><i class="fas fa-comments"></i> 커뮤니티</a></li>
                 </ul>
             </nav>
-            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
         </div>
     </header>
 
     <main class="container">
-        <h2><i class="fas fa-shield-alt"></i> 관리진 전용 대시보드</h2>
-        <p style="color: var(--text-sub); margin-bottom: 20px; font-size: 0.9rem;">회원 권한 설정 및 사이트 환경을 관리할 수 있습니다.</p>
-
-        <!-- 1. 사이트 환경 설정 섹션 -->
-        <section class="card glass-panel" style="margin-bottom: 20px;">
-            <h3><i class="fas fa-sliders-h"></i> 사이트 환경 설정</h3>
-            <div style="margin-top: 15px;">
-                <label style="font-size: 0.85rem; color: var(--text-sub);">사이트 타이틀 (로고명)</label>
-                <input type="text" id="settingSiteTitle" class="input-modern" placeholder="예: ⚙️ MARKET" style="margin-top: 5px;">
-                
-                <label style="font-size: 0.85rem; color: var(--text-sub); display: block; margin-top: 10px;">상단 긴급 공지 텍스트</label>
-                <input type="text" id="settingNoticeText" class="input-modern" placeholder="공지 내용 입력 (비워두면 숨김)" style="margin-top: 5px;">
-                
-                <button class="btn-auth" style="margin-top: 10px;" onclick="saveSiteSettings()">설정 저장하기</button>
+        <!-- 사이트 제목 설정 영역 -->
+        <section class="card glass-panel">
+            <h3><i class="fas fa-cog"></i> 사이트 기본 설정</h3>
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <input type="text" id="adminSiteTitleInput" placeholder="사이트 이름을 입력하세요 (예: 큐브트랜스 마켓)" class="input-modern">
+                <button class="btn-auth" onclick="saveSiteTitle()"><i class="fas fa-save"></i> 제목 저장</button>
             </div>
         </section>
 
-        <!-- 2. 회원 권한 관리 섹션 -->
+        <!-- 📦 주문 내역 관리 (7가지 상태 변경 가능) -->
         <section class="card glass-panel">
-            <h3><i class="fas fa-users-cog"></i> 회원 목록 및 권한 설정</h3>
-            <p style="font-size: 0.85rem; color: var(--text-sub); margin: 5px 0 15px 0;">
-                역할 순위: 1. 관리진 &gt; 2. 특수회원 &gt; 3. 판매자 &gt; 4. 일반회원
-            </p>
-            <div id="userManagementList">
-                <p>회원 목록을 불러오는 중...</p>
+            <h3><i class="fas fa-clipboard-list"></i> 주문 내역 및 배송/처리 상태 관리</h3>
+            <p style="font-size: 0.85rem; color: var(--text-sub);">주문 상태를 변경하면 즉시 반영됩니다.</p>
+            
+            <div style="overflow-x: auto;">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>주문번호</th>
+                            <th>주문자</th>
+                            <th>상품명</th>
+                            <th>금액</th>
+                            <th>주문일시</th>
+                            <th>상태변경 (7단계)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orderTableBody">
+                        <tr><td colspan="6" style="text-align:center;">주문 내역을 불러오는 중...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </section>
     </main>
 
-    <footer>
-        <p>&copy; 2026 ⚙️ MARKET Admin. All rights reserved.</p>
-    </footer>
-
     <script src="app.js"></script>
     <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            // 테마 아이콘 동기화
-            const themeBtn = document.getElementById('themeToggle');
-            if (themeBtn && document.body.classList.contains('light-mode')) {
-                themeBtn.innerHTML = '<i class="fas fa-sun"></i>';
-            }
+        const STATUS_OPTIONS = [
+            '주문접수',
+            '배송중',
+            '환불완료',
+            '처리중',
+            '보류',
+            '처리불가',
+            '처리완료'
+        ];
 
-            // 관리진 권한 체크 (관리진 또는 관리자 허용)
+        window.addEventListener('DOMContentLoaded', () => {
             const role = localStorage.getItem('currentUserRole');
-            if (role !== '관리진' && role !== '관리자') {
-                alert('관리진만 접근할 수 있는 페이지입니다.');
+            if (role !== '관리자' && role !== '관리진') {
+                alert('관리자 권한이 없습니다.');
                 location.href = '/';
                 return;
             }
 
-            fetchUsersForAdmin();
-            loadCurrentSettings();
+            document.getElementById('adminSiteTitleInput').value = localStorage.getItem('siteTitle') || 'MARKET';
+            fetchOrders();
         });
 
-        // 👥 회원 목록 불러오기 (id 컬럼 대신 nickname 기준 조회)
-        async function fetchUsersForAdmin() {
-            const container = document.getElementById('userManagementList');
-            try {
-                const { data, error } = await db.from('users').select('*').order('nickname', { ascending: true });
-                if (error) throw error;
-
-                if (!data || data.length === 0) {
-                    container.innerHTML = `<p>가입된 회원이 없습니다.</p>`;
-                    return;
-                }
-
-                container.innerHTML = data.map(u => `
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
-                        <div>
-                            <strong>${u.nickname}</strong> 
-                            <span style="font-size: 0.8rem; color: var(--text-sub); margin-left: 8px;">(비밀번호: ${u.password})</span>
-                        </div>
-                        <div style="display: flex; gap: 8px; align-items: center;">
-                            <select id="role-${u.nickname}" class="input-modern" style="margin-bottom: 0; padding: 6px 10px; font-size: 0.85rem;">
-                                <option value="관리진" ${u.role === '관리진' || u.role === '관리자' ? 'selected' : ''}>관리진</option>
-                                <option value="특수회원" ${u.role === '특수회원' ? 'selected' : ''}>특수회원</option>
-                                <option value="판매자" ${u.role === '판매자' ? 'selected' : ''}>판매자</option>
-                                <option value="일반회원" ${!u.role || u.role === '일반회원' ? 'selected' : ''}>일반회원</option>
-                            </select>
-                            <button class="btn-auth" style="padding: 6px 12px; font-size: 0.85rem; width: auto;" onclick="updateUserRole('${u.nickname}')">변경</button>
-                        </div>
-                    </div>
-                `).join('');
-            } catch (err) {
-                console.error(err);
-                container.innerHTML = `<p style="color: var(--accent-red, #ff4757);">회원 목록을 불러오는 중 오류가 발생했습니다: ${err.message}</p>`;
-            }
-        }
-
-        // 🔄 회원 권한 업데이트
-        async function updateUserRole(nickname) {
-            const selectElem = document.getElementById(`role-${nickname}`);
-            const newRole = selectElem.value;
-
-            const { error } = await db.from('users').update({ role: newRole }).eq('nickname', nickname);
-            if (error) {
-                alert('권한 변경 실패: ' + error.message);
-            } else {
-                alert(`[${nickname}]님의 권한이 [${newRole}](으)로 변경되었습니다.`);
-                fetchUsersForAdmin();
-            }
-        }
-
-        // ⚙️ 사이트 설정 저장
-        function saveSiteSettings() {
-            const title = document.getElementById('settingSiteTitle').value.trim();
-            const notice = document.getElementById('settingNoticeText').value.trim();
-
-            if (title) localStorage.setItem('customSiteTitle', title);
-            localStorage.setItem('siteNotice', notice);
-
-            alert('사이트 설정이 저장되었습니다!');
+        // 사이트 제목 변경 (장터/커뮤니티/홈 모두 즉시 동기화)
+        function saveSiteTitle() {
+            const title = document.getElementById('adminSiteTitleInput').value.trim();
+            if (!title) return alert('제목을 입력하세요.');
+            localStorage.setItem('siteTitle', title);
+            alert('사이트 제목이 변경되었습니다! 모든 페이지에 적용됩니다.');
             location.reload();
         }
 
-        function loadCurrentSettings() {
-            const savedTitle = localStorage.getItem('customSiteTitle');
-            const savedNotice = localStorage.getItem('siteNotice');
-            if (savedTitle) document.getElementById('settingSiteTitle').value = savedTitle;
-            if (savedNotice) document.getElementById('settingNoticeText').value = savedNotice;
+        // 주문 내역 조회
+        async function fetchOrders() {
+            const tbody = document.getElementById('orderTableBody');
+            try {
+                const { data, error } = await db.from('orders').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">주문 내역이 없습니다.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.map(order => {
+                    const optionsHtml = STATUS_OPTIONS.map(opt => `
+                        <option value="${opt}" ${order.status === opt ? 'selected' : ''}>${opt}</option>
+                    `).join('');
+
+                    return `
+                        <tr>
+                            <td>#${order.id}</td>
+                            <td>${order.user_id || '익명'}</td>
+                            <td>${order.product_name || '상품정보 없음'}</td>
+                            <td>${Number(order.amount || 0).toLocaleString()}원</td>
+                            <td>${new Date(order.created_at).toLocaleString()}</td>
+                            <td>
+                                <select class="status-select" onchange="changeOrderStatus(${order.id}, this.value)">
+                                    ${optionsHtml}
+                                </select>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">주문 목록을 불러오지 못했습니다.</td></tr>';
+            }
+        }
+
+        // 상태 실시간 변경 처리
+        async function changeOrderStatus(orderId, newStatus) {
+            try {
+                const { error } = await db.from('orders').update({ status: newStatus }).eq('id', orderId);
+                if (error) throw error;
+                alert(`주문 #${orderId}의 상태가 [${newStatus}](으)로 변경되었습니다.`);
+            } catch (err) {
+                alert('상태 변경 실패: ' + err.message);
+                fetchOrders(); // 원래 상태로 복구
+            }
         }
     </script>
 </body>
