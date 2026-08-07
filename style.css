@@ -1,93 +1,334 @@
+/* ==========================================================================
+   🚌 베스벨샵 - Global Stylesheet (Modern Dark/Light UI)
+   ========================================================================== */
+
 :root {
-    --bg-color: #f8f9fa;
-    --card-bg: #ffffff;
-    --text-color: #212529;
-    --text-sub: #6c757d;
-    --primary: #0044cc;
-    --border-color: #dee2e6;
+    --bg-main: #0f172a;
+    --bg-card: #1e293b;
+    --bg-glass: rgba(30, 41, 59, 0.85);
+    --bg-glass-hover: rgba(51, 65, 85, 0.95);
+    --border-color: rgba(255, 255, 255, 0.12);
+    --text-main: #f8fafc;
+    --text-sub: #94a3b8;
+    
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --primary-glow: rgba(59, 130, 246, 0.35);
+    
+    --accent: #f59e0b;
+    --danger: #ef4444;
+    
+    --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+    --modal-backdrop: rgba(15, 23, 42, 0.85);
+    --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-body.dark-mode {
-    --bg-color: #12161a;
-    --card-bg: #1e242b; /* 다크모드 시 카드 배경을 어둡게 설정하여 글씨가 보이도록 함 */
-    --text-color: #f8f9fa;
-    --text-sub: #adb5bd;
-    --primary: #3b82f6;
-    --border-color: #2c3440;
+body.light-mode {
+    --bg-main: #f1f5f9;
+    --bg-card: #ffffff;
+    --bg-glass: rgba(255, 255, 255, 0.9);
+    --bg-glass-hover: rgba(241, 245, 249, 1);
+    --border-color: rgba(0, 0, 0, 0.1);
+    --text-main: #0f172a;
+    --text-sub: #64748b;
+    
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --primary-glow: rgba(37, 99, 235, 0.2);
+    
+    --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+    --modal-backdrop: rgba(0, 0, 0, 0.5);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    font-family: 'Pretendard', sans-serif;
-    margin: 0;
-    padding: 0;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    line-height: 1.5;
 }
 
-/* 공통 카드 스타일 */
-.card, .glass-panel {
-    background-color: var(--card-bg);
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+button, input, select, textarea {
+    outline: none;
+    border: none;
+    font-size: 0.95rem;
+    color: var(--text-main);
+}
+
+button {
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.container {
+    width: 100%;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem;
+    flex: 1;
+}
+
+.glass-panel, .card {
+    background: var(--bg-card);
     border: 1px solid var(--border-color);
-    color: var(--text-color);
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    box-shadow: var(--card-shadow);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-main);
 }
 
-/* 헤더 및 로고 */
+/* Header & Nav */
 header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 30px;
-    background-color: var(--card-bg);
+    padding: 0.85rem 1.5rem;
+    background: var(--bg-glass);
+    backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--border-color);
 }
 
-.site-logo {
-    height: 42px;
-    width: auto;
-    object-fit: contain;
+.logo {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-/* Admin 상단 배너 영역 */
-.top-banner-container {
+.logo strong {
+    color: var(--primary);
+}
+
+.mobile-menu-btn {
+    display: none;
+    background: transparent;
+    color: var(--text-main);
+    font-size: 1.4rem;
+    padding: 4px 8px;
+}
+
+.nav-group {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.nav-group nav { order: 1; }
+.nav-group .theme-toggle { order: 2; }
+.nav-group #authContainer { order: 3; }
+
+nav ul {
+    display: flex;
+    list-style: none;
+    gap: 0.5rem;
+}
+
+nav a {
+    padding: 0.5rem 0.85rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: var(--text-sub);
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+nav a:hover, nav a.active {
+    color: var(--text-main);
+    background: rgba(59, 130, 246, 0.15);
+}
+
+.theme-toggle {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: var(--accent);
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+#authContainer { position: relative; }
+
+#authToggleBtn {
+    background: var(--bg-card) !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--border-color) !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    font-size: 0.88rem !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    box-shadow: var(--card-shadow) !important;
+}
+
+#authToggleBtn:hover {
+    border-color: var(--primary) !important;
+}
+
+.auth-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 12px);
+    width: 280px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.25rem;
+    box-shadow: var(--card-shadow);
+    display: none;
+    z-index: 100;
+}
+
+.auth-dropdown.active {
+    display: block;
+    animation: fadeIn 0.2s ease;
+}
+
+.auth-title {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    color: var(--text-main);
+}
+
+.user-info-box {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 8px;
+    color: var(--text-main);
+}
+
+.user-info-box .user-greeting,
+.user-info-box .user-role-badge {
+    color: var(--text-main) !important;
+}
+
+.role-text {
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.auth-action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.btn-mypage, .btn-logout {
     width: 100%;
-    max-height: 250px;
-    overflow: hidden;
-    margin-bottom: 20px;
+    padding: 0.6rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
 }
 
-.top-banner-container img {
+.btn-mypage {
+    background: rgba(59, 130, 246, 0.15);
+    color: var(--primary);
+}
+
+.btn-logout {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--danger);
+}
+
+.auth-links {
+    margin-top: 10px;
+    font-size: 0.8rem;
+    text-align: center;
+    color: var(--primary);
+    cursor: pointer;
+}
+
+/* Inputs & Buttons */
+.input-modern {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    padding: 0.75rem 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-main);
+    margin-bottom: 0.75rem;
+    transition: var(--transition);
 }
 
-/* 중고나라 스타일 마켓 UI (가로형 리스트/그리드) */
-.market-list-container {
+body.light-mode .input-modern {
+    background: rgba(0, 0, 0, 0.03);
+    color: var(--text-main);
+}
+
+.input-modern:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.btn-auth, .btn-primary-large {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 700;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.btn-primary-large:hover, .btn-auth:hover {
+    background: var(--primary-hover);
+}
+
+/* Joonggonara Style Market List */
+.market-list {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 20px;
+    margin-top: 15px;
 }
 
-.joonggonara-card {
+.market-item-row {
     display: flex;
-    background-color: var(--card-bg);
+    gap: 15px;
+    background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 10px;
-    padding: 15px;
-    gap: 20px;
+    border-radius: 12px;
+    padding: 12px;
     align-items: center;
-    cursor: pointer;
-    transition: transform 0.2s;
+    transition: var(--transition);
 }
 
-.joonggonara-card:hover {
+.market-item-row:hover {
+    border-color: var(--primary);
     transform: translateY(-2px);
 }
 
@@ -96,34 +337,158 @@ header {
     height: 110px;
     border-radius: 8px;
     object-fit: cover;
-    background-color: var(--border-color);
     flex-shrink: 0;
+    background: #111;
 }
 
 .market-info {
-    flex-grow: 1;
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    justify-content: center;
+    overflow: hidden;
 }
 
-.market-title {
-    font-size: 1.1rem;
+.market-info h4 {
+    font-size: 1.05rem;
     font-weight: 700;
-    color: var(--text-color);
-    margin: 0;
+    color: var(--text-main);
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.market-price {
-    font-size: 1.25rem;
+.market-info .price {
+    font-size: 1.15rem;
     font-weight: 800;
     color: var(--primary);
-    margin: 0;
+    margin-bottom: 6px;
 }
 
-.market-meta {
-    font-size: 0.85rem;
+.market-info .meta {
+    font-size: 0.82rem;
     color: var(--text-sub);
     display: flex;
     gap: 12px;
+}
+
+.market-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    justify-content: center;
+}
+
+/* Modals */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--modal-backdrop);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.modal-content {
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: var(--bg-card);
+    padding: 1.5rem;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+}
+
+.modal-close {
+    background: transparent;
+    color: var(--text-sub);
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 1.25rem;
+}
+
+.btn-secondary {
+    padding: 0.65rem 1.25rem;
+    background: transparent;
+    color: var(--text-sub);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+/* Floating Chat / Channel Talk */
+.floating-chat-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    font-size: 1.3rem;
+    box-shadow: 0 8px 24px var(--primary-glow);
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.floating-chat-btn:hover {
+    transform: scale(1.1);
+}
+
+footer {
+    text-align: center;
+    padding: 1.5rem;
+    color: var(--text-sub);
+    font-size: 0.82rem;
+    border-top: 1px solid var(--border-color);
+    margin-top: auto;
+}
+
+@media (max-width: 768px) {
+    .mobile-menu-btn { display: block; }
+    .nav-group {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background: var(--bg-card);
+        border-bottom: 1px solid var(--border-color);
+        flex-direction: column;
+        padding: 1rem;
+        display: none;
+        box-shadow: var(--card-shadow);
+    }
+    .nav-group.active { display: flex; }
+    nav ul { flex-direction: column; width: 100%; text-align: center; }
+    .market-item-row { flex-direction: column; align-items: flex-start; }
+    .market-thumb { width: 100%; height: 160px; }
+    .market-actions { width: 100%; flex-direction: row; margin-top: 8px; }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
 }
