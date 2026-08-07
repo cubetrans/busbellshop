@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>고객센터 - 버스벨샵</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <div class="header-left">
+      <a href="index.html" class="logo">
+        <img src="icon.png" alt="logo" width="30" height="30" onerror="this.style.display='none'"> Bus Bell Shop
+      </a>
+      <ul class="nav-menu">
+        <li><a href="index.html">홈</a></li>
+        <li><a href="market.html">장터</a></li>
+        <li><a href="community.html">커뮤니티</a></li>
+        <li><a href="support.html">고객센터</a></li>
+      </ul>
+    </div>
+
+    <div class="header-right">
+      <span class="user-info user-greeting">로그인이 필요합니다</span>
+      <button class="theme-toggle-btn">🌙 다크모드</button>
+      <a href="mypage.html" class="btn btn-outline auth-action">마이페이지</a>
+      <a href="login.html" class="btn btn-primary auth-action">로그인</a>
+      <button class="hamburger">☰</button>
+    </div>
+
+    <div class="mobile-menu">
+      <div class="user-greeting mobile-user-greeting">로그인이 필요합니다</div>
+      <ul>
+        <li><a href="index.html">홈</a></li>
+        <li><a href="market.html">장터</a></li>
+        <li><a href="community.html">커뮤니티</a></li>
+        <li><a href="support.html">고객센터</a></li>
+        <li><a href="mypage.html">마이페이지</a></li>
+        <li><a href="#" class="logout-btn">로그아웃</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <div class="container">
+    <h2>고객센터 (1:1 문의)</h2>
+    <p style="margin-bottom: 20px;">궁금하신 점이나 불편사항을 남겨주시면 신속하게 답변해 드립니다.</p>
+
+    <div class="card">
+      <h3>문의 작성하기</h3>
+      <form id="inquiry-form" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+        <input type="text" id="inquiry-title" placeholder="제목을 입력하세요" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
+        <textarea id="inquiry-content" placeholder="문의 내용을 입력하세요" rows="5" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;"></textarea>
+        <button type="submit" class="btn btn-primary" style="align-self: flex-start;">문의 접수</button>
+      </form>
+    </div>
+
+    <h3>나의 문의 내역</h3>
+    <div id="inquiry-list" style="margin-top: 15px;"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
