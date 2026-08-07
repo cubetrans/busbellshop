@@ -1,110 +1,45 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>관리자 페이지 - 버스벨샵</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <div class="logo">
-      <a href="index.html"><img src="icon.png" alt="버스벨샵 로고"></a>
-    </div>
-    <div class="header-actions">
-      <button onclick="toggleTheme()">테마 변경</button>
-      <a href="index.html">홈으로</a>
-    </div>
-  </header>
-
   <main>
-    <div class="section-title">관리자 대시보드 (전체 회원 관리)</div>
-    <div class="content-box">
-      <p style="margin-bottom: 15px; color: var(--text-secondary);">고객센터 응대를 위해 모든 회원의 아이디(닉네임), 비밀번호, 등급, 계좌 정보를 조회 및 관리할 수 있습니다.</p>
-      <div id="users-table-area" style="overflow-x: auto;">
-        <!-- 회원 리스트 테이블 -->
-      </div>
-    </div>
+    <h2>주문 관리 페이지</h2>
+    <table>
+      <thead><tr><th>구매자</th><th>상품</th><th>상태</th><th>관리</th></tr></thead>
+      <tbody id="order-list"></tbody>
+    </table>
   </main>
 
   <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      const user = getLoggedInUser();
-      if (!user || user.role !== '관리자') {
-        alert('관리자 권한이 없습니다.');
-        window.location.href = 'index.html';
-        return;
-      }
-
-      loadAllUsers();
-    });
-
-    async function loadAllUsers() {
-      const { data, error } = await supabaseClient.from('users').select('*');
-      const area = document.getElementById('users-table-area');
-
-      if (error || !data) {
-        area.innerHTML = '<p>회원 정보를 불러오지 못했습니다.</p>';
-        return;
-      }
-
-      let html = `
-        <table>
-          <thead>
-            <tr>
-              <th>아이디(닉네임)</th>
-              <th>비밀번호</th>
-              <th>권한(Role)</th>
-              <th>은행 / 계좌번호 / 예금주</th>
-              <th>관리</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-
-      for (const u of data) {
-        html += `
-          <tr>
-            <td><strong>${u.nickname}</strong></td>
-            <td><input type="text" id="pw-${u.nickname}" value="${u.password}" style="margin:0; padding:4px;"></td>
-            <td>
-              <select id="role-${u.nickname}" style="margin:0; padding:4px;">
-                <option value="일반회원" ${u.role === '일반회원' ? 'selected' : ''}>일반회원</option>
-                <option value="특수회원" ${u.role === '특수회원' ? 'selected' : ''}>특수회원 (VIP)</option>
-                <option value="관리자" ${u.role === '관리자' ? 'selected' : ''}>관리자</option>
-              </select>
-            </td>
-            <td style="font-size:12px;">
-              ${u.bank_name || '-'} / ${u.account_number || '-'} / ${u.account_holder || '-'}
-            </td>
-            <td>
-              <button class="btn-primary" style="padding:4px 8px; font-size:12px;" onclick="adminUpdateUser('${u.nickname}')">수정저장</button>
-            </td>
-          </tr>
-        `;
-      }
-      html += `</tbody></table>`;
-      area.innerHTML = html;
+    async function loadOrders() {
+      const { data } = await supabaseClient.from('orders').select('*');
+      const list = document.getElementById('order-list');
+      list.innerHTML = data.map(o => `
+        <tr>
+          <td>${o.buyer_nickname}</td>
+          <td>${o.item_title}</td>
+          <td>${o.status}</td>
+          <td>
+            <select onchange="updateStatus(${o.id}, this.value)">
+              <option ${o.status=='입금대기'?'selected':''}>입금대기</option>
+              <option ${o.status=='처리중'?'selected':''}>처리중</option>
+              <option ${o.status=='보류'?'selected':''}>보류</option>
+              <option ${o.status=='처리 완료'?'selected':''}>처리 완료</option>
+              <option ${o.status=='처리 불가'?'selected':''}>처리 불가</option>
+            </select>
+          </td>
+        </tr>
+      `).join('');
     }
-
-    async function adminUpdateUser(nickname) {
-      const newPw = document.getElementById(`pw-${nickname}`).value.trim();
-      const newRole = document.getElementById(`role-${nickname}`).value;
-
-      const { error } = await supabaseClient
-        .from('users')
-        .update({ password: newPw, role: newRole })
-        .eq('nickname', nickname);
-
-      if (error) {
-        alert('회원 정보 변경 실패');
-      } else {
-        alert(`[${nickname}] 회원의 정보가 수정되었습니다.`);
-        loadAllUsers();
-      }
+    async function updateStatus(id, val) {
+      await supabaseClient.from('orders').update({status: val}).eq('id', id);
+      loadOrders();
     }
+    loadOrders();
   </script>
 </body>
 </html>
