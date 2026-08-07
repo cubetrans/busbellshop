@@ -1,257 +1,59 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>베스벨샵 - 장터</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('theme') === 'light') {
-                document.body.classList.add('light-mode');
-            }
-        });
-    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>중고마켓 - 버스벨샵</title>
+  <script src="app.js"></script>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <a class='logo' href='/'>🚌 <strong>베스벨샵</strong></a>
-        <button class="mobile-menu-btn" onclick="toggleMobileMenu()"><i class="fas fa-bars"></i></button>
-        <div class="nav-group" id="navGroup">
-            <nav>
-                <ul>
-                    <li><a href='/'><i class="fas fa-home"></i> 홈</a></li>
-                    <li><a href='market.html' class="active"><i class="fas fa-shopping-cart"></i> 장터</a></li>
-                    <li><a href='community.html'><i class="fas fa-comments"></i> 커뮤니티</a></li>
-                </ul>
-            </nav>
-            <div id="authContainer">
-                <button onclick="toggleAuthDropdown()" id="authToggleBtn" class="user-badge">
-                    <i class="fas fa-user-circle"></i> 로그인 / 가입
-                </button>
-                <div id="authDropdown" class="auth-dropdown"><div id="authFormArea"></div></div>
-            </div>
-        </div>
-    </header>
-
-    <main class="container">
-        <section class="card glass-panel search-section">
-            <div class="search-bar-group" style="display: flex; gap: 12px; align-items: center;">
-                <div class="search-input-wrapper" style="position: relative; flex: 1;">
-                    <i class="fas fa-search search-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-sub);"></i>
-                    <input type="text" id="searchInput" placeholder="상품 검색..." class="input-modern" onkeyup="filterItems()" style="padding-left: 42px; margin-bottom: 0;">
-                </div>
-                <div id="registerButtonArea"></div>
-            </div>
-        </section>
-
-        <section class="card glass-panel">
-            <h2><i class="fas fa-box-open"></i> 중고 장터 목록</h2>
-            <!-- 중고나라 스타일 리스트 (좌측 썸네일, 우측 정보) -->
-            <div id="marketItemList" class="market-list">
-                <p style="text-align:center; padding: 2rem;">상품을 불러오는 중...</p>
-            </div>
-        </section>
-    </main>
-
-    <!-- 상품 등록/수정 모달 -->
-    <div id="productFormModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content glass-panel">
-            <div class="modal-header">
-                <h3 id="formModalTitle"><i class="fas fa-plus-circle"></i> 상품 등록</h3>
-                <button class="modal-close" onclick="closeProductForm()">&times;</button>
-            </div>
-            <form id="productForm" onsubmit="submitMarketItem(event)">
-                <input type="text" id="prodTitle" placeholder="상품명" class="input-modern" required>
-                <input type="number" id="prodPrice" placeholder="가격 (원)" class="input-modern" required>
-                
-                <label style="font-size:0.8rem; color:var(--text-sub); margin-top:10px; display:block;">상품 사진 (선택)</label>
-                <input type="file" id="prodImage" accept="image/*" class="input-modern" style="padding:8px; margin-bottom: 5px;">
-                <div id="deleteImgArea" style="display:none; margin-bottom:10px;">
-                    <label style="font-size:0.85rem; color:#ff4d4f; cursor:pointer;">
-                        <input type="checkbox" id="deleteExistingImg"> 🗑️ 기존 등록된 사진 삭제
-                    </label>
-                </div>
-
-                <input type="text" id="prodContact" placeholder="연락처" class="input-modern" required>
-                <textarea id="prodDesc" rows="5" placeholder="상품 상세 설명" class="input-modern" required></textarea>
-                
-                <div class="modal-footer">
-                    <button type="button" class="btn-secondary" onclick="closeProductForm()">취소</button>
-                    <button type="submit" class="btn-auth">완료</button>
-                </div>
-            </form>
-        </div>
+  <header>
+    <div class="logo"><a href="index.html">버스벨샵</a></div>
+    <div class="search-container">
+      <input type="text" placeholder="상품명, 지역, 브랜드 등 통합검색">
     </div>
+    <div class="header-actions">
+      <button onclick="toggleTheme()">테마 변경</button>
+      <a href="mypage.html">내정보</a>
+    </div>
+  </header>
 
-    <!-- 채널톡 상담 플로팅 버튼 -->
-    <button class="floating-chat-btn" onclick="openCustomerService()" aria-label="고객센터 상담하기">
-        <i class="fas fa-comment-dots"></i>
-    </button>
+  <nav class="sub-nav">
+    <a href="index.html">홈</a>
+    <a href="market.html" class="active">중고마켓</a>
+    <a href="community.html">커뮤니티</a>
+    <a href="admin.html">관리자</a>
+  </nav>
 
-    <script src="app.js"></script>
-    <script>
-        let allItems = [];
-        let editingItemId = null;
-
-        window.addEventListener('DOMContentLoaded', () => {
-            checkSellerPermission();
-            fetchMarketItems();
-        });
-
-        function checkSellerPermission() {
-            const role = localStorage.getItem('currentUserRole') || '일반회원';
-            const area = document.getElementById('registerButtonArea');
-            const isAdmin = (role === '관리진' || role === '관리자');
-            
-            if (isAdmin || role === '특수회원' || role === '판매자') {
-                area.innerHTML = `<button class="btn-primary-large" onclick="openProductForm()" style="padding: 0.75rem 1.25rem; white-space: nowrap;"><i class="fas fa-pen"></i> 상품 등록</button>`;
-            } else {
-                area.innerHTML = `<span style="font-size: 0.8rem; color: var(--text-sub); white-space: nowrap;">* 판매자 이상 등록 가능</span>`;
-            }
-        }
-
-        function openProductForm(id = null) {
-            const modal = document.getElementById('productFormModal');
-            modal.style.display = 'flex';
-            const deleteImgArea = document.getElementById('deleteImgArea');
-            document.getElementById('deleteExistingImg').checked = false;
-
-            if (id) {
-                const item = allItems.find(i => i.id === id);
-                editingItemId = item.id;
-                document.getElementById('prodTitle').value = item.title;
-                document.getElementById('prodPrice').value = item.price;
-                document.getElementById('prodContact').value = item.contact;
-                document.getElementById('prodDesc').value = item.description;
-                document.getElementById('formModalTitle').innerHTML = '<i class="fas fa-edit"></i> 상품 수정';
-                deleteImgArea.style.display = item.image_url ? 'block' : 'none';
-            } else {
-                editingItemId = null;
-                document.getElementById('productForm').reset();
-                document.getElementById('formModalTitle').innerHTML = '<i class="fas fa-plus-circle"></i> 새 상품 등록';
-                deleteImgArea.style.display = 'none';
-            }
-        }
-
-        function closeProductForm() {
-            document.getElementById('productFormModal').style.display = 'none';
-            editingItemId = null;
-        }
-
-        async function fetchMarketItems() {
-            const listContainer = document.getElementById('marketItemList');
-            const currentUser = localStorage.getItem('currentUser');
-            const currentRole = localStorage.getItem('currentUserRole') || '';
-            const isAdmin = (currentRole === '관리진' || currentRole === '관리자');
-
-            try {
-                const { data, error } = await db.from('market').select('*').order('created_at', { ascending: false });
-                if (error) throw error;
-                allItems = data;
-
-                if(!data || data.length === 0) {
-                    listContainer.innerHTML = '<p style="text-align:center; padding: 2rem;">등록된 상품이 없습니다.</p>';
-                    return;
-                }
-
-                // 중고나라 스타일 (좌측 썸네일, 우측 정보)
-                listContainer.innerHTML = data.map(item => {
-                    const canEdit = (currentUser === item.author || isAdmin);
-                    const adminButtons = canEdit ? `
-                        <div class="market-actions">
-                            <button onclick='openProductForm(${item.id})' class="btn-auth" style="padding: 6px 12px; font-size: 0.8rem;">수정</button>
-                            <button onclick="deleteMarketItem(${item.id})" class="btn-logout" style="padding: 6px 12px; font-size: 0.8rem;">삭제</button>
-                        </div>
-                    ` : '';
-
-                    const thumbHtml = item.image_url ? `<img src="${item.image_url}" class="market-thumb">` : `<div class="market-thumb" style="display:flex; align-items:center; justify-content:center; color:var(--text-sub);"><i class="fas fa-image fa-2x"></i></div>`;
-
-                    return `
-                        <div class="market-item-row">
-                            ${thumbHtml}
-                            <div class="market-info">
-                                <h4>${item.title}</h4>
-                                <div class="price">${Number(item.price).toLocaleString()}원</div>
-                                <div class="meta">
-                                    <span><i class="fas fa-user"></i> ${item.author}</span>
-                                    <span><i class="fas fa-phone"></i> ${item.contact}</span>
-                                    <span><i class="fas fa-clock"></i> ${new Date(item.created_at).toLocaleDateString()}</span>
-                                </div>
-                                <p style="font-size: 0.88rem; color: var(--text-sub); margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.description}</p>
-                            </div>
-                            ${adminButtons}
-                        </div>
-                    `;
-                }).join('');
-            } catch (err) {
-                console.error(err);
-                listContainer.innerHTML = '<p style="text-align:center; color:red;">데이터를 불러오는데 실패했습니다.</p>';
-            }
-        }
-
-        async function submitMarketItem(e) {
-            e.preventDefault();
-            const currentUser = localStorage.getItem('currentUser');
-            if (!currentUser) return alert('로그인 후 이용하세요.');
-
-            const title = document.getElementById('prodTitle').value.trim();
-            const price = document.getElementById('prodPrice').value.trim();
-            const contact = document.getElementById('prodContact').value.trim();
-            const description = document.getElementById('prodDesc').value.trim();
-            const imageInput = document.getElementById('prodImage');
-            const deleteExisting = document.getElementById('deleteExistingImg').checked;
-
-            let imageUrl = undefined;
-            if (deleteExisting) imageUrl = null;
-
-            if (imageInput.files && imageInput.files[0]) {
-                const file = imageInput.files[0];
-                const fileExt = file.name.split('.').pop();
-                const fileName = `market_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-                const { error: uploadError } = await db.storage.from('images').upload(fileName, file);
-                if (uploadError) return alert('이미지 업로드 실패: ' + uploadError.message);
-                imageUrl = db.storage.from('images').getPublicUrl(fileName).data.publicUrl;
-            }
-
-            let query;
-            if (editingItemId) {
-                const updateData = { title, price, contact, description };
-                if (imageUrl !== undefined) updateData.image_url = imageUrl; 
-                query = db.from('market').update(updateData).eq('id', editingItemId);
-            } else {
-                query = db.from('market').insert([{ title, price, contact, description, author: currentUser, image_url: imageUrl || null }]);
-            }
-
-            const { error } = await query;
-            if (error) alert('처리 실패: ' + error.message);
-            else {
-                alert(editingItemId ? '수정되었습니다.' : '등록되었습니다.');
-                closeProductForm();
-                fetchMarketItems();
-            }
-        }
-
-        async function deleteMarketItem(id) {
-            if (!confirm('정말 삭제하시겠습니까?')) return;
-            const { error } = await db.from('market').delete().eq('id', id);
-            if (error) alert('삭제 실패: ' + error.message);
-            else {
-                alert('삭제되었습니다.');
-                fetchMarketItems();
-            }
-        }
-
-        function filterItems() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            const items = document.querySelectorAll('.market-item-row');
-            items.forEach(item => {
-                const text = item.innerText.toLowerCase();
-                item.style.display = text.includes(query) ? 'flex' : 'none';
-            });
-        }
-    </script>
+  <main>
+    <div class="section-title">전체 상품 목록</div>
+    <div class="product-grid">
+      <a href="market.html" class="product-card">
+        <div class="product-thumb">상품 이미지</div>
+        <div class="product-info">
+          <div class="product-title">하차벨 컨트롤 박스 커스텀 부품 세트 판매</div>
+          <div class="product-price">15,000원</div>
+          <div class="product-meta">서울시 · 5분 전</div>
+        </div>
+      </a>
+      <a href="market.html" class="product-card">
+        <div class="product-thumb">상품 이미지</div>
+        <div class="product-info">
+          <div class="product-title">대중교통 안내방송 음원 및 철도 굿즈 일괄</div>
+          <div class="product-price">30,000원</div>
+          <div class="product-meta">경기도 · 1시간 전</div>
+        </div>
+      </a>
+      <a href="market.html" class="product-card">
+        <div class="product-thumb">상품 이미지</div>
+        <div class="product-info">
+          <div class="product-title">버스 LED 행선판 모형 팝니다</div>
+          <div class="product-price">50,000원</div>
+          <div class="product-meta">부산시 · 3시간 전</div>
+        </div>
+      </a>
+    </div>
+  </main>
 </body>
 </html>
