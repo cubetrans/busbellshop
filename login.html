@@ -4,123 +4,75 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>로그인 - 버스벨샵</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js"></script>
   <link rel="stylesheet" href="style.css">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
+
   <header>
-  <div class="logo">
-    <a href="index.html"><img src="icon.png" alt="로고"></a>
-  </div>
-  
-  <div class="search-gradient-wrap">
-    <div class="search-container">
-      <input type="text" id="search-input" placeholder="검색...">
+    <div class="header-left">
+      <a href="index.html" class="logo">
+        <img src="icon.png" alt="logo" width="30" height="30" onerror="this.style.display='none'"> Bus Bell Shop
+      </a>
+      <ul class="nav-menu">
+        <li><a href="index.html">홈</a></li>
+        <li><a href="market.html">장터</a></li>
+        <li><a href="community.html">커뮤니티</a></li>
+        <li><a href="support.html">고객센터</a></li>
+      </ul>
     </div>
-  </div>
 
-  <!-- 이 영역이 자바스크립트에 의해 동적으로 채워집니다 -->
-  <div class="header-actions" id="auth-menu-area"></div>
-</header>
+    <div class="header-right">
+      <button class="theme-toggle-btn">🌙 다크모드</button>
+      <button class="hamburger">☰</button>
+    </div>
 
-<nav class="sub-nav" id="sub-nav">
-  <a href="index.html">홈</a>
-  <a href="market.html">중고마켓</a>
-  <a href="community.html">커뮤니티</a>
-  <a href="mypage.html">마이페이지</a>
-  <a href="admin.html" id="admin-nav" style="display:none;">관리자</a>
-</nav>
+    <div class="mobile-menu">
+      <ul>
+        <li><a href="index.html">홈</a></li>
+        <li><a href="market.html">장터</a></li>
+        <li><a href="community.html">커뮤니티</a></li>
+        <li><a href="support.html">고객센터</a></li>
+      </ul>
+    </div>
+  </header>
 
-  <main style="max-width: 400px; margin-top: 50px;">
-    <div class="content-box">
-      <!-- 로그인 섹션 -->
-      <div id="login-section">
-        <div class="section-title">로그인</div>
-        <label>아이디 (닉네임)</label>
-        <input type="text" id="login-id" placeholder="아이디 입력">
-        <label>비밀번호</label>
-        <input type="password" id="login-pw" placeholder="비밀번호 입력">
-        <button class="btn-primary" style="width: 100%; margin-top: 10px;" onclick="handleLogin()">로그인</button>
-        <div style="text-align: center; margin-top: 15px;">
-          <a href="#" onclick="toggleAuthMode(event)" style="font-size: 14px; color: #38bdf8; text-decoration: none;">계정이 없으신가요? 회원가입하기</a>
-        </div>
-      </div>
-
-      <!-- 회원가입 섹션 (기본 숨김) -->
-      <div id="signup-section" style="display: none;">
-        <div class="section-title">회원가입</div>
-        <label>아이디 (닉네임)</label>
-        <input type="text" id="signup-id" placeholder="사용할 닉네임">
-        <label>비밀번호</label>
-        <input type="password" id="signup-pw" placeholder="비밀번호">
-        <button class="btn-primary" style="width: 100%; margin-top: 10px;" onclick="handleSignup()">회원가입</button>
-        <div style="text-align: center; margin-top: 15px;">
-          <a href="#" onclick="toggleAuthMode(event)" style="font-size: 14px; color: #38bdf8; text-decoration: none;">계정이 있습니다. 로그인하기</a>
-        </div>
+  <div class="container" style="max-width: 400px; margin-top: 60px;">
+    <div class="card">
+      <h2>로그인</h2>
+      <form id="login-form" style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px;">
+        <input type="text" id="login-username" placeholder="사용자명 (예: 서울교덕 또는 관리자)" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
+        <input type="password" id="login-password" placeholder="비밀번호" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
+        <button type="submit" class="btn btn-primary">로그인</button>
+      </form>
+      <div style="margin-top: 15px; font-size: 0.9rem; text-align: center;">
+        <p>체험용 계정: <strong>서울교덕</strong> / 비밀번호: <strong>password123</strong></p>
+        <p style="margin-top: 5px;">관리자 계정: <strong>관리자</strong> / 비밀번호: <strong>adminpassword</strong></p>
       </div>
     </div>
-  </main>
+  </div>
 
+  <script src="app.js"></script>
   <script>
-    let isSignupMode = false;
-
-    function toggleAuthMode(e) {
+    document.getElementById('login-form').addEventListener('submit', (e) => {
       e.preventDefault();
-      isSignupMode = !isSignupMode;
-      document.getElementById('login-section').style.display = isSignupMode ? 'none' : 'block';
-      document.getElementById('signup-section').style.display = isSignupMode ? 'block' : 'none';
-    }
+      const usernameInput = document.getElementById('login-username').value.trim();
+      const passwordInput = document.getElementById('login-password').value.trim();
 
-    async function handleLogin() {
-      const id = document.getElementById('login-id').value.trim();
-      const pw = document.getElementById('login-pw').value.trim();
-      if (!id || !pw) {
-        alert('아이디와 비밀번호를 입력해주세요.');
-        return;
-      }
+      const users = JSON.parse(localStorage.getItem('all_users')) || [
+        { id: 'user1', username: '서울교덕', accountNum: '110-123-456789', password: 'password123', role: 'user' },
+        { id: 'admin1', username: '관리자', accountNum: '333-987-654321', password: 'adminpassword', role: 'admin' },
+        { id: 'user2', username: '교통동호인', accountNum: '1002-555-778899', password: 'password456', role: 'user' }
+      ];
 
-      const { data, error } = await supabaseClient
-        .from('users')
-        .select('*')
-        .eq('nickname', id)
-        .eq('password', pw)
-        .single();
-
-      if (error || !data) {
-        alert('아이디 또는 비밀번호가 일치하지 않습니다.');
-      } else {
-        setLoggedInUser(data);
-        alert(`${data.nickname}님 환영합니다!`);
+      const found = users.find(u => u.username === usernameInput && u.password === passwordInput);
+      if (found) {
+        localStorage.setItem('currentUser', JSON.stringify(found));
+        alert(`${found.username}님 환영합니다!`);
         window.location.href = 'index.html';
-      }
-    }
-
-    async function handleSignup() {
-      const id = document.getElementById('signup-id').value.trim();
-      const pw = document.getElementById('signup-pw').value.trim();
-
-      if (!id || !pw) {
-        alert('모든 정보를 입력해주세요.');
-        return;
-      }
-
-      const { error } = await supabaseClient
-        .from('users')
-        .insert([{ nickname: id, password: pw, role: '일반회원' }]);
-
-      if (error) {
-        alert('회원가입 실패: 이미 존재하는 아이디이거나 오류가 발생했습니다.');
       } else {
-        alert('회원가입이 완료되었습니다. 로그인해주세요.');
-        isSignupMode = false;
-        document.getElementById('login-section').style.display = 'block';
-        document.getElementById('signup-section').style.display = 'none';
-        document.getElementById('signup-id').value = '';
-        document.getElementById('signup-pw').value = '';
+        alert('아이디 또는 비밀번호가 일치하지 않습니다.');
       }
-    }
+    });
   </script>
 </body>
 </html>
