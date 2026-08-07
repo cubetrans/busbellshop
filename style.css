@@ -1,31 +1,173 @@
-:root { --bg-color: #f4f4f4; --bg-card: #fff; --text-color: #333; --border-color: #ddd; --primary: #38bdf8; }
-body { margin: 0; font-family: sans-serif; background-color: var(--bg-color); color: var(--text-color); }
-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; background: #fff; border-bottom: 1px solid var(--border-color); }
-.logo img { height: 40px; }
-.search-gradient-wrap { flex-grow: 1; margin: 0 20px; }
-.search-container input { width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; }
-.header-actions { display: flex; gap: 10px; align-items: center; }
-.sub-nav { display: flex; background: #fff; border-bottom: 1px solid var(--border-color); justify-content: center; padding: 10px 0; }
-.sub-nav a { padding: 0 20px; text-decoration: none; color: #555; }
-.sub-nav a.active { color: var(--primary); font-weight: bold; }
-main { max-width: 800px; margin: 20px auto; padding: 0 15px; }
-.content-box { background: var(--bg-card); padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+/* ==========================================
+   기본 변수 정의 (라이트 / 다크 테마 대응)
+   ========================================== */
+:root {
+  --bg-color: #f8fafc;
+  --bg-card: #ffffff;
+  --text-color: #1e293b;
+  --text-secondary: #64748b;
+  --border-color: #e2e8f0;
+  --primary: #0284c7;
+  --primary-hover: #0369a1;
+  --danger: #ef4444;
+  --edit: #10b981;
+}
 
-/* 햄버거 메뉴 스타일 */
-.hamburger-btn { display: none; background: none; border: none; font-size: 24px; cursor: pointer; }
+body.dark-theme {
+  --bg-color: #0f172a;
+  --bg-card: #1e293b;
+  --text-color: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --border-color: #334155;
+  --primary: #38bdf8;
+  --primary-hover: #0ea5e9;
+}
 
-/* 모바일 전용 설정 */
-@media (max-width: 768px) {
-  header { flex-wrap: wrap; }
-  .search-gradient-wrap { order: 3; width: 100%; margin: 10px 0 0 0; }
-  .hamburger-btn { display: block; }
-  .sub-nav { display: none; flex-direction: column; width: 100%; text-align: center; }
-  .sub-nav.mobile-open { display: flex; }
-  .sub-nav a { padding: 15px 0; border-bottom: 1px solid var(--border-color); width: 100%; }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  line-height: 1.5;
+  transition: background-color 0.2s, color 0.2s;
 }
 
 /* ==========================================
-   버튼 스타일 총정리 (모던 & 입체감)
+   헤더 및 네비게이션 레이아웃
+   ========================================== */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background-color: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo img {
+  height: 36px;
+  display: block;
+}
+
+.search-gradient-wrap {
+  flex-grow: 1;
+  max-width: 400px;
+  margin: 0 20px;
+}
+
+.search-container input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-size: 14px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.sub-nav {
+  display: flex;
+  background-color: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+  justify-content: center;
+  padding: 0 10px;
+}
+
+.sub-nav a {
+  padding: 12px 20px;
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-size: 15px;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.sub-nav a:hover,
+.sub-nav a.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+/* ==========================================
+   메인 컨테이너 및 카드 UI
+   ========================================== */
+main {
+  max-width: 900px;
+  margin: 24px auto;
+  padding: 0 16px;
+}
+
+.content-box {
+  background-color: var(--bg-card);
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 16px;
+}
+
+/* ==========================================
+   폼 및 입력 요소 스타일
+   ========================================== */
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+}
+
+input[type="text"],
+input[type="number"],
+textarea,
+select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-size: 14px;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+
+textarea {
+  resize: vertical;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+/* ==========================================
+   모던 버튼 스타일 (입체감 및 호버 효과)
    ========================================== */
 button, 
 .btn-primary, 
@@ -46,7 +188,6 @@ button,
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
-/* 마우스 올렸을 때 살짝 떠오르는 효과 */
 button:hover, 
 .btn-primary:hover, 
 .btn-edit:hover, 
@@ -56,7 +197,6 @@ button:hover,
   opacity: 1;
 }
 
-/* 클릭할 때 살짝 눌리는 효과 */
 button:active, 
 .btn-primary:active, 
 .btn-edit:active, 
@@ -65,42 +205,110 @@ button:active,
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
-/* 1. 기본/서브 버튼 (테마에 맞는 은은한 테두리형) */
 button {
   background-color: var(--bg-card);
   color: var(--text-color);
   border: 1px solid var(--border-color);
 }
+
 button:hover {
   background-color: var(--bg-color);
   border-color: var(--primary);
   color: var(--primary);
 }
 
-/* 2. 주요 액션 버튼 (세련된 블루 그라데이션) */
 .btn-primary {
   background: linear-gradient(135deg, #0284c7, #0369a1);
   color: #ffffff;
 }
 
-/* 3. 수정/성공 버튼 (산뜻한 에메랄드 그라데이션) */
 .btn-edit {
   background: linear-gradient(135deg, #10b981, #059669);
   color: #ffffff;
 }
 
-/* 4. 위험/삭제 버튼 (시선이 가는 레드 그라데이션) */
 .btn-danger {
   background: linear-gradient(135deg, #ef4444, #dc2626);
   color: #ffffff;
 }
 
-/* 덤: 입력창(Input/Textarea/Select) 포커스 효과도 세련되게 다듬기 */
-input[type="text"]:focus,
-input[type="number"]:focus,
-textarea:focus,
-select:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+/* ==========================================
+   테이블 스타일
+   ========================================== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  background-color: var(--bg-card);
+}
+
+th, td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+  font-size: 14px;
+}
+
+th {
+  background-color: var(--bg-color);
+  font-weight: 600;
+}
+
+/* ==========================================
+   모바일 반응형 설정 (768px 이하)
+   ========================================== */
+.hamburger-btn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--text-color);
+  padding: 4px;
+}
+
+@media (max-width: 768px) {
+  header {
+    flex-wrap: wrap;
+    padding: 10px 14px;
+  }
+
+  .search-gradient-wrap {
+    order: 3;
+    width: 100%;
+    margin: 10px 0 0 0;
+    max-width: none;
+  }
+
+  .hamburger-btn {
+    display: block;
+  }
+
+  .sub-nav {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    text-align: center;
+  }
+
+  .sub-nav.mobile-open {
+    display: flex;
+  }
+
+  .sub-nav a {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+    width: 100%;
+  }
+
+  main {
+    margin: 12px auto;
+    padding: 0 10px;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
 }
