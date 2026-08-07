@@ -80,10 +80,10 @@
                 </div>
             </section>
 
-            <!-- 💳 안전결제 정산 계좌 관리 -->
-            <section class="card glass-panel">
+            <!-- 💳 안전결제 정산 계좌 관리 (기본 숨김 처리) -->
+            <section class="card glass-panel" id="bankAccountSection" style="display: none;">
                 <div class="card-header">
-                    <h2><i class="fas fa-wallet"></i> 안전결제 정산 계좌</h2>
+                    <h2><i class="fas fa-wallet"></i> 안전결제 정산 계좌 <span style="font-size: 0.9rem; color: var(--primary-color);">(판매자 전용)</span></h2>
                 </div>
                 <p style="font-size: 0.88rem; color: var(--text-sub); margin-bottom: 15px;">
                     판매 물품이 안전결제로 거래될 경우, 구매 확정 후 수수료(2%)를 제외한 대금이 아래 계좌로 입금됩니다.
@@ -187,25 +187,40 @@
             const myNicknameEl = document.getElementById('myNickname');
             if (myNicknameEl) myNicknameEl.innerText = currentUser;
 
-            const role = typeof getRole === 'function' ? getRole(currentUser) : '일반회원';
+            // 로컬스토리지 우선, 없으면 getRole 함수 호출 (안전성 강화)
+            let role = localStorage.getItem('currentUserRole');
+            if (!role && typeof getRole === 'function') {
+                role = getRole(currentUser);
+            }
+            if (!role) role = '일반회원';
+
             const roleBadge = document.getElementById('myRoleBadge');
             if (roleBadge) {
                 roleBadge.innerText = role;
                 if (role === '관리자') roleBadge.style.background = '#eab308';
+                else if (role === '관리진') roleBadge.style.background = '#eab308';
                 else if (role === '판매자') roleBadge.style.background = '#3b82f6';
                 else if (role === '특수회원') roleBadge.style.background = '#a855f7';
             }
 
-            // 2. 계좌 정보 불러오기
-            try {
-                const { data: user } = await db.from('users').select('*').eq('nickname', currentUser).maybeSingle();
-                if (user) {
-                    if (user.bank_name) document.getElementById('bankName').value = user.bank_name;
-                    if (user.account_number) document.getElementById('accountNumber').value = user.account_number;
-                    if (user.account_holder) document.getElementById('accountHolder').value = user.account_holder;
+            // ⭐ 2. 권한에 따른 정산 계좌 섹션 노출 처리
+            const allowedRoles = ['판매자', '특수회원', '관리진', '관리자'];
+            const bankSection = document.getElementById('bankAccountSection');
+            
+            if (allowedRoles.includes(role)) {
+                if (bankSection) bankSection.style.display = 'block';
+
+                // 권한이 있는 경우에만 DB에서 계좌 정보를 불러옴
+                try {
+                    const { data: user } = await db.from('users').select('*').eq('nickname', currentUser).maybeSingle();
+                    if (user) {
+                        if (user.bank_name) document.getElementById('bankName').value = user.bank_name;
+                        if (user.account_number) document.getElementById('accountNumber').value = user.account_number;
+                        if (user.account_holder) document.getElementById('accountHolder').value = user.account_holder;
+                    }
+                } catch (e) {
+                    console.error("계좌 정보 로드 실패:", e);
                 }
-            } catch (e) {
-                console.error("계좌 정보 로드 실패:", e);
             }
 
             // 3. 내 활동 내역 개수 카운트
@@ -252,7 +267,7 @@
             }
         }
 
-        // 🔗 구글 계정 연동 기능
+        // 🔗 구글 계정 연동 기능 (옵션)
         async function linkGoogleAccount() {
             try {
                 const { data, error } = await db.auth.linkIdentity({
