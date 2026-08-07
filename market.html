@@ -3,64 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>버스벨 샵 - 장터</title>
+    <title>하차벨 장터</title>
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { font-family: 'Apple SD Gothic Neo', sans-serif; margin: 0; padding: 0; background-color: #f8f9fa; color: #333; }
-        header { background: #fff; padding: 15px 20px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
-        .logo img { height: 40px; display: block; }
-        nav a { margin-left: 20px; text-decoration: none; color: #555; font-weight: bold; }
-        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        h2 { margin: 0; }
-        .btn { background: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn:hover { background: #0056b3; }
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .product-card { background: white; border: 1px solid #ddd; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .product-card h3 { margin-top: 0; font-size: 18px; }
-        .price { color: #e63946; font-weight: bold; font-size: 16px; margin: 10px 0; }
-        .escrow-notice { font-size: 12px; color: #666; background: #f1f3f5; padding: 8px; border-radius: 4px; margin-top: 10px; }
-        /* 모달 스타일 */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 30px; border-radius: 8px; width: 400px; max-width: 90%; }
-        .modal-content input, .modal-content textarea { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-    </style>
 </head>
 <body>
-
-    <header>
-        <div class="logo">
-            <!-- 텍스트 제거 및 로고 이미지 대체 -->
-            <img src="logo.png" alt="Logo">
+    <header class="site-header">
+        <div class="logo-container">
+            <a href="index.html"><img src="logo.png" alt="Bus Bell Shop" class="header-logo"></a>
         </div>
         <nav>
-            <a href="index.html">홈</a>
             <a href="market.html">장터</a>
             <a href="community.html">커뮤니티</a>
         </nav>
     </header>
 
-    <div class="container">
-        <div class="top-bar">
-            <h2>중고 장터</h2>
-            <button class="btn" onclick="openModal()">상품 등록하기</button>
+    <main class="market-container">
+        <div class="market-header-actions">
+            <h2>하차벨 중고 장터</h2>
+            <button id="open-register-btn" class="btn-primary">상품 등록하기</button>
+        </div>
+
+        <!-- 상품 등록 모달/폼 (기본 숨김) -->
+        <div id="register-modal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <h3>상품 등록</h3>
+                <form id="product-form">
+                    <input type="text" id="prod-title" placeholder="상품명" required>
+                    <textarea id="prod-desc" placeholder="상품 설명" required></textarea>
+                    <input type="number" id="prod-price" placeholder="정가 (원)" required>
+                    <input type="text" id="prod-image" placeholder="이미지 URL">
+                    <button type="submit" class="btn-primary">등록 완료</button>
+                    <button type="button" id="close-modal-btn" class="btn-secondary">취소</button>
+                </form>
+            </div>
         </div>
 
         <!-- 상품 목록 영역 -->
         <div id="product-list" class="product-grid">
-            <p>상품을 불러오는 중...</p>
+            <!-- 상품 동적 로드 -->
         </div>
-    </div>
+    </main>
 
-    <!-- 상품 등록 모달 -->
-    <div id="productModal" class="modal">
+    <!-- 에스크로 결제 안내 모달 -->
+    <div id="escrow-modal" class="modal" style="display:none;">
         <div class="modal-content">
-            <h3>상품 등록</h3>
-            <input type="text" id="pTitle" placeholder="상품명">
-            <input type="number" id="pPrice" placeholder="정가 (원)">
-            <textarea id="pDesc" placeholder="상품 설명" rows="4"></textarea>
-            <button class="btn" style="width: 100%;" onclick="registerProduct()">등록 완료</button>
-            <button class="btn" style="width: 100%; background: #6c757d; margin-top: 5px;" onclick="closeModal()">취소</button>
+            <h3>안전 에스크로 결제 안내</h3>
+            <p>본 장터는 관리진 계좌를 통한 <strong>에스크로 방식</strong>으로 거래됩니다.</p>
+            <p><strong>입금 계좌:</strong> 하나은행 154-910580-98807 (예금주: 안수현)</p>
+            <p>상품 정가를 입금하시면, 관리진 확인 후 2%의 수수료를 제외한 98%의 금액이 판매자에게 전달됩니다.</p>
+            <button id="confirm-purchase-btn" class="btn-primary">입금 완료 및 구매신청</button>
+            <button id="close-escrow-btn" class="btn-secondary">닫기</button>
         </div>
     </div>
 
@@ -69,71 +62,90 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwZ3poaXBpZWJjbmtmcXp1ZmdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5ODMxMTgsImV4cCI6MjEwMTU1OTExOH0.byzqUDMvoAIbybPYbyKsR6KoPnpLPs0jsdawAnW0Eww';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        document.addEventListener("DOMContentLoaded", () => {
-            fetchProducts();
-        });
+        const productListEl = document.getElementById('product-list');
+        const registerModal = document.getElementById('register-modal');
+        const openRegisterBtn = document.getElementById('open-register-btn');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const escrowModal = document.getElementById('escrow-modal');
 
-        async function fetchProducts() {
-            const listEl = document.getElementById('product-list');
-            const { data, error } = await supabaseClient.from('market_posts').select('*').order('created_at', { ascending: false });
+        let selectedProductId = null;
 
+        // 상품 목록 불러오기
+        async function loadProducts() {
+            productListEl.innerHTML = '<p>상품을 불러오는 중...</p>';
+            const { data, error } = await supabaseClient.from('products').select('*').order('created_at', { ascending: false });
+            
             if (error) {
-                listEl.innerHTML = '<p>상품을 불러오는데 실패했습니다.</p>';
+                productListEl.innerHTML = '<p>상품을 불러오지 못했습니다.</p>';
                 return;
             }
 
-            if (!data || data.length === 0) {
-                listEl.innerHTML = '<p>등록된 상품이 없습니다.</p>';
+            if (data.length === 0) {
+                productListEl.innerHTML = '<p>등록된 상품이 없습니다.</p>';
                 return;
             }
 
-            listEl.innerHTML = data.map(item => `
-                <div class="product-card">
-                    <h3>${escapeHtml(item.title)}</h3>
-                    <div class="price">${Number(item.price).toLocaleString()}원</div>
-                    <p>${escapeHtml(item.description)}</p>
-                    <div class="escrow-notice">
-                        🔒 <strong>에스크로 결제 안내</strong><br>
-                        관리진 계좌 입금 확인 후 거래가 진행됩니다.<br>
-                        (수수료 2% 차감 후 98% 판매자 정산)
-                    </div>
-                    <button class="btn" style="width: 100%; margin-top: 10px;" onclick="buyProduct('${item.id}', ${item.price})">구매하기 (에스크로)</button>
-                </div>
-            `).join('');
+            productListEl.innerHTML = '';
+            data.forEach(prod => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+                    <img src="${prod.image || 'default-bell.png'}" alt="${prod.title}" class="prod-img">
+                    <h4>${prod.title}</h4>
+                    <p class="prod-price">${Number(prod.price).toLocaleString()}원</p>
+                    <button class="btn-buy" onclick="openEscrow('${prod.id}', ${prod.price})">구매하기 (에스크로)</button>
+                `;
+                productListEl.appendChild(card);
+            });
         }
 
-        function openModal() { document.getElementById('productModal').style.display = 'flex'; }
-        function closeModal() { document.getElementById('productModal').style.display = 'none'; }
-
-        async function registerProduct() {
-            const title = document.getElementById('pTitle').value;
-            const price = document.getElementById('pPrice').value;
-            const description = document.getElementById('pDesc').value;
-
-            if (!title || !price) {
-                alert('상품명과 가격을 입력해주세요.');
+        // 상품 등록 모달 제어
+        openRegisterBtn.addEventListener('click', async () => {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (!user) {
+                alert('로그인이 필요합니다.');
+                window.location.href = 'login.html';
                 return;
             }
+            registerModal.style.display = 'flex';
+        });
 
-            const { error } = await supabaseClient.from('market_posts').insert([{ title, price: Number(price), description }]);
+        closeModalBtn.addEventListener('click', () => { registerModal.style.display = 'none'; });
+
+        document.getElementById('product-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            
+            const title = document.getElementById('prod-title').value;
+            const description = document.getElementById('prod-desc').value;
+            const price = parseFloat(document.getElementById('prod-price').value);
+            const image = document.getElementById('prod-image').value;
+
+            const { error } = await supabaseClient.from('products').insert([
+                { title, description, price, image, user_id: user.id }
+            ]);
+
             if (error) {
                 alert('등록 실패: ' + error.message);
             } else {
                 alert('상품이 등록되었습니다.');
-                closeModal();
-                fetchProducts();
+                registerModal.style.display = 'none';
+                loadProducts();
             }
+        });
+
+        function openEscrow(productId, price) {
+            selectedProductId = productId;
+            escrowModal.style.display = 'flex';
         }
 
-        function buyProduct(id, price) {
-            const fee = Math.floor(price * 0.02);
-            const sellerAmount = price - fee;
-            alert(`[에스크로 결제 시스템]\n\n관리진 계좌로 정가 ${price.toLocaleString()}원을 입금해주세요.\n입금 확인 후 관리진이 2% 수수료(${fee.원}원)를 제외한 ${sellerAmount.toLocaleString()}원을 판매자에게 전달합니다.`);
-        }
+        document.getElementById('close-escrow-btn').addEventListener('click', () => { escrowModal.style.display = 'none'; });
+        document.getElementById('confirm-purchase-btn').addEventListener('click', () => {
+            alert('구매 신청이 완료되었습니다. 관리진 계좌(하나은행 154-910580-98807 안수현)로 입금해 주시면 확인 후 처리됩니다.');
+            escrowModal.style.display = 'none';
+        });
 
-        function escapeHtml(str) {
-            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
-        }
+        loadProducts();
     </script>
 </body>
 </html>
