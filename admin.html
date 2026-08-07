@@ -1,30 +1,91 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
+  <meta charset="UTF-8">
+  <title>관리자 페이지 - 버스벨샵</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <header>
+    <div class="logo"><a href="index.html"><img src="icon.png" alt="버스벨샵 로고"></a></div>
+    <div class="header-actions" id="auth-menu-area"><button onclick="toggleTheme()">테마 변경</button></div>
+  </header>
+  <nav class="sub-nav">
+    <a href="index.html">홈</a>
+    <a href="market.html">중고마켓</a>
+    <a href="community.html">커뮤니티</a>
+    <a href="mypage.html">마이페이지</a>
+    <a href="admin.html" class="active">관리자</a>
+  </nav>
+
   <main>
-    <h2>주문 관리 페이지</h2>
-    <table>
-      <thead><tr><th>구매자</th><th>상품</th><th>상태</th><th>관리</th></tr></thead>
-      <tbody id="order-list"></tbody>
-    </table>
+    <div class="section-title" style="margin-bottom: 20px;">관리자 페이지</div>
+
+    <!-- 에스크로 주문 관리 섹션 -->
+    <div class="content-box" style="margin-bottom: 20px;">
+      <h3>에스크로 주문 관리</h3>
+      <table border="1" style="width:100%; border-collapse: collapse; margin-top:10px;">
+        <thead>
+          <tr>
+            <th>구매자</th>
+            <th>상품명</th>
+            <th>금액</th>
+            <th>상태</th>
+            <th>상태 변경</th>
+          </tr>
+        </thead>
+        <tbody id="order-list"></tbody>
+      </table>
+    </div>
+
+    <!-- 회원 정보 및 역할 관리 섹션 -->
+    <div class="content-box">
+      <h3>회원 목록 및 역할 관리</h3>
+      <table border="1" style="width:100%; border-collapse: collapse; margin-top:10px;">
+        <thead>
+          <tr>
+            <th>닉네임</th>
+            <th>아이디 / 이메일</th>
+            <th>현재 역할</th>
+            <th>역할 변경</th>
+          </tr>
+        </thead>
+        <tbody id="user-list"></tbody>
+      </table>
+    </div>
   </main>
 
   <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const currentUser = getLoggedInUser();
+      if (!currentUser || currentUser.role !== '관리자') {
+        alert('관리자만 접근할 수 있는 페이지입니다.');
+        window.location.href = 'index.html';
+        return;
+      }
+      loadOrders();
+      loadUsers();
+    });
+
+    // 주문 내역 불러오기
     async function loadOrders() {
-      const { data } = await supabaseClient.from('orders').select('*');
+      const { data, error } = await supabaseClient.from('orders').select('*').order('created_at', { ascending: false });
       const list = document.getElementById('order-list');
+      if (error || !data || data.length === 0) {
+        list.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:10px;">주문 내역이 없습니다.</td></tr>';
+        return;
+      }
+      
       list.innerHTML = data.map(o => `
         <tr>
           <td>${o.buyer_nickname}</td>
           <td>${o.item_title}</td>
+          <td>${o.amount.toLocaleString()}원</td>
           <td>${o.status}</td>
           <td>
-            <select onchange="updateStatus(${o.id}, this.value)">
+            <select onchange="updateOrderStatus(${o.id}, this.value)">
               <option ${o.status=='입금대기'?'selected':''}>입금대기</option>
               <option ${o.status=='처리중'?'selected':''}>처리중</option>
               <option ${o.status=='보류'?'selected':''}>보류</option>
@@ -35,11 +96,53 @@
         </tr>
       `).join('');
     }
-    async function updateStatus(id, val) {
-      await supabaseClient.from('orders').update({status: val}).eq('id', id);
-      loadOrders();
+
+    async function updateOrderStatus(id, newStatus) {
+      const { error } = await supabaseClient.from('orders').update({ status: newStatus }).eq('id', id);
+      if (error) {
+        alert('상태 변경 실패');
+      } else {
+        alert('주문 상태가 변경되었습니다.');
+        loadOrders();
+      }
     }
-    loadOrders();
+
+    // 회원 목록 불러오기
+    async function loadUsers() {
+      const { data, error } = await supabaseClient.from('users').select('*');
+      const list = document.getElementById('user-list');
+      if (error || !data || data.length === 0) {
+        list.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:10px;">회원 정보가 없습니다.</td></tr>';
+        return;
+      }
+
+      list.innerHTML = data.map(u => `
+        <tr>
+          <td>${u.nickname || ''}</td>
+          <td>${u.email || u.id || ''}</td>
+          <td>${u.role || '일반'}</td>
+          <td>
+            <select onchange="updateUserRole('${u.id}', this.value)">
+              <option value="일반" ${u.role=='일반'?'selected':''}>일반</option>
+              <option value="특수회원" ${u.role=='특수회원'?'selected':''}>특수회원</option>
+              <option value="관리자" ${u.role=='관리자'?'selected':''}>관리자</option>
+            </select>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // 회원 역할 변경하기
+    async function updateUserRole(userId, newRole) {
+      const { error } = await supabaseClient.from('users').update({ role: newRole }).eq('id', userId);
+      if (error) {
+        // id가 숫자가 아니거나 형식이 다를 경우 닉네임으로 한 번 더 시도
+        alert('역할 변경 실패');
+      } else {
+        alert('회원 역할이 변경되었습니다.');
+        loadUsers();
+      }
+    }
   </script>
 </body>
 </html>
