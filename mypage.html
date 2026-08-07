@@ -1,186 +1,37 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>베스벨샵 - 마이페이지</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        if (localStorage.getItem('theme') === 'light') {
-            window.addEventListener('DOMContentLoaded', () => {
-                document.body.classList.add('light-mode');
-            });
-        }
-    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>마이페이지 - 버스벨샵</title>
+  <script src="app.js"></script>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <header>
+    <div class="logo"><a href="index.html">버스벨샵</a></div>
+    <div class="search-container">
+      <input type="text" placeholder="상품명, 지역, 브랜드 등 통합검색">
+    </div>
+    <div class="header-actions">
+      <button onclick="toggleTheme()">테마 변경</button>
+      <a href="mypage.html">내정보</a>
+    </div>
+  </header>
 
-    <header>
-        <a class='logo' href='/'>🚌 <strong>베스벨샵</strong></a>
-        <button class="mobile-menu-btn" onclick="toggleMobileMenu()"><i class="fas fa-bars"></i></button>
+  <nav class="sub-nav">
+    <a href="index.html">홈</a>
+    <a href="market.html">중고마켓</a>
+    <a href="community.html">커뮤니티</a>
+    <a href="admin.html">관리자</a>
+  </nav>
 
-        <div class="nav-group" id="navGroup">
-            <nav>
-                <ul>
-                    <li><a href='/'><i class="fas fa-home"></i> 홈</a></li>
-                    <li><a href='market.html'><i class="fas fa-shopping-cart"></i> 장터</a></li>
-                    <li><a href='community.html'><i class="fas fa-comments"></i> 커뮤니티</a></li>
-                </ul>
-            </nav>
-            <div id="authContainer">
-                <button onclick="toggleAuthDropdown()" id="authToggleBtn" class="user-badge">
-                    <i class="fas fa-user-circle"></i> 로그인 / 가입
-                </button>
-                <div id="authDropdown" class="auth-dropdown"><div id="authFormArea"></div></div>
-            </div>
-        </div>
-    </header>
-
-    <main class="container">
-        <!-- 로그인 안 한 경우 경고 상자 -->
-        <div id="loginRequiredBox" class="card glass-panel" style="display: none; text-align: center; padding: 2.5rem 1rem;">
-            <i class="fas fa-lock" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
-            <h2>로그인이 필요한 페이지입니다</h2>
-            <p style="color: var(--text-sub); margin-bottom: 1.5rem;">마이페이지를 이용하시려면 먼저 상단에서 로그인해 주세요.</p>
-            <button class="btn-primary-large" onclick="toggleAuthDropdown()" style="width: auto; display: inline-block;">로그인하러 가기</button>
-        </div>
-
-        <!-- 마이페이지 대시보드 -->
-        <div id="mypageContent" style="display: none;">
-            <section class="card profile-card glass-panel">
-                <div class="profile-header" style="display: flex; align-items: center; gap: 1.25rem;">
-                    <div class="profile-avatar" style="width: 60px; height: 60px; background: linear-gradient(135deg, var(--primary), #a855f7); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: #fff;">
-                        <i class="fas fa-user-shield"></i>
-                    </div>
-                    <div class="profile-info">
-                        <h2 id="myNickname">불러오는 중...</h2>
-                        <span id="myRoleBadge" class="role-tag" style="display: inline-block; margin-top: 4px; padding: 2px 10px; background: var(--primary); color: #fff; font-size: 0.75rem; font-weight: 700; border-radius: 12px;">일반회원</span>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 정산 계좌 관리 -->
-            <section class="card glass-panel" id="bankAccountSection" style="display: none;">
-                <h2><i class="fas fa-wallet"></i> 안전결제 정산 계좌 <span style="font-size: 0.9rem; color: var(--primary);">(판매자 전용)</span></h2>
-                <p style="font-size: 0.88rem; color: var(--text-sub); margin-bottom: 15px;">구매 확정 후 수수료를 제외한 대금이 아래 계좌로 입금됩니다.</p>
-                <form id="bankForm" onsubmit="saveBankInfo(event)">
-                    <label style="font-size: 0.85rem; color: var(--text-sub);">은행명</label>
-                    <input type="text" id="bankName" placeholder="예: 카카오뱅크, 국민은행" class="input-modern" required>
-                    <label style="font-size: 0.85rem; color: var(--text-sub);">계좌번호 ('-' 제외)</label>
-                    <input type="text" id="accountNumber" placeholder="예: 3333011234567" class="input-modern" required>
-                    <label style="font-size: 0.85rem; color: var(--text-sub);">예금주</label>
-                    <input type="text" id="accountHolder" placeholder="예: 홍길동" class="input-modern" required>
-                    <button type="submit" id="saveBankBtn" class="btn-auth" style="margin-top: 10px;"><i class="fas fa-save"></i> 계좌 정보 저장하기</button>
-                </form>
-            </section>
-
-            <!-- 나의 활동 내역 -->
-            <section class="card glass-panel">
-                <h2><i class="fas fa-history"></i> 나의 작성 내역</h2>
-                <div class="stats-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1rem;">
-                    <div class="stat-box" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; text-align: center;">
-                        <p style="color: var(--text-sub);">내가 등록한 부품</p>
-                        <h3 id="myMarketCount" style="font-size: 1.5rem; font-weight: 800;">0개</h3>
-                    </div>
-                    <div class="stat-box" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; text-align: center;">
-                        <p style="color: var(--text-sub);">내가 쓴 작성글</p>
-                        <h3 id="myPostCount" style="font-size: 1.5rem; font-weight: 800;">0개</h3>
-                    </div>
-                </div>
-            </section>
-        </div>
-
-        <section class="credit-box glass-panel">
-            <h4>💡 베스벨샵 제작/관리진</h4>
-            <div class="credit-grid" style="display: flex; gap: 1.5rem; margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-sub);">
-                <p><i class="fas fa-code"></i> <b>개발:</b> 서울교덕</p>
-                <p><i class="fas fa-lightbulb"></i> <b>아이디어:</b> 평택버덕</p>
-                <p><i class="fas fa-check-circle"></i> <b>피드백:</b> 하차벨 매니아</p>
-            </div>
-        </section>
-    </main>
-
-    <!-- 채널톡 상담 플로팅 버튼 -->
-    <button class="floating-chat-btn" onclick="openCustomerService()" aria-label="고객센터 상담하기">
-        <i class="fas fa-comment-dots"></i>
-    </button>
-
-    <footer>
-        <p>&copy; 2026 🚌 베스벨샵. All rights reserved.</p>
-    </footer>
-
-    <script src="app.js"></script>
-    <script>
-        window.addEventListener('DOMContentLoaded', () => { loadUserData(); });
-
-        async function loadUserData() {
-            const currentUser = localStorage.getItem('currentUser');
-            const loginBox = document.getElementById('loginRequiredBox');
-            const mypageContent = document.getElementById('mypageContent');
-
-            if (!currentUser) {
-                if (loginBox) loginBox.style.display = 'block';
-                if (mypageContent) mypageContent.style.display = 'none';
-                return;
-            }
-
-            if (loginBox) loginBox.style.display = 'none';
-            if (mypageContent) mypageContent.style.display = 'block';
-
-            document.getElementById('myNickname').innerText = currentUser;
-            let role = localStorage.getItem('currentUserRole') || '일반회원';
-            const roleBadge = document.getElementById('myRoleBadge');
-            if (roleBadge) {
-                roleBadge.innerText = role;
-                if (role === '관리자' || role === '관리진') roleBadge.style.background = '#eab308';
-                else if (role === '판매자') roleBadge.style.background = '#3b82f6';
-                else if (role === '특수회원') roleBadge.style.background = '#a855f7';
-            }
-
-            const allowedRoles = ['판매자', '특수회원', '관리진', '관리자'];
-            const bankSection = document.getElementById('bankAccountSection');
-            if (allowedRoles.includes(role)) {
-                bankSection.style.display = 'block';
-                try {
-                    const { data: user } = await db.from('users').select('*').eq('nickname', currentUser).maybeSingle();
-                    if (user) {
-                        if (user.bank_name) document.getElementById('bankName').value = user.bank_name;
-                        if (user.account_number) document.getElementById('accountNumber').value = user.account_number;
-                        if (user.account_holder) document.getElementById('accountHolder').value = user.account_holder;
-                    }
-                } catch (e) { console.error(e); }
-            }
-
-            try {
-                const { count: marketCount } = await db.from('market').select('*', { count: 'exact', head: true }).eq('author', currentUser);
-                const { count: postCount } = await db.from('posts').select('*', { count: 'exact', head: true }).eq('author', currentUser);
-                document.getElementById('myMarketCount').innerText = `${marketCount || 0}개`;
-                document.getElementById('myPostCount').innerText = `${postCount || 0}개`;
-            } catch (e) { console.error(e); }
-        }
-
-        async function saveBankInfo(e) {
-            e.preventDefault();
-            const currentUser = localStorage.getItem('currentUser');
-            if (!currentUser) return;
-
-            const bank_name = document.getElementById('bankName').value.trim();
-            const account_number = document.getElementById('accountNumber').value.trim();
-            const account_holder = document.getElementById('accountHolder').value.trim();
-
-            const saveBtn = document.getElementById('saveBankBtn');
-            saveBtn.disabled = true;
-            saveBtn.innerText = "저장 중...";
-
-            const { error } = await db.from('users').update({ bank_name, account_number, account_holder }).eq('nickname', currentUser);
-            saveBtn.disabled = false;
-            saveBtn.innerHTML = '<i class="fas fa-save"></i> 계좌 정보 저장하기';
-
-            if (error) alert('저장 실패: ' + error.message);
-            else alert('정산 계좌 정보가 성공적으로 저장되었습니다!');
-        }
-    </script>
+  <main>
+    <div class="section-title">마이페이지</div>
+    <div class="content-box">
+      <p>닉네임: 버스동호인</p>
+      <p style="margin-top: 10px;">등록한 상품 및 거래 내역을 관리할 수 있습니다.</p>
+    </div>
+  </main>
 </body>
 </html>
