@@ -23,3 +23,84 @@ main { max-width: 800px; margin: 20px auto; padding: 0 15px; }
   .sub-nav.mobile-open { display: flex; }
   .sub-nav a { padding: 15px 0; border-bottom: 1px solid var(--border-color); width: 100%; }
 }
+
+/* ==========================================
+   버튼 스타일 총정리 (모던 & 입체감)
+   ========================================== */
+button, 
+.btn-primary, 
+.btn-edit, 
+.btn-danger {
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* 마우스 올렸을 때 살짝 떠오르는 효과 */
+button:hover, 
+.btn-primary:hover, 
+.btn-edit:hover, 
+.btn-danger:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  opacity: 1;
+}
+
+/* 클릭할 때 살짝 눌리는 효과 */
+button:active, 
+.btn-primary:active, 
+.btn-edit:active, 
+.btn-danger:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* 1. 기본/서브 버튼 (테마에 맞는 은은한 테두리형) */
+button {
+  background-color: var(--bg-card);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+button:hover {
+  background-color: var(--bg-color);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* 2. 주요 액션 버튼 (세련된 블루 그라데이션) */
+.btn-primary {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: #ffffff;
+}
+
+/* 3. 수정/성공 버튼 (산뜻한 에메랄드 그라데이션) */
+.btn-edit {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+}
+
+/* 4. 위험/삭제 버튼 (시선이 가는 레드 그라데이션) */
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #ffffff;
+}
+
+/* 덤: 입력창(Input/Textarea/Select) 포커스 효과도 세련되게 다듬기 */
+input[type="text"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
