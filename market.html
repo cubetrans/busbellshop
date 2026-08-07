@@ -14,7 +14,11 @@
     <div class="header-actions" id="auth-menu-area"><button onclick="toggleTheme()">테마 변경</button></div>
   </header>
   <nav class="sub-nav">
-    <a href="index.html">홈</a><a href="market.html" class="active">중고마켓</a><a href="community.html">커뮤니티</a><a href="mypage.html">마이페이지</a><a href="admin.html" id="admin-nav" style="display:none;">관리자</a>
+    <a href="index.html">홈</a>
+    <a href="market.html" class="active">중고마켓</a>
+    <a href="community.html">커뮤니티</a>
+    <a href="mypage.html">마이페이지</a>
+    <a href="admin.html" id="admin-nav" style="display:none;">관리자</a>
   </nav>
 
   <main>
@@ -23,69 +27,178 @@
       <button class="btn-primary" onclick="openWriteModal()">판매글 등록</button>
     </div>
 
+    <!-- 판매글 작성/수정 박스 -->
     <div id="write-box" class="content-box" style="display:none;">
       <h3 id="modal-mode-title">판매글 작성</h3>
-      <p style="font-size: 13px; color: #ef4444; font-weight: bold;">※ 판매자는 수수료 2%가 차감된 98%의 금액만 입금받습니다.</p>
+      <p style="font-size: 13px; color: #ef4444; font-weight: bold; margin-bottom: 10px;">※ 판매자는 수수료 2%가 차감된 98%의 금액만 입금받습니다.</p>
       <input type="hidden" id="edit-market-id">
-      <input type="text" id="item-title" placeholder="상품명">
-      <input type="number" id="item-price" placeholder="가격">
+      <label>제목</label>
+      <input type="text" id="item-title" placeholder="상품명을 입력하세요">
+      <label>가격 (원)</label>
+      <input type="number" id="item-price" placeholder="가격을 숫자로 입력">
+      <label>연락처</label>
       <input type="text" id="item-contact" placeholder="연락처">
-      <textarea id="item-desc" rows="4" placeholder="설명"></textarea>
-      <button class="btn-primary" onclick="saveMarketItem()">저장하기</button>
-      <button class="btn-danger" onclick="closeWriteModal()">취소</button>
+      <label>상세 내용</label>
+      <textarea id="item-desc" rows="4" placeholder="설명 입력"></textarea>
+      <div style="display: flex; gap: 8px; margin-top: 10px;">
+        <button class="btn-primary" onclick="saveMarketItem()">저장하기</button>
+        <button class="btn-danger" onclick="closeWriteModal()">취소</button>
+      </div>
     </div>
 
+    <!-- 에스크로 결제 모달 -->
     <div id="escrow-box" class="content-box" style="display:none; border: 2px solid #38bdf8;">
       <h3>안전결제 (에스크로) 입금 안내</h3>
-      <p id="escrow-item-info"></p>
-      <p style="font-weight:bold; color:#38bdf8;">입금 계좌: 하나은행 154-910580-98807 (ㅇㅅㅎ)</p>
+      <p id="escrow-item-info" style="margin: 10px 0;"></p>
+      <p style="font-weight:bold; color:#38bdf8; margin: 10px 0;">입금 계좌: 국민은행 1234-56-789012 (버스벨샵)</p>
       <p id="deposit-ref-text" style="font-size:15px; color:red; font-weight:bold; margin:10px 0;"></p>
-      <p style="font-size: 13px; color: gray;">※ 착오송금은 환불해드리지 않습니다.</p>
-      <button class="btn-primary" onclick="executeEscrowPayment()">결제 완료 (입금 확인 요청)</button>
+      <p style="font-size: 13px; color: gray; margin-bottom: 10px;">※ 착오송금은 환불해드리지 않습니다.</p>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-primary" onclick="executeEscrowPayment()">결제 완료 (입금 확인 요청)</button>
+        <button class="btn-danger" onclick="closeEscrowModal()">닫기</button>
+      </div>
     </div>
+
     <div id="market-list"></div>
   </main>
 
   <script>
     let currentSelectedPrice = 0, currentSelectedItem = '', currentSeller = '';
 
+    document.addEventListener('DOMContentLoaded', () => {
+      loadMarketItems();
+    });
+
     async function loadMarketItems() {
-      const { data } = await supabaseClient.from('market').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabaseClient.from('market').select('*').order('created_at', { ascending: false });
       const listArea = document.getElementById('market-list');
+      if (error || !data || data.length === 0) {
+        listArea.innerHTML = '<div class="content-box"><p>등록된 상품이 없습니다.</p></div>';
+        return;
+      }
       const currentUser = getLoggedInUser();
       let html = '';
       data.forEach(item => {
+        const canEdit = currentUser && (currentUser.nickname === item.author || currentUser.role === '관리자');
         html += `
           <div class="content-box">
             <h3>${item.title}</h3>
-            <p>${item.price.toLocaleString()}원 | 판매자: ${item.author}</p>
-            <button class="btn-primary" onclick="openEscrowModal('${item.title}', ${item.price}, '${item.author}')">안전결제(에스크로)</button>
+            <p style="font-size: 18px; font-weight: bold; color: #38bdf8; margin: 6px 0;">${item.price.toLocaleString()}원</p>
+            <p style="font-size: 13px; color: var(--text-secondary);">판매자: ${item.author} | 연락처: ${item.contact}</p>
+            <hr style="margin: 10px 0; border: none; border-top: 1px solid var(--border-color);">
+            <div style="margin-bottom: 10px;">${item.description}</div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <button class="btn-primary" onclick="openEscrowModal('${item.title}', ${item.price}, '${item.author}')">안전결제(에스크로)</button>
+              ${canEdit ? `<button class="btn-edit" onclick="editItem(${item.id}, '${item.title.replace(/'/g, "\\'")}', ${item.price}, '${item.contact}', \`${item.description.replace(/`/g, '\\`')}\`)">수정</button>` : ''}
+              ${canEdit ? `<button class="btn-danger" onclick="deleteItem(${item.id})">삭제</button>` : ''}
+            </div>
           </div>
         `;
       });
       listArea.innerHTML = html;
     }
 
+    function openWriteModal() {
+      const user = getLoggedInUser();
+      if (!user) {
+        alert('로그인이 필요한 서비스입니다.');
+        window.location.href = 'login.html';
+        return;
+      }
+      document.getElementById('edit-market-id').value = '';
+      document.getElementById('item-title').value = '';
+      document.getElementById('item-price').value = '';
+      document.getElementById('item-contact').value = '';
+      document.getElementById('item-desc').value = '';
+      document.getElementById('modal-mode-title').innerText = '판매글 작성';
+      document.getElementById('write-box').style.display = 'block';
+    }
+
+    function closeWriteModal() {
+      document.getElementById('write-box').style.display = 'none';
+    }
+
+    function editItem(id, title, price, contact, desc) {
+      document.getElementById('edit-market-id').value = id;
+      document.getElementById('item-title').value = title;
+      document.getElementById('item-price').value = price;
+      document.getElementById('item-contact').value = contact;
+      document.getElementById('item-desc').value = desc;
+      document.getElementById('modal-mode-title').innerText = '판매글 수정';
+      document.getElementById('write-box').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function saveMarketItem() {
+      const id = document.getElementById('edit-market-id').value;
+      const title = document.getElementById('item-title').value.trim();
+      const price = parseInt(document.getElementById('item-price').value) || 0;
+      const contact = document.getElementById('item-contact').value.trim();
+      const description = document.getElementById('item-desc').value.trim();
+      const user = getLoggedInUser();
+
+      if (!title || !contact) {
+        alert('제목과 연락처를 입력해주세요.');
+        return;
+      }
+
+      if (id) {
+        const { error } = await supabaseClient.from('market').update({ title, price, contact, description }).eq('id', id);
+        if (error) alert('수정 실패');
+        else { alert('수정되었습니다.'); closeWriteModal(); loadMarketItems(); }
+      } else {
+        const { error } = await supabaseClient.from('market').insert([{ title, price, contact, description, author: user.nickname }]);
+        if (error) alert('등록 실패');
+        else { alert('등록되었습니다.'); closeWriteModal(); loadMarketItems(); }
+      }
+    }
+
+    async function deleteItem(id) {
+      if (!confirm('정말 삭제하시겠습니까?')) return;
+      const { error } = await supabaseClient.from('market').delete().eq('id', id);
+      if (error) alert('삭제 실패');
+      else { alert('삭제되었습니다.'); loadMarketItems(); }
+    }
+
     function openEscrowModal(title, price, seller) {
       const user = getLoggedInUser();
-      if (!user) { alert('로그인 필요'); return; }
-      currentSelectedPrice = price; currentSelectedItem = title; currentSeller = seller;
+      if (!user) {
+        alert('로그인이 필요한 서비스입니다.');
+        window.location.href = 'login.html';
+        return;
+      }
+      currentSelectedPrice = price; 
+      currentSelectedItem = title; 
+      currentSeller = seller;
       
       const ref = (user.nickname.substring(0,2)) + (seller.substring(0,2)) + (title.substring(0,4));
       
       document.getElementById('escrow-item-info').innerText = `상품: ${title} / 금액: ${price.toLocaleString()}원`;
       document.getElementById('deposit-ref-text').innerText = `입금자명(필수): ${ref}`;
       document.getElementById('escrow-box').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function closeEscrowModal() {
+      document.getElementById('escrow-box').style.display = 'none';
     }
 
     async function executeEscrowPayment() {
       const user = getLoggedInUser();
-      await supabaseClient.from('orders').insert([{ 
-        buyer_nickname: user.nickname, seller_nickname: currentSeller, 
-        item_title: currentSelectedItem, amount: currentSelectedPrice, status: '입금대기' 
+      const { error } = await supabaseClient.from('orders').insert([{ 
+        buyer_nickname: user.nickname, 
+        seller_nickname: currentSeller, 
+        item_title: currentSelectedItem, 
+        amount: currentSelectedPrice, 
+        status: '입금대기' 
       }]);
-      alert('신청 완료. 관리자 확인 후 처리됩니다.');
-      document.getElementById('escrow-box').style.display = 'none';
+      
+      if (error) {
+        alert('주문 신청 중 오류가 발생했습니다.');
+      } else {
+        alert('주문 신청이 완료되었습니다! 안내된 입금자명으로 입금해 주세요.');
+      }
+      closeEscrowModal();
     }
   </script>
 </body>
