@@ -52,3 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
     adminNav.style.display = 'block';
   }
 });
+
+function toggleMobileMenu() {
+  const nav = document.getElementById('sub-nav');
+  if(nav) nav.classList.toggle('mobile-open');
+}
