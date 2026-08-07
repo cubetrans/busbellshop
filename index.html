@@ -1,127 +1,51 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>베스벨샵 - 홈</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        if (localStorage.getItem('theme') === 'light') {
-            window.addEventListener('DOMContentLoaded', () => {
-                document.body.classList.add('light-mode');
-                const themeBtn = document.getElementById('themeBtn');
-                if (themeBtn) themeBtn.innerHTML = '<i class="fas fa-sun"></i>';
-            });
-        }
-    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>버스벨샵 - 홈</title>
+  <script src="app.js"></script>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <header>
+    <div class="logo"><a href="index.html">버스벨샵</a></div>
+    <div class="search-container">
+      <input type="text" placeholder="상품명, 지역, 브랜드 등 통합검색">
+    </div>
+    <div class="header-actions">
+      <button onclick="toggleTheme()">테마 변경</button>
+      <a href="mypage.html">내정보</a>
+    </div>
+  </header>
 
-    <header>
-        <a class='logo' href='/'>🚌 <strong>베스벨샵</strong></a>
-        <button class="mobile-menu-btn" onclick="toggleMobileMenu()"><i class="fas fa-bars"></i></button>
+  <nav class="sub-nav">
+    <a href="index.html" class="active">홈</a>
+    <a href="market.html">중고마켓</a>
+    <a href="community.html">커뮤니티</a>
+    <a href="admin.html">관리자</a>
+  </nav>
 
-        <div class="nav-group" id="navGroup">
-            <nav>
-                <ul>
-                    <li><a href='/' class="active"><i class="fas fa-home"></i> 홈</a></li>
-                    <li><a href='market.html'><i class="fas fa-shopping-cart"></i> 장터</a></li>
-                    <li><a href='community.html'><i class="fas fa-comments"></i> 커뮤니티</a></li>
-                </ul>
-            </nav>
-            <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()" aria-label="테마 변경">
-                <i class="fas fa-moon"></i>
-            </button>
-            <div id="authContainer">
-                <button onclick="toggleAuthDropdown()" id="authToggleBtn" class="user-badge">
-                    <i class="fas fa-user-circle"></i> 로그인 / 가입
-                </button>
-                <div id="authDropdown" class="auth-dropdown"><div id="authFormArea"></div></div>
-            </div>
+  <main>
+    <div class="section-title">오늘의 추천 상품</div>
+    <div class="product-grid">
+      <a href="market.html" class="product-card">
+        <div class="product-thumb">상품 이미지</div>
+        <div class="product-info">
+          <div class="product-title">하차벨 컨트롤 박스 커스텀 부품 세트 판매</div>
+          <div class="product-price">15,000원</div>
+          <div class="product-meta">서울시 · 5분 전</div>
         </div>
-    </header>
-
-    <main class="container">
-        <!-- 🖼️ 관리자 설정 메인 상단 배너 이미지 영역 -->
-        <div id="mainBannerArea" style="display: none; margin-bottom: 25px; border-radius: 16px; overflow: hidden; box-shadow: var(--card-shadow);">
-            <img id="mainBannerImg" src="" alt="상단 배너" style="width: 100%; max-height: 320px; object-fit: cover; display: block;">
+      </a>
+      <a href="market.html" class="product-card">
+        <div class="product-thumb">상품 이미지</div>
+        <div class="product-info">
+          <div class="product-title">대중교통 안내방송 음원 및 철도 굿즈 일괄</div>
+          <div class="product-price">30,000원</div>
+          <div class="product-meta">경기도 · 1시간 전</div>
         </div>
-
-        <!-- 메인 소개 배너 -->
-        <section class="card glass-panel" style="text-align: center; padding: 3rem 1.5rem;">
-            <h1 class="hero-title" style="font-size: 2.2rem; font-weight: 900; margin-bottom: 0.75rem; background: linear-gradient(to right, #60a5fa, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">거품 없는 수집의 시작, 베스벨샵</h1>
-            <p style="color: var(--text-sub); font-size: 1.05rem; margin-bottom: 1.75rem;">왜곡된 버스 부품 세계관을 뜯어고칩니다!</p>
-            <button class="btn-primary-large" onclick="location.href='market.html'" style="display: inline-block; width: auto; padding: 0.85rem 2rem;">부품 구경하기</button>
-        </section>
-
-        <!-- 📊 실시간 현황 통계 -->
-        <section class="card">
-            <h2><i class="fas fa-chart-pie"></i> 베스벨샵 실시간 현황</h2>
-            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1rem;">
-                <div class="stat-box glass-panel" style="text-align: center; padding: 1.25rem;">
-                    <i class="fas fa-box-open" style="font-size: 1.75rem; color: var(--primary); margin-bottom: 0.5rem;"></i>
-                    <p style="color: var(--text-sub);">등록된 부품</p>
-                    <h3 id="marketCount" style="font-size: 1.5rem; font-weight: 800;">...</h3>
-                </div>
-                <div class="stat-box glass-panel" style="text-align: center; padding: 1.25rem;">
-                    <i class="fas fa-pen-nib" style="font-size: 1.75rem; color: var(--primary); margin-bottom: 0.5rem;"></i>
-                    <p style="color: var(--text-sub);">커뮤니티 글</p>
-                    <h3 id="postCount" style="font-size: 1.5rem; font-weight: 800;">...</h3>
-                </div>
-            </div>
-        </section>
-
-        <!-- 크레딧 -->
-        <section class="credit-box glass-panel" style="margin-top: 20px;">
-            <h4>💡 베스벨샵 제작/관리진</h4>
-            <div class="credit-grid" style="display: flex; gap: 1.5rem; margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-sub);">
-                <p><i class="fas fa-code"></i> <b>개발:</b> 서울교덕</p>
-                <p><i class="fas fa-lightbulb"></i> <b>아이디어:</b> 평택버덕</p>
-                <p><i class="fas fa-check-circle"></i> <b>피드백:</b> 하차벨 매니아</p>
-            </div>
-        </section>
-    </main>
-
-    <!-- 채널톡 연동 플로팅 상담 버튼 -->
-    <button class="floating-chat-btn" onclick="openCustomerService()" aria-label="고객센터 상담하기">
-        <i class="fas fa-comment-dots"></i>
-    </button>
-
-    <footer>
-        <p>&copy; 2026 🚌 베스벨샵. All rights reserved.</p>
-    </footer>
-
-    <script src="app.js"></script>
-    <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            // 관리자 설정 상단 배너 이미지 불러오기
-            const savedBanner = localStorage.getItem('mainBannerImage');
-            const bannerArea = document.getElementById('mainBannerArea');
-            const bannerImg = document.getElementById('mainBannerImg');
-
-            if (savedBanner && savedBanner.trim() !== '') {
-                bannerImg.src = savedBanner;
-                bannerArea.style.display = 'block';
-            } else {
-                bannerArea.style.display = 'none';
-            }
-
-            fetchStats();
-        });
-
-        async function fetchStats() {
-            try {
-                const { count: marketTotal } = await db.from('market').select('*', { count: 'exact', head: true });
-                const { count: postTotal } = await db.from('posts').select('*', { count: 'exact', head: true });
-                
-                document.getElementById('marketCount').innerText = `${marketTotal || 0}개`;
-                document.getElementById('postCount').innerText = `${postTotal || 0}개`;
-            } catch (err) {
-                console.error("통계 로드 오류:", err);
-            }
-        }
-    </script>
+      </a>
+    </div>
+  </main>
 </body>
 </html>
