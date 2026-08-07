@@ -3,20 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>⚙️ MARKET - 커뮤니티</title>
+    <title>커뮤니티</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        if (localStorage.getItem('theme') === 'light') {
-            window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('theme') === 'light') {
                 document.body.classList.add('light-mode');
-            });
-        }
+            }
+            const savedTitle = localStorage.getItem('siteTitle') || 'MARKET';
+            document.title = savedTitle + ' - 커뮤니티';
+            const logoEl = document.getElementById('siteLogo');
+            if (logoEl) logoEl.innerHTML = `⚙️ <strong>${savedTitle}</strong>`;
+        });
     </script>
 </head>
 <body>
-
     <header>
         <a class='logo' href='/' id="siteLogo">⚙️ <strong>MARKET</strong></a>
         <button class="mobile-menu-btn" onclick="toggleMobileMenu()"><i class="fas fa-bars"></i></button>
@@ -55,20 +58,23 @@
         </section>
     </main>
 
-    <!-- 📝 게시글 작성/수정 모달 -->
+    <!-- 게시글 작성/수정 모달 -->
     <div id="writeModal" class="modal-overlay" style="display: none;">
         <div class="modal-content glass-panel">
             <div class="modal-header">
                 <h3 id="writeModalTitle"><i class="fas fa-pen-nib"></i> 새 게시글 작성</h3>
             </div>
             <form id="postForm" onsubmit="submitPost(event)">
-                <select id="postCategory" class="input-modern" required>
-                    <!-- JS에서 권한별로 자동 생성됨 -->
-                </select>
+                <select id="postCategory" class="input-modern" required></select>
                 <input type="text" id="postTitle" placeholder="제목" class="input-modern" required>
                 
                 <label style="font-size:0.8rem; color:var(--text-sub); margin-top:10px; display:block;">사진 첨부 (선택)</label>
-                <input type="file" id="postImage" accept="image/*" class="input-modern" style="padding:8px; margin-bottom: 10px;">
+                <input type="file" id="postImage" accept="image/*" class="input-modern" style="padding:8px; margin-bottom: 5px;">
+                <div id="deleteImgArea" style="display:none; margin-bottom:10px;">
+                    <label style="font-size:0.85rem; color:#ff4d4f; cursor:pointer;">
+                        <input type="checkbox" id="deleteExistingImg"> 🗑️ 기존 등록된 사진 삭제
+                    </label>
+                </div>
                 
                 <textarea id="postContent" rows="6" placeholder="내용" class="input-modern" required></textarea>
                 <div class="modal-footer">
@@ -79,11 +85,9 @@
         </div>
     </div>
 
-    <!-- 🔍 상세 보기 모달 -->
+    <!-- 상세 보기 모달 -->
     <div id="detailModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content glass-panel" id="detailContent">
-            <!-- JS 렌더링 -->
-        </div>
+        <div class="modal-content glass-panel" id="detailContent"></div>
     </div>
 
     <script src="app.js"></script>
@@ -95,39 +99,39 @@
             fetchPosts();
         });
 
-        // 1. 공지게시판 노출 로직 (관리진/관리자 오류 수정)
         function openWriteModal(postId = null) {
             const user = localStorage.getItem('currentUser');
             const role = localStorage.getItem('currentUserRole') || '일반회원';
-            
             if (!user) return alert('로그인 후 이용 가능합니다.');
 
-            const isAdmin = (role === '관리진' || role === '관리자'); // 역할명 유연하게 허용
+            const isAdmin = (role === '관리진' || role === '관리자');
             const catSelect = document.getElementById('postCategory');
             
             let options = `
                 <option value="질문게시판">질문게시판</option>
                 <option value="자랑게시판">자랑게시판</option>
             `;
-            if (isAdmin) {
-                options = `<option value="공지게시판">공지게시판</option>` + options;
-            }
+            if (isAdmin) options = `<option value="공지게시판">공지게시판</option>` + options;
             catSelect.innerHTML = options;
 
             const modal = document.getElementById('writeModal');
             modal.style.display = 'flex';
+            const deleteImgArea = document.getElementById('deleteImgArea');
+            document.getElementById('deleteExistingImg').checked = false;
 
             if (postId) {
                 const post = allPosts.find(p => p.id === postId);
                 editingPostId = post.id;
                 document.getElementById('postTitle').value = post.title;
                 document.getElementById('postContent').value = post.content;
-                catSelect.value = post.category;
+                catSelect.value = post.category || '질문게시판';
                 document.getElementById('writeModalTitle').innerHTML = '<i class="fas fa-edit"></i> 게시글 수정';
+                deleteImgArea.style.display = post.image_url ? 'block' : 'none';
             } else {
                 editingPostId = null;
                 document.getElementById('postForm').reset();
                 document.getElementById('writeModalTitle').innerHTML = '<i class="fas fa-pen-nib"></i> 새 게시글 작성';
+                deleteImgArea.style.display = 'none';
             }
         }
 
@@ -150,7 +154,7 @@
 
                 list.innerHTML = data.map(post => `
                     <div class="post-item" onclick="openDetailModal(${post.id})">
-                        <span class="post-cat-badge ${post.category === '공지게시판' ? 'admin-notice' : ''}">${post.category}</span>
+                        <span class="post-cat-badge ${post.category === '공지게시판' ? 'admin-notice' : ''}">${post.category || '질문게시판'}</span>
                         <div class="post-title">${post.title}</div>
                         <div class="post-meta">
                             <span><i class="fas fa-user"></i> ${post.author}</span>
@@ -168,7 +172,6 @@
             const user = localStorage.getItem('currentUser');
             const role = localStorage.getItem('currentUserRole');
             const isAdmin = (role === '관리진' || role === '관리자');
-            
             const canEdit = (user === post.author || isAdmin);
             
             const adminButtons = canEdit ? `
@@ -180,14 +183,12 @@
 
             document.getElementById('detailContent').innerHTML = `
                 <div class="modal-header">
-                    <span class="post-cat-badge">${post.category}</span>
+                    <span class="post-cat-badge">${post.category || '질문게시판'}</span>
                     <button class="modal-close" onclick="closeDetailModal()">&times;</button>
                 </div>
                 <h3 style="margin: 10px 0;">${post.title}</h3>
                 <p style="font-size: 0.9rem; color: var(--text-sub); margin-bottom: 20px;">작성자: ${post.author}</p>
-                
                 ${post.image_url ? `<img src="${post.image_url}" style="width:100%; border-radius:10px; margin-bottom:20px;">` : ''}
-                
                 <div style="white-space: pre-wrap; line-height: 1.6;">${post.content}</div>
                 <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color);">
                 ${adminButtons}
@@ -199,7 +200,6 @@
             document.getElementById('detailModal').style.display = 'none';
         }
 
-        // 2. 파일 업로드 오류 해결 (확장자 추가 로직)
         async function submitPost(e) {
             e.preventDefault();
             const user = localStorage.getItem('currentUser');
@@ -207,17 +207,16 @@
             const content = document.getElementById('postContent').value.trim();
             const category = document.getElementById('postCategory').value;
             const imageInput = document.getElementById('postImage');
+            const deleteExisting = document.getElementById('deleteExistingImg').checked;
 
-            let imageUrl = '';
-            
-            // 이미지 업로드 로직
+            let imageUrl = undefined;
+            if (deleteExisting) imageUrl = null;
+
             if (imageInput.files && imageInput.files[0]) {
                 const file = imageInput.files[0];
-                const fileExt = file.name.split('.').pop(); // 확장자 추출
+                const fileExt = file.name.split('.').pop();
                 const fileName = `post_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-                
                 const { error: uploadError } = await db.storage.from('images').upload(fileName, file);
-                
                 if (uploadError) return alert('이미지 업로드 실패: ' + uploadError.message);
                 imageUrl = db.storage.from('images').getPublicUrl(fileName).data.publicUrl;
             }
@@ -225,10 +224,10 @@
             let query;
             if (editingPostId) {
                 const updateData = { title, content, category };
-                if(imageUrl) updateData.image_url = imageUrl;
+                if (imageUrl !== undefined) updateData.image_url = imageUrl;
                 query = db.from('posts').update(updateData).eq('id', editingPostId);
             } else {
-                query = db.from('posts').insert([{ title, content, category, author: user, image_url: imageUrl }]);
+                query = db.from('posts').insert([{ title, content, category, author: user, image_url: imageUrl || null }]);
             }
 
             const { error } = await query;
@@ -242,7 +241,6 @@
 
         async function deletePost(id) {
             if (!confirm('정말 삭제하시겠습니까?')) return;
-            
             const { error } = await db.from('posts').delete().eq('id', id);
             if (error) alert('삭제 실패: ' + error.message);
             else {
