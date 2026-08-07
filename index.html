@@ -2,157 +2,82 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>⚙️ MARKET - 홈</title>
-    <!-- 폰트어썸 (아이콘용) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>베스벨샵 - 하차벨 전문 장터</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    
-    <!-- Supabase 라이브러리 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <script>
-        // 초기 테마 설정 (깜빡임 방지)
-        if (localStorage.getItem('theme') === 'light') {
-            window.addEventListener('DOMContentLoaded', () => {
-                document.body.classList.add('light-mode');
-                const themeBtn = document.getElementById('themeBtn');
-                if (themeBtn) themeBtn.innerHTML = '<i class="fas fa-sun"></i>';
-            });
-        }
-    </script>
 </head>
 <body>
 
     <header>
-        <a class='logo' href='/' id="siteLogo">⚙️ <strong>MARKET</strong></a>
-        
-        <!-- 모바일 햄버거 버튼 (메뉴 3줄) -->
-        <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
-            <i class="fas fa-bars"></i>
-        </button>
-
-        <div class="nav-group" id="navGroup">
-            <nav>
-                <ul>
-                    <li><a href='/' class="active"><i class="fas fa-home"></i> 홈</a></li>
-                    <li><a href='market.html'><i class="fas fa-shopping-cart"></i> 장터</a></li>
-                    <li><a href='community.html'><i class="fas fa-comments"></i> 커뮤니티</a></li>
-                </ul>
-            </nav>
-            <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()" aria-label="테마 변경">
-                <i class="fas fa-moon"></i>
-            </button>
-            
-            <div id="authContainer">
-                <button onclick="toggleAuthDropdown()" id="authToggleBtn" class="user-badge">
-                    <i class="fas fa-user-circle"></i> 로그인 / 가입
-                </button>
-                <div id="authDropdown" class="auth-dropdown">
-                    <div id="authFormArea"></div>
-                </div>
-            </div>
+        <a href="/" class="logo">
+            <!-- 1. 이미지 로고 적용 (assets/logo.png 경로에 업로드 필요) -->
+            <img src="assets/logo.png" alt="베스벨샵" class="site-logo">
+        </a>
+        <div class="nav-group">
+            <a href="/market">장터</a>
+            <a href="/community">커뮤니티</a>
+            <a href="/mypage">마이페이지</a>
+            <button id="themeBtn" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
         </div>
     </header>
 
-    <main class="container">
-        <!-- 🚨 관리자 전용 긴급 공지 배너 (입력된 내용이 있을 때만 크게 표시됨) -->
-        <div id="emergencyNoticeBanner" style="display: none; background: rgba(255, 71, 87, 0.15); border: 2px solid var(--accent-red, #ff4757); border-radius: 12px; padding: 20px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(255,71,87,0.2);">
-            <h3 style="margin: 0 0 8px 0; color: var(--accent-red, #ff4757); font-size: 1.2rem;">
-                <i class="fas fa-bullhorn"></i> 긴급 공지사항
-            </h3>
-            <p id="emergencyNoticeText" style="margin: 0; font-size: 1.05rem; font-weight: bold; word-break: break-all;"></p>
-        </div>
+    <!-- 4. Admin에서 관리하는 상단 배너 영역 -->
+    <div class="top-banner-container">
+        <img id="mainBannerImage" src="assets/default_banner.png" alt="베스벨샵 이벤트 배너">
+    </div>
 
-        <!-- 메인 배너 -->
-        <section class="hero glass-panel" id="mainBanner">
-            <h1 id="siteTitle" class="hero-title">거품 없는 수집의 시작</h1>
-            <p id="siteDesc" class="hero-subtitle">왜곡된 버스 부품 세계관을 뜯어고칩니다!</p>
-            <div class="hero-actions">
-                <button class="btn-primary-large" onclick="location.href='market.html'">부품 구경하기</button>
-            </div>
-        </section>
-
-        <!-- 📊 실시간 현황 통계 -->
-        <section class="card" style="margin-top: 20px;">
-            <h2><i class="fas fa-chart-pie"></i> MARKET 실시간 현황</h2>
-            <div class="stats-grid">
-                <div class="stat-box glass-panel">
-                    <i class="fas fa-box-open stat-icon"></i>
-                    <p>등록된 부품</p>
-                    <h3 id="marketCount">...</h3>
-                </div>
-                <div class="stat-box glass-panel">
-                    <i class="fas fa-pen-nib stat-icon"></i>
-                    <p>커뮤니티 글</p>
-                    <h3 id="postCount">...</h3>
-                </div>
-            </div>
-        </section>
-
-        <!-- 크레딧 -->
-        <section class="credit-box glass-panel" style="margin-top: 20px;">
-            <h4>💡 MARKET 제작/관리진</h4>
-            <div class="credit-grid">
-                <p><i class="fas fa-code"></i> <b>개발:</b> 서울교덕</p>
-                <p><i class="fas fa-lightbulb"></i> <b>아이디어:</b> 평택버덕</p>
-                <p><i class="fas fa-check-circle"></i> <b>피드백:</b> 하차벨 매니아</p>
-            </div>
+    <main class="container" style="max-width: 900px; margin: 0 auto; padding: 20px;">
+        <section class="card glass-panel" style="text-align: center; padding: 3rem 1rem;">
+            <h2>🔔 베스벨샵에 오신 것을 환영합니다!</h2>
+            <p style="color: var(--text-sub);">국내 최고의 버스 하차벨 및 부품 거래 커뮤니티</p>
+            <a href="/market" class="btn-primary" style="display: inline-block; margin-top: 15px; padding: 10px 20px; background: var(--primary); color: #fff; border-radius: 6px; text-decoration: none;">장터 구경하기</a>
         </section>
     </main>
 
-    <!-- 플로팅 챗봇/상담 버튼 -->
-    <button class="floating-chat-btn" onclick="alert('실시간 채팅 상담 기능은 준비 중입니다!')" aria-label="상담하기">
-        <i class="fas fa-comment-dots"></i>
-    </button>
-
-    <footer>
-        <p>&copy; 2026 ⚙️ MARKET. All rights reserved.</p>
-    </footer>
-
-    <!-- 1. 공통 로직 파일 (app.js) 불러오기 -->
     <script src="app.js"></script>
-
-    <!-- 2. index.html 전용 스크립트 -->
     <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            // 커스텀 사이트 타이틀 적용
-            const customTitle = localStorage.getItem('customSiteTitle');
-            if (customTitle) {
-                const logoElem = document.getElementById('siteLogo');
-                if (logoElem) logoElem.innerHTML = customTitle;
-            }
-
-            // 관리자 설정 긴급 공지 불러오기
-            const savedNotice = localStorage.getItem('siteNotice');
-            const banner = document.getElementById('emergencyNoticeBanner');
-            const textElem = document.getElementById('emergencyNoticeText');
-
-            if (savedNotice && savedNotice.trim() !== '') {
-                textElem.textContent = savedNotice;
-                banner.style.display = 'block';
-            } else {
-                banner.style.display = 'none';
-            }
-
-            fetchStats();
-        });
-
-        // 실시간 통계 불러오기
-        async function fetchStats() {
+        // 페이지 로드 시 Admin이 설정한 배너 이미지 불러오기
+        window.addEventListener('DOMContentLoaded', async () => {
             try {
-                const { count: marketTotal } = await db.from('market').select('*', { count: 'exact', head: true });
-                const { count: postTotal } = await db.from('posts').select('*', { count: 'exact', head: true });
-                
-                const marketEl = document.getElementById('marketCount');
-                const postEl = document.getElementById('postCount');
-                
-                if (marketEl) marketEl.innerText = `${marketTotal || 0}개`;
-                if (postEl) postEl.innerText = `${postTotal || 0}개`;
-            } catch (err) {
-                console.error("통계 로드 오류:", err);
+                const { data } = await db.from('settings').select('*').eq('key', 'top_banner_url').maybeSingle();
+                if (data && data.value) {
+                    document.getElementById('mainBannerImage').src = data.value;
+                }
+            } catch(e) {
+                console.log("배너 로드 기본값 유지");
             }
+        });
+    </script>
+
+    <!-- 2. 채널톡(Channel Talk) 고객센터 연동 스크립트 -->
+    <script>
+      (function() {
+        var w = window;
+        if (w.ChannelIO) { return (window.console.error || window.console.log || function(){})('ChannelIO script included twice.'); }
+        var ch = function() { ch.c(arguments); };
+        ch.q = [];
+        ch.c = function(args) { ch.q.push(args); };
+        w.ChannelIO = ch;
+        function l() {
+          if (w.ChannelIOInitialized) { return; }
+          w.ChannelIOInitialized = true;
+          var s = document.createElement('script');
+          s.type = 'text/javascript'; s.async = true;
+          s.src = 'https://cdn.channel.io/plugin/ch-plugin-web.js';
+          s.charset = 'UTF-8';
+          var x = document.getElementsByTagName('script')[0];
+          x.parentNode.insertBefore(s, x);
         }
+        if (document.readyState === 'complete') { l(); }
+        else if (window.attachEvent) { window.attachEvent('onload', l); }
+        else { window.addEventListener('DOMContentLoaded', l, false); window.addEventListener('load', l, false); }
+      })();
+      
+      ChannelIO('boot', {
+        "pluginKey": "여기에_채널톡_플러그인키를_입력하세요" // 채널톡 관리자센터에서 발급받은 키 입력
+      });
     </script>
 </body>
 </html>
