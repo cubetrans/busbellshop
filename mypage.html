@@ -3,21 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>⚙️ MARKET - 마이페이지</title>
-    <!-- 폰트어썸 (아이콘용) -->
+    <title>베스벨샵 - 마이페이지</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    
-    <!-- Supabase 라이브러리 (최상단 1회 로드) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <script>
-        // 초기 테마 설정 (깜빡임 방지)
         if (localStorage.getItem('theme') === 'light') {
             window.addEventListener('DOMContentLoaded', () => {
                 document.body.classList.add('light-mode');
-                const themeBtn = document.getElementById('themeBtn');
-                if (themeBtn) themeBtn.innerHTML = '<i class="fas fa-sun"></i>';
             });
         }
     </script>
@@ -25,129 +18,83 @@
 <body>
 
     <header>
-        <a class='logo' href='/'>⚙️ <strong>MARKET</strong></a>
-        
-        <!-- 모바일 햄버거 버튼 -->
-        <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
-            <i class="fas fa-bars"></i>
-        </button>
+        <a class='logo' href='/'>🚌 <strong>베스벨샵</strong></a>
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()"><i class="fas fa-bars"></i></button>
 
         <div class="nav-group" id="navGroup">
             <nav>
                 <ul>
                     <li><a href='/'><i class="fas fa-home"></i> 홈</a></li>
-                    <li><a href='/market'><i class="fas fa-shopping-cart"></i> 장터</a></li>
-                    <li><a href='/community'><i class="fas fa-comments"></i> 커뮤니티</a></li>
+                    <li><a href='market.html'><i class="fas fa-shopping-cart"></i> 장터</a></li>
+                    <li><a href='community.html'><i class="fas fa-comments"></i> 커뮤니티</a></li>
                 </ul>
             </nav>
-            <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()" aria-label="테마 변경">
-                <i class="fas fa-moon"></i>
-            </button>
-            
             <div id="authContainer">
                 <button onclick="toggleAuthDropdown()" id="authToggleBtn" class="user-badge">
                     <i class="fas fa-user-circle"></i> 로그인 / 가입
                 </button>
-                <div id="authDropdown" class="auth-dropdown">
-                    <div id="authFormArea"></div>
-                </div>
+                <div id="authDropdown" class="auth-dropdown"><div id="authFormArea"></div></div>
             </div>
         </div>
     </header>
 
     <main class="container">
-        <!-- 로그인 안 한 경우 나타나는 경고 상자 -->
+        <!-- 로그인 안 한 경우 경고 상자 -->
         <div id="loginRequiredBox" class="card glass-panel" style="display: none; text-align: center; padding: 2.5rem 1rem;">
             <i class="fas fa-lock" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
             <h2>로그인이 필요한 페이지입니다</h2>
             <p style="color: var(--text-sub); margin-bottom: 1.5rem;">마이페이지를 이용하시려면 먼저 상단에서 로그인해 주세요.</p>
-            <button class="btn-primary-large" onclick="toggleAuthDropdown()">로그인하러 가기</button>
+            <button class="btn-primary-large" onclick="toggleAuthDropdown()" style="width: auto; display: inline-block;">로그인하러 가기</button>
         </div>
 
-        <!-- 마이페이지 대시보드 (로그인 시 표시) -->
+        <!-- 마이페이지 대시보드 -->
         <div id="mypageContent" style="display: none;">
-            
-            <!-- 👤 프로필 요약 카드 -->
             <section class="card profile-card glass-panel">
-                <div class="profile-header">
-                    <div class="profile-avatar">
+                <div class="profile-header" style="display: flex; align-items: center; gap: 1.25rem;">
+                    <div class="profile-avatar" style="width: 60px; height: 60px; background: linear-gradient(135deg, var(--primary), #a855f7); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: #fff;">
                         <i class="fas fa-user-shield"></i>
                     </div>
                     <div class="profile-info">
                         <h2 id="myNickname">불러오는 중...</h2>
-                        <span id="myRoleBadge" class="role-tag">일반회원</span>
+                        <span id="myRoleBadge" class="role-tag" style="display: inline-block; margin-top: 4px; padding: 2px 10px; background: var(--primary); color: #fff; font-size: 0.75rem; font-weight: 700; border-radius: 12px;">일반회원</span>
                     </div>
                 </div>
             </section>
 
-            <!-- 💳 안전결제 정산 계좌 관리 (기본 숨김 처리) -->
+            <!-- 정산 계좌 관리 -->
             <section class="card glass-panel" id="bankAccountSection" style="display: none;">
-                <div class="card-header">
-                    <h2><i class="fas fa-wallet"></i> 안전결제 정산 계좌 <span style="font-size: 0.9rem; color: var(--primary-color);">(판매자 전용)</span></h2>
-                </div>
-                <p style="font-size: 0.88rem; color: var(--text-sub); margin-bottom: 15px;">
-                    판매 물품이 안전결제로 거래될 경우, 구매 확정 후 수수료(2%)를 제외한 대금이 아래 계좌로 입금됩니다.
-                </p>
+                <h2><i class="fas fa-wallet"></i> 안전결제 정산 계좌 <span style="font-size: 0.9rem; color: var(--primary);">(판매자 전용)</span></h2>
+                <p style="font-size: 0.88rem; color: var(--text-sub); margin-bottom: 15px;">구매 확정 후 수수료를 제외한 대금이 아래 계좌로 입금됩니다.</p>
                 <form id="bankForm" onsubmit="saveBankInfo(event)">
                     <label style="font-size: 0.85rem; color: var(--text-sub);">은행명</label>
-                    <input type="text" id="bankName" placeholder="예: 카카오뱅크, 국민은행, 농협" class="input-modern" required>
-
-                    <label style="font-size: 0.85rem; color: var(--text-sub);">계좌번호 ('-' 제외 숫자만)</label>
+                    <input type="text" id="bankName" placeholder="예: 카카오뱅크, 국민은행" class="input-modern" required>
+                    <label style="font-size: 0.85rem; color: var(--text-sub);">계좌번호 ('-' 제외)</label>
                     <input type="text" id="accountNumber" placeholder="예: 3333011234567" class="input-modern" required>
-
-                    <label style="font-size: 0.85rem; color: var(--text-sub);">예금주 성함</label>
+                    <label style="font-size: 0.85rem; color: var(--text-sub);">예금주</label>
                     <input type="text" id="accountHolder" placeholder="예: 홍길동" class="input-modern" required>
-
-                    <button type="submit" id="saveBankBtn" class="btn-auth" style="margin-top: 10px;">
-                        <i class="fas fa-save"></i> 계좌 정보 저장하기
-                    </button>
+                    <button type="submit" id="saveBankBtn" class="btn-auth" style="margin-top: 10px;"><i class="fas fa-save"></i> 계좌 정보 저장하기</button>
                 </form>
             </section>
 
-            <!-- 🏅 회원 등급 혜택 안내 -->
-            <section class="card glass-panel">
-                <h2><i class="fas fa-medal"></i> 회원 등급 정보</h2>
-                <div class="tier-grid">
-                    <div class="tier-box">
-                        <h4>👑 관리자</h4>
-                        <p>사이트 전체 관리, 상품/공지 작성, 회원 권한 설정</p>
-                    </div>
-                    <div class="tier-box">
-                        <h4>💼 판매자</h4>
-                        <p>상품 등록 및 안전결제 정산 지원, 전용 스티커 부여</p>
-                    </div>
-                    <div class="tier-box">
-                        <h4>✨ 특수회원</h4>
-                        <p>커뮤니티 및 게시판 우대, 전용 배지 부여</p>
-                    </div>
-                    <div class="tier-box">
-                        <h4>🌱 일반회원</h4>
-                        <p>기본 부품 구매 및 커뮤니티 작성 가능</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 📦 나의 활동 내역 요약 -->
+            <!-- 나의 활동 내역 -->
             <section class="card glass-panel">
                 <h2><i class="fas fa-history"></i> 나의 작성 내역</h2>
-                <div class="stats-grid">
-                    <div class="stat-box">
-                        <p>내가 등록한 부품</p>
-                        <h3 id="myMarketCount">0개</h3>
+                <div class="stats-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1rem;">
+                    <div class="stat-box" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; text-align: center;">
+                        <p style="color: var(--text-sub);">내가 등록한 부품</p>
+                        <h3 id="myMarketCount" style="font-size: 1.5rem; font-weight: 800;">0개</h3>
                     </div>
-                    <div class="stat-box">
-                        <p>내가 쓴 작성글</p>
-                        <h3 id="myPostCount">0개</h3>
+                    <div class="stat-box" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; text-align: center;">
+                        <p style="color: var(--text-sub);">내가 쓴 작성글</p>
+                        <h3 id="myPostCount" style="font-size: 1.5rem; font-weight: 800;">0개</h3>
                     </div>
                 </div>
             </section>
-
         </div>
 
-        <!-- 크레딧 -->
         <section class="credit-box glass-panel">
-            <h4>💡 MARKET 제작/관리진</h4>
-            <div class="credit-grid">
+            <h4>💡 베스벨샵 제작/관리진</h4>
+            <div class="credit-grid" style="display: flex; gap: 1.5rem; margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-sub);">
                 <p><i class="fas fa-code"></i> <b>개발:</b> 서울교덕</p>
                 <p><i class="fas fa-lightbulb"></i> <b>아이디어:</b> 평택버덕</p>
                 <p><i class="fas fa-check-circle"></i> <b>피드백:</b> 하차벨 매니아</p>
@@ -155,20 +102,19 @@
         </section>
     </main>
 
+    <!-- 채널톡 상담 플로팅 버튼 -->
+    <button class="floating-chat-btn" onclick="openCustomerService()" aria-label="고객센터 상담하기">
+        <i class="fas fa-comment-dots"></i>
+    </button>
+
     <footer>
-        <p>&copy; 2026 ⚙️ MARKET. All rights reserved.</p>
+        <p>&copy; 2026 🚌 베스벨샵. All rights reserved.</p>
     </footer>
 
-    <!-- 1. 공통 로직 파일 (app.js - db 초기화 및 로그인/회원가입 등 포함) -->
     <script src="app.js"></script>
-
-    <!-- 2. mypage.html 전용 스크립트 -->
     <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            loadUserData();
-        });
+        window.addEventListener('DOMContentLoaded', () => { loadUserData(); });
 
-        // 🔄 마이페이지 정보 로드 (프로필, 계좌, 작성 내역)
         async function loadUserData() {
             const currentUser = localStorage.getItem('currentUser');
             const loginBox = document.getElementById('loginRequiredBox');
@@ -183,34 +129,20 @@
             if (loginBox) loginBox.style.display = 'none';
             if (mypageContent) mypageContent.style.display = 'block';
 
-            // 1. 프로필 및 등급 표시
-            const myNicknameEl = document.getElementById('myNickname');
-            if (myNicknameEl) myNicknameEl.innerText = currentUser;
-
-            // 로컬스토리지 우선, 없으면 getRole 함수 호출 (안전성 강화)
-            let role = localStorage.getItem('currentUserRole');
-            if (!role && typeof getRole === 'function') {
-                role = getRole(currentUser);
-            }
-            if (!role) role = '일반회원';
-
+            document.getElementById('myNickname').innerText = currentUser;
+            let role = localStorage.getItem('currentUserRole') || '일반회원';
             const roleBadge = document.getElementById('myRoleBadge');
             if (roleBadge) {
                 roleBadge.innerText = role;
-                if (role === '관리자') roleBadge.style.background = '#eab308';
-                else if (role === '관리진') roleBadge.style.background = '#eab308';
+                if (role === '관리자' || role === '관리진') roleBadge.style.background = '#eab308';
                 else if (role === '판매자') roleBadge.style.background = '#3b82f6';
                 else if (role === '특수회원') roleBadge.style.background = '#a855f7';
             }
 
-            // ⭐ 2. 권한에 따른 정산 계좌 섹션 노출 처리
             const allowedRoles = ['판매자', '특수회원', '관리진', '관리자'];
             const bankSection = document.getElementById('bankAccountSection');
-            
             if (allowedRoles.includes(role)) {
-                if (bankSection) bankSection.style.display = 'block';
-
-                // 권한이 있는 경우에만 DB에서 계좌 정보를 불러옴
+                bankSection.style.display = 'block';
                 try {
                     const { data: user } = await db.from('users').select('*').eq('nickname', currentUser).maybeSingle();
                     if (user) {
@@ -218,68 +150,36 @@
                         if (user.account_number) document.getElementById('accountNumber').value = user.account_number;
                         if (user.account_holder) document.getElementById('accountHolder').value = user.account_holder;
                     }
-                } catch (e) {
-                    console.error("계좌 정보 로드 실패:", e);
-                }
+                } catch (e) { console.error(e); }
             }
 
-            // 3. 내 활동 내역 개수 카운트
             try {
                 const { count: marketCount } = await db.from('market').select('*', { count: 'exact', head: true }).eq('author', currentUser);
                 const { count: postCount } = await db.from('posts').select('*', { count: 'exact', head: true }).eq('author', currentUser);
-
-                const myMarketEl = document.getElementById('myMarketCount');
-                const myPostEl = document.getElementById('myPostCount');
-                if (myMarketEl) myMarketEl.innerText = `${marketCount || 0}개`;
-                if (myPostEl) myPostEl.innerText = `${postCount || 0}개`;
-            } catch (e) {
-                console.error("활동 내역 로드 실패:", e);
-            }
+                document.getElementById('myMarketCount').innerText = `${marketCount || 0}개`;
+                document.getElementById('myPostCount').innerText = `${postCount || 0}개`;
+            } catch (e) { console.error(e); }
         }
 
-        // 💾 계좌 정보 저장 기능
         async function saveBankInfo(e) {
             e.preventDefault();
             const currentUser = localStorage.getItem('currentUser');
             if (!currentUser) return;
 
-            const bankName = document.getElementById('bankName').value.trim();
-            const accountNumber = document.getElementById('accountNumber').value.trim();
-            const accountHolder = document.getElementById('accountHolder').value.trim();
+            const bank_name = document.getElementById('bankName').value.trim();
+            const account_number = document.getElementById('accountNumber').value.trim();
+            const account_holder = document.getElementById('accountHolder').value.trim();
 
             const saveBtn = document.getElementById('saveBankBtn');
             saveBtn.disabled = true;
             saveBtn.innerText = "저장 중...";
 
-            const { error } = await db.from('users').update({
-                bank_name: bankName,
-                account_number: accountNumber,
-                account_holder: accountHolder
-            }).eq('nickname', currentUser);
-
+            const { error } = await db.from('users').update({ bank_name, account_number, account_holder }).eq('nickname', currentUser);
             saveBtn.disabled = false;
             saveBtn.innerHTML = '<i class="fas fa-save"></i> 계좌 정보 저장하기';
 
-            if (error) {
-                alert('계좌 정보 저장 중 오류가 발생했습니다: ' + error.message);
-            } else {
-                alert('정산 계좌 정보가 성공적으로 저장되었습니다!');
-            }
-        }
-
-        // 🔗 구글 계정 연동 기능 (옵션)
-        async function linkGoogleAccount() {
-            try {
-                const { data, error } = await db.auth.linkIdentity({
-                    provider: 'google',
-                    options: {
-                        redirectTo: window.location.origin
-                    }
-                });
-                if (error) throw error;
-            } catch (err) {
-                alert('구글 계정 연동 실패: ' + err.message);
-            }
+            if (error) alert('저장 실패: ' + error.message);
+            else alert('정산 계좌 정보가 성공적으로 저장되었습니다!');
         }
     </script>
 </body>
