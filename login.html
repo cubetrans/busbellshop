@@ -1,56 +1,20 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>로그인 - 하차벨 장터 & 커뮤니티</title>
-    <link rel="stylesheet" href="style.css"> <!-- 기존 디자인 스타일 유지 -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css">
+    <title>로그인</title>
 </head>
 <body>
-    <!-- 단일 헤더 -->
-    <header class="site-header">
-        <div class="logo-container">
-            <a href="index.html"><img src="logo.png" alt="Bus Bell Shop" class="header-logo"></a>
-        </div>
+    <header>
+        <div class="logo">Bus Bell Shop</div>
     </header>
-
-    <main class="auth-container">
-        <div class="auth-box">
-            <h2>로그인</h2>
-            <form id="login-form">
-                <div class="input-group">
-                    <label for="email">이메일</label>
-                    <input type="email" id="email" required placeholder="이메일을 입력하세요">
-                </div>
-                <div class="input-group">
-                    <label for="password">비밀번호</label>
-                    <input type="password" id="password" required placeholder="비밀번호를 입력하세요">
-                </div>
-                <button type="submit" class="btn-primary">로그인</button>
-            </form>
-            <p class="auth-switch">계정이 없으신가요? <a href="signup.html">회원가입</a></p>
-        </div>
-    </main>
-
-    <script>
-        const SUPABASE_URL = 'https://ipgzhipiebcnkfqzufgm.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwZ3poaXBpZWJjbmtmcXp1ZmdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5ODMxMTgsImV4cCI6MjEwMTU1OTExOH0.byzqUDMvoAIbybPYbyKsR6KoPnpLPs0jsdawAnW0Eww';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-            if (error) {
-                alert('로그인 실패: ' + error.message);
-            } else {
-                alert('로그인 성공!');
-                window.location.href = 'index.html';
-            }
-        });
-    </script>
+    <div class="content">
+        <h2>로그인</h2>
+        <form id="loginForm">
+            <input type="text" placeholder="아이디" required><br>
+            <input type="password" placeholder="비밀번호" required><br>
+            <button type="submit">로그인</button>
+        </form>
+    </div>
 </body>
 </html>
