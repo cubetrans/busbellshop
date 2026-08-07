@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>커뮤니티</title>
+    <title>베스벨샵 - 커뮤니티</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -12,16 +12,12 @@
             if (localStorage.getItem('theme') === 'light') {
                 document.body.classList.add('light-mode');
             }
-            const savedTitle = localStorage.getItem('siteTitle') || 'MARKET';
-            document.title = savedTitle + ' - 커뮤니티';
-            const logoEl = document.getElementById('siteLogo');
-            if (logoEl) logoEl.innerHTML = `⚙️ <strong>${savedTitle}</strong>`;
         });
     </script>
 </head>
 <body>
     <header>
-        <a class='logo' href='/' id="siteLogo">⚙️ <strong>MARKET</strong></a>
+        <a class='logo' href='/'>🚌 <strong>베스벨샵</strong></a>
         <button class="mobile-menu-btn" onclick="toggleMobileMenu()"><i class="fas fa-bars"></i></button>
         <div class="nav-group" id="navGroup">
             <nav>
@@ -42,18 +38,18 @@
 
     <main class="container">
         <section class="card glass-panel search-section">
-            <div class="search-bar-group">
-                <div class="search-input-wrapper">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" id="searchInput" placeholder="게시글 검색..." class="input-modern" onkeyup="filterPosts()">
+            <div class="search-bar-group" style="display: flex; gap: 12px; align-items: center;">
+                <div class="search-input-wrapper" style="position: relative; flex: 1;">
+                    <i class="fas fa-search search-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-sub);"></i>
+                    <input type="text" id="searchInput" placeholder="게시글 검색..." class="input-modern" onkeyup="filterPosts()" style="padding-left: 42px; margin-bottom: 0;">
                 </div>
-                <button class="btn-primary-large btn-write" onclick="openWriteModal()"><i class="fas fa-pen"></i> 글쓰기</button>
+                <button class="btn-primary-large" onclick="openWriteModal()" style="padding: 0.75rem 1.25rem; white-space: nowrap;"><i class="fas fa-pen"></i> 글쓰기</button>
             </div>
         </section>
 
         <section class="card glass-panel">
             <div id="postList" class="post-list">
-                <p style="text-align:center;">게시글을 불러오는 중...</p>
+                <p style="text-align:center; padding: 2rem;">게시글을 불러오는 중...</p>
             </div>
         </section>
     </main>
@@ -63,6 +59,7 @@
         <div class="modal-content glass-panel">
             <div class="modal-header">
                 <h3 id="writeModalTitle"><i class="fas fa-pen-nib"></i> 새 게시글 작성</h3>
+                <button class="modal-close" onclick="closeWriteModal()">&times;</button>
             </div>
             <form id="postForm" onsubmit="submitPost(event)">
                 <select id="postCategory" class="input-modern" required></select>
@@ -89,6 +86,11 @@
     <div id="detailModal" class="modal-overlay" style="display: none;">
         <div class="modal-content glass-panel" id="detailContent"></div>
     </div>
+
+    <!-- 채널톡 상담 플로팅 버튼 -->
+    <button class="floating-chat-btn" onclick="openCustomerService()" aria-label="고객센터 상담하기">
+        <i class="fas fa-comment-dots"></i>
+    </button>
 
     <script src="app.js"></script>
     <script>
@@ -147,16 +149,18 @@
                 allPosts = data;
 
                 const list = document.getElementById('postList');
-                if(data.length === 0){
-                    list.innerHTML = '<p style="text-align:center;">등록된 게시글이 없습니다.</p>';
+                if(!data || data.length === 0){
+                    list.innerHTML = '<p style="text-align:center; padding: 2rem;">등록된 게시글이 없습니다.</p>';
                     return;
                 }
 
                 list.innerHTML = data.map(post => `
-                    <div class="post-item" onclick="openDetailModal(${post.id})">
-                        <span class="post-cat-badge ${post.category === '공지게시판' ? 'admin-notice' : ''}">${post.category || '질문게시판'}</span>
-                        <div class="post-title">${post.title}</div>
-                        <div class="post-meta">
+                    <div class="post-item" onclick="openDetailModal(${post.id})" style="display:flex; justify-content:space-between; align-items:center; padding: 12px 0; border-bottom: 1px solid var(--border-color); cursor:pointer;">
+                        <div style="display:flex; align-items:center; gap: 10px;">
+                            <span class="post-cat-badge" style="background: rgba(59, 130, 246, 0.15); color: var(--primary); padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight:700;">${post.category || '질문게시판'}</span>
+                            <span style="font-weight: 600;">${post.title}</span>
+                        </div>
+                        <div class="post-meta" style="font-size: 0.8rem; color: var(--text-sub); display:flex; gap: 10px;">
                             <span><i class="fas fa-user"></i> ${post.author}</span>
                             <span><i class="fas fa-clock"></i> ${new Date(post.created_at).toLocaleDateString()}</span>
                         </div>
@@ -183,11 +187,11 @@
 
             document.getElementById('detailContent').innerHTML = `
                 <div class="modal-header">
-                    <span class="post-cat-badge">${post.category || '질문게시판'}</span>
+                    <span class="post-cat-badge" style="background: rgba(59, 130, 246, 0.15); color: var(--primary); padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight:700;">${post.category || '질문게시판'}</span>
                     <button class="modal-close" onclick="closeDetailModal()">&times;</button>
                 </div>
                 <h3 style="margin: 10px 0;">${post.title}</h3>
-                <p style="font-size: 0.9rem; color: var(--text-sub); margin-bottom: 20px;">작성자: ${post.author}</p>
+                <p style="font-size: 0.85rem; color: var(--text-sub); margin-bottom: 20px;">작성자: ${post.author}</p>
                 ${post.image_url ? `<img src="${post.image_url}" style="width:100%; border-radius:10px; margin-bottom:20px;">` : ''}
                 <div style="white-space: pre-wrap; line-height: 1.6;">${post.content}</div>
                 <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color);">
