@@ -21,30 +21,44 @@
 
   <main style="max-width: 400px; margin-top: 50px;">
     <div class="content-box">
-      <div class="section-title">로그인</div>
-      <label>아이디 (닉네임)</label>
-      <input type="text" id="login-id" placeholder="아이디 입력">
-      <label>비밀번호</label>
-      <input type="password" id="login-pw" placeholder="비밀번호 입력">
-      <button class="btn-primary" style="width: 100%; margin-top: 10px;" onclick="handleLogin()">로그인</button>
-    </div>
+      <!-- 로그인 섹션 -->
+      <div id="login-section">
+        <div class="section-title">로그인</div>
+        <label>아이디 (닉네임)</label>
+        <input type="text" id="login-id" placeholder="아이디 입력">
+        <label>비밀번호</label>
+        <input type="password" id="login-pw" placeholder="비밀번호 입력">
+        <button class="btn-primary" style="width: 100%; margin-top: 10px;" onclick="handleLogin()">로그인</button>
+        <div style="text-align: center; margin-top: 15px;">
+          <a href="#" onclick="toggleAuthMode(event)" style="font-size: 14px; color: #38bdf8; text-decoration: none;">계정이 없으신가요? 회원가입하기</a>
+        </div>
+      </div>
 
-    <div class="content-box" style="margin-top: 20px;">
-      <div class="section-title">회원가입</div>
-      <label>아이디 (닉네임)</label>
-      <input type="text" id="signup-id" placeholder="사용할 닉네임">
-      <label>비밀번호</label>
-      <input type="password" id="signup-pw" placeholder="비밀번호">
-      <label>회원 유형</label>
-      <select id="signup-role">
-        <option value="일반회원">일반회원</option>
-        <option value="특수회원">특수회원 (VIP)</option>
-      </select>
-      <button class="btn-primary" style="width: 100%; margin-top: 10px;" onclick="handleSignup()">회원가입</button>
+      <!-- 회원가입 섹션 (기본 숨김) -->
+      <div id="signup-section" style="display: none;">
+        <div class="section-title">회원가입</div>
+        <label>아이디 (닉네임)</label>
+        <input type="text" id="signup-id" placeholder="사용할 닉네임">
+        <label>비밀번호</label>
+        <input type="password" id="signup-pw" placeholder="비밀번호">
+        <button class="btn-primary" style="width: 100%; margin-top: 10px;" onclick="handleSignup()">회원가입</button>
+        <div style="text-align: center; margin-top: 15px;">
+          <a href="#" onclick="toggleAuthMode(event)" style="font-size: 14px; color: #38bdf8; text-decoration: none;">계정이 있습니다. 로그인하기</a>
+        </div>
+      </div>
     </div>
   </main>
 
   <script>
+    let isSignupMode = false;
+
+    function toggleAuthMode(e) {
+      e.preventDefault();
+      isSignupMode = !isSignupMode;
+      document.getElementById('login-section').style.display = isSignupMode ? 'none' : 'block';
+      document.getElementById('signup-section').style.display = isSignupMode ? 'block' : 'none';
+    }
+
     async function handleLogin() {
       const id = document.getElementById('login-id').value.trim();
       const pw = document.getElementById('login-pw').value.trim();
@@ -72,22 +86,27 @@
     async function handleSignup() {
       const id = document.getElementById('signup-id').value.trim();
       const pw = document.getElementById('signup-pw').value.trim();
-      const role = document.getElementById('signup-role').value;
 
       if (!id || !pw) {
         alert('모든 정보를 입력해주세요.');
         return;
       }
 
+      // 회원가입 시 기본 회원 유형은 '일반회원'으로 고정 설정
       const { error } = await supabaseClient
         .from('users')
-        .insert([{ nickname: id, password: pw, role: role }]);
+        .insert([{ nickname: id, password: pw, role: '일반회원' }]);
 
       if (error) {
         alert('회원가입 실패: 이미 존재하는 아이디이거나 오류가 발생했습니다.');
       } else {
         alert('회원가입이 완료되었습니다. 로그인해주세요.');
-        window.location.reload();
+        // 가입 완료 후 로그인 뷰로 자동 전환
+        isSignupMode = false;
+        document.getElementById('login-section').style.display = 'block';
+        document.getElementById('signup-section').style.display = 'none';
+        document.getElementById('signup-id').value = '';
+        document.getElementById('signup-pw').value = '';
       }
     }
   </script>
