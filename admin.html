@@ -3,161 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>관리자 페이지 - 주문 및 사이트 관리</title>
+    <title>베스벨샵 - 관리자 페이지</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        .admin-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            font-size: 0.95rem;
-        }
-        .admin-table th, .admin-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-        .status-select {
-            padding: 6px 10px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            background: var(--input-bg, #fff);
-            font-weight: bold;
-            cursor: pointer;
-        }
-    </style>
 </head>
 <body>
+
     <header>
-        <a class='logo' href='/'>⚙️ <strong>관리자 페이지</strong></a>
-        <div class="nav-group">
-            <nav>
-                <ul>
-                    <li><a href='/'><i class="fas fa-home"></i> 홈</a></li>
-                    <li><a href='market.html'><i class="fas fa-shopping-cart"></i> 장터</a></li>
-                    <li><a href='community.html'><i class="fas fa-comments"></i> 커뮤니티</a></li>
-                </ul>
-            </nav>
-        </div>
+        <a href="/" class="logo">
+            <img src="assets/logo.png" alt="베스벨샵" class="site-logo">
+        </a>
+        <span>관리자 모드 👑</span>
     </header>
 
-    <main class="container">
-        <!-- 사이트 제목 설정 영역 -->
+    <main class="container" style="max-width: 800px; margin: 30px auto; padding: 0 20px;">
         <section class="card glass-panel">
-            <h3><i class="fas fa-cog"></i> 사이트 기본 설정</h3>
-            <div style="display:flex; gap:10px; margin-top:15px;">
-                <input type="text" id="adminSiteTitleInput" placeholder="사이트 이름을 입력하세요 (예: 큐브트랜스 마켓)" class="input-modern">
-                <button class="btn-auth" onclick="saveSiteTitle()"><i class="fas fa-save"></i> 제목 저장</button>
-            </div>
-        </section>
-
-        <!-- 📦 주문 내역 관리 (7가지 상태 변경 가능) -->
-        <section class="card glass-panel">
-            <h3><i class="fas fa-clipboard-list"></i> 주문 내역 및 배송/처리 상태 관리</h3>
-            <p style="font-size: 0.85rem; color: var(--text-sub);">주문 상태를 변경하면 즉시 반영됩니다.</p>
+            <h2><Image> 🖼️ index 상단 배너 이미지 관리</h2>
+            <p style="font-size: 0.9rem; color: var(--text-sub);">메인 페이지(index.html) 상단에 노출될 배너 이미지의 URL을 변경합니다.</p>
             
-            <div style="overflow-x: auto;">
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>주문번호</th>
-                            <th>주문자</th>
-                            <th>상품명</th>
-                            <th>금액</th>
-                            <th>주문일시</th>
-                            <th>상태변경 (7단계)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="orderTableBody">
-                        <tr><td colspan="6" style="text-align:center;">주문 내역을 불러오는 중...</td></tr>
-                    </tbody>
-                </table>
-            </div>
+            <form id="bannerForm" onsubmit="saveBannerUrl(event)" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+                <label style="font-size: 0.85rem; color: var(--text-sub);">배너 이미지 웹 링크(URL)</label>
+                <input type="url" id="bannerUrlInput" placeholder="https://example.com/banner.png" class="input-modern" style="padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color);" required>
+                <button type="submit" class="btn-primary" style="padding: 10px; background: var(--primary); color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">배너 이미지 교체하기</button>
+            </form>
         </section>
     </main>
 
     <script src="app.js"></script>
     <script>
-        const STATUS_OPTIONS = [
-            '주문접수',
-            '배송중',
-            '환불완료',
-            '처리중',
-            '보류',
-            '처리불가',
-            '처리완료'
-        ];
-
-        window.addEventListener('DOMContentLoaded', () => {
-            const role = localStorage.getItem('currentUserRole');
-            if (role !== '관리자' && role !== '관리진') {
-                alert('관리자 권한이 없습니다.');
-                location.href = '/';
-                return;
+        window.addEventListener('DOMContentLoaded', async () => {
+            // 현재 저장된 배너 URL 불러오기
+            try {
+                const { data } = await db.from('settings').select('*').eq('key', 'top_banner_url').maybeSingle();
+                if (data) {
+                    document.getElementById('bannerUrlInput').value = data.value;
+                }
+            } catch(e) {
+                console.error(e);
             }
-
-            document.getElementById('adminSiteTitleInput').value = localStorage.getItem('siteTitle') || 'MARKET';
-            fetchOrders();
         });
 
-        // 사이트 제목 변경 (장터/커뮤니티/홈 모두 즉시 동기화)
-        function saveSiteTitle() {
-            const title = document.getElementById('adminSiteTitleInput').value.trim();
-            if (!title) return alert('제목을 입력하세요.');
-            localStorage.setItem('siteTitle', title);
-            alert('사이트 제목이 변경되었습니다! 모든 페이지에 적용됩니다.');
-            location.reload();
-        }
+        async function saveBannerUrl(e) {
+            e.preventDefault();
+            const newUrl = document.getElementById('bannerUrlInput').value.trim();
+            
+            // Supabase settings 테이블에 업서트 (없으면 생성, 있으면 수정)
+            const { error } = await db.from('settings').upsert({ key: 'top_banner_url', value: newUrl });
 
-        // 주문 내역 조회
-        async function fetchOrders() {
-            const tbody = document.getElementById('orderTableBody');
-            try {
-                const { data, error } = await db.from('orders').select('*').order('created_at', { ascending: false });
-                if (error) throw error;
-
-                if (!data || data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">주문 내역이 없습니다.</td></tr>';
-                    return;
-                }
-
-                tbody.innerHTML = data.map(order => {
-                    const optionsHtml = STATUS_OPTIONS.map(opt => `
-                        <option value="${opt}" ${order.status === opt ? 'selected' : ''}>${opt}</option>
-                    `).join('');
-
-                    return `
-                        <tr>
-                            <td>#${order.id}</td>
-                            <td>${order.user_id || '익명'}</td>
-                            <td>${order.product_name || '상품정보 없음'}</td>
-                            <td>${Number(order.amount || 0).toLocaleString()}원</td>
-                            <td>${new Date(order.created_at).toLocaleString()}</td>
-                            <td>
-                                <select class="status-select" onchange="changeOrderStatus(${order.id}, this.value)">
-                                    ${optionsHtml}
-                                </select>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-            } catch (err) {
-                console.error(err);
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">주문 목록을 불러오지 못했습니다.</td></tr>';
-            }
-        }
-
-        // 상태 실시간 변경 처리
-        async function changeOrderStatus(orderId, newStatus) {
-            try {
-                const { error } = await db.from('orders').update({ status: newStatus }).eq('id', orderId);
-                if (error) throw error;
-                alert(`주문 #${orderId}의 상태가 [${newStatus}](으)로 변경되었습니다.`);
-            } catch (err) {
-                alert('상태 변경 실패: ' + err.message);
-                fetchOrders(); // 원래 상태로 복구
+            if (error) {
+                alert('배너 변경 실패: ' + error.message);
+            } else {
+                alert('메인 상단 배너가 성공적으로 변경되었습니다!');
             }
         }
     </script>
