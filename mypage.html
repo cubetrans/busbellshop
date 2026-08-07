@@ -4,33 +4,32 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>마이페이지 - 버스벨샵</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
-    <div class="logo"><a href="index.html">버스벨샵</a></div>
-    <div class="search-container">
-      <input type="text" placeholder="상품명, 지역, 브랜드 등 통합검색">
+    <div class="logo">
+      <a href="index.html"><img src="icon.png" alt="버스벨샵 로고"></a>
+    </div>
+    <div class="search-gradient-wrap">
+      <div class="search-container">
+        <input type="text" placeholder="통합검색">
+      </div>
     </div>
     <div class="header-actions">
       <button onclick="toggleTheme()">테마 변경</button>
-      <a href="mypage.html">내정보</a>
+      <a href="index.html">홈으로</a>
     </div>
   </header>
-
-  <nav class="sub-nav">
-    <a href="index.html">홈</a>
-    <a href="market.html">중고마켓</a>
-    <a href="community.html">커뮤니티</a>
-    <a href="admin.html">관리자</a>
-  </nav>
 
   <main>
     <div class="section-title">마이페이지</div>
     <div class="content-box">
-      <p>닉네임: 버스동호인</p>
-      <p style="margin-top: 10px;">등록한 상품 및 거래 내역을 관리할 수 있습니다.</p>
+      <div id="user-info-area">
+        <p>로그인이 필요합니다. (Supabase `users` 테이블 연동 로그인 구현 영역)</p>
+      </div>
     </div>
   </main>
 </body>
