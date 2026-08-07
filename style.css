@@ -1,83 +1,13 @@
-body {
-    font-family: 'Apple SD Gothic Neo', sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f8f9fa;
-    color: #333;
+:root {
+    --primary-color: #2c3e50;
+    --accent-color: #3498db;
+    --bg-color: #f4f7f6;
+    --text-color: #333;
 }
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 30px;
-    background: #fff;
-    border-bottom: 1px solid #ddd;
-}
-.logo a {
-    text-decoration: none;
-    font-size: 20px;
-    font-weight: bold;
-    color: #333;
-}
-nav a {
-    margin-left: 20px;
-    text-decoration: none;
-    color: #555;
-    font-weight: 500;
-}
-nav a:hover, nav a.active {
-    color: #007bff;
-    font-weight: bold;
-}
-.container {
-    max-width: 1000px;
-    margin: 30px auto;
-    padding: 0 20px;
-}
-.btn {
-    background: #007bff;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    text-decoration: none;
-    display: inline-block;
-}
-.btn:hover {
-    background: #0056b3;
-}
-.card {
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    justify-content: center;
-    align-items: center;
-}
-.modal-content {
-    background: white;
-    padding: 30px;
-    border-radius: 8px;
-    width: 400px;
-    max-width: 90%;
-}
-.modal-content input, .modal-content textarea, .modal-content select {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
+body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 0; }
+header { background: var(--primary-color); color: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+header .logo { font-size: 1.5rem; font-weight: bold; }
+nav a { color: #fff; margin-left: 1rem; text-decoration: none; }
+.container { max-width: 800px; margin: 2rem auto; padding: 2rem; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+input, button { display: block; width: 100%; padding: 0.8rem; margin: 0.5rem 0; }
+button { background: var(--accent-color); color: #fff; border: none; cursor: pointer; }
