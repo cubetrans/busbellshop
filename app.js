@@ -8,21 +8,21 @@ document.addEventListener('DOMContentLoaded', () => {
   initCustomerService();
 });
 
-// 테마 변경 기능 (라이트/다크)
+// 테마 변경 기능 (이모지만 표시하여 줄바꿈 원천 차단)
 function initTheme() {
   const savedTheme = localStorage.getItem('theme') || 'light';
   document.documentElement.setAttribute('data-theme', savedTheme);
 
   const toggleButtons = document.querySelectorAll('.theme-toggle-btn');
   toggleButtons.forEach(btn => {
-    btn.textContent = savedTheme === 'dark' ? '☀️ 라이트모드' : '🌙 다크모드';
+    btn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
     btn.addEventListener('click', () => {
       const currentTheme = document.documentElement.getAttribute('data-theme');
       const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', newTheme);
       localStorage.setItem('theme', newTheme);
       toggleButtons.forEach(b => {
-        b.textContent = newTheme === 'dark' ? '☀️ 라이트모드' : '🌙 다크모드';
+        b.textContent = newTheme === 'dark' ? '☀️' : '🌙';
       });
     });
   });
@@ -289,7 +289,6 @@ function executeSearch(query) {
 function renderFilteredMarket(posts) {
   const container = document.getElementById('market-list');
   if (!container) return;
-  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
 
   container.innerHTML = '';
   if (posts.length === 0) {
