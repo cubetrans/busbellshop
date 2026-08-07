@@ -153,13 +153,59 @@ main {
   cursor: pointer;
 }
 
+.btn-edit {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.btn-edit:hover {
+  background-color: #2563eb;
+}
+
 .btn-danger {
   background-color: #ef4444;
   color: white;
   border: none;
-  padding: 6px 12px;
+  padding: 6px 14px;
   border-radius: 4px;
   cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.btn-danger:hover {
+  background-color: #dc2626;
+}
+
+.board-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.board-tab {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  color: var(--text-color);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.board-tab:hover,
+.board-tab.active {
+  background: var(--gradient-main);
+  color: white;
+  border-color: transparent;
 }
 
 input[type="text"], input[type="password"], input[type="number"], textarea, select {
