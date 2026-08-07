@@ -1,173 +1,36 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>베스벨샵 - 관리자 페이지</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        .admin-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            font-size: 0.95rem;
-        }
-        .admin-table th, .admin-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-        .status-select {
-            padding: 6px 10px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            background: var(--bg-card);
-            color: var(--text-main);
-            font-weight: bold;
-            cursor: pointer;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리자 페이지 - 버스벨샵</title>
+  <script src="app.js"></script>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <a class='logo' href='/'>🚌 <strong>관리자 페이지</strong></a>
-        <div class="nav-group">
-            <nav>
-                <ul>
-                    <li><a href='/'><i class="fas fa-home"></i> 홈</a></li>
-                    <li><a href='market.html'><i class="fas fa-shopping-cart"></i> 장터</a></li>
-                    <li><a href='community.html'><i class="fas fa-comments"></i> 커뮤니티</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+  <header>
+    <div class="logo"><a href="index.html">버스벨샵</a></div>
+    <div class="search-container">
+      <input type="text" placeholder="상품명, 지역, 브랜드 등 통합검색">
+    </div>
+    <div class="header-actions">
+      <button onclick="toggleTheme()">테마 변경</button>
+      <a href="mypage.html">내정보</a>
+    </div>
+  </header>
 
-    <main class="container">
-        <!-- 메인 상단 배너 이미지 설정 영역 (요청하신 기능 반영) -->
-        <section class="card glass-panel">
-            <h3><i class="fas fa-image"></i> 홈 메인 상단 배너 이미지 설정</h3>
-            <p style="font-size: 0.85rem; color: var(--text-sub); margin-bottom: 12px;">홈 화면 상단에 표시될 배너 이미지의 URL을 입력하거나 이미지 파일을 업로드하세요.</p>
-            <div style="display:flex; gap:10px; margin-bottom: 10px;">
-                <input type="text" id="adminBannerUrlInput" placeholder="이미지 URL 주소 입력" class="input-modern" style="margin-bottom:0;">
-                <button class="btn-auth" onclick="saveBannerUrl()" style="white-space: nowrap; width: auto; padding: 0 20px;"><i class="fas fa-save"></i> URL 저장</button>
-            </div>
-            <div>
-                <label style="font-size: 0.85rem; color: var(--text-sub); display: block; margin-bottom: 4px;">또는 직접 이미지 파일 업로드:</label>
-                <input type="file" id="adminBannerFile" accept="image/*" class="input-modern" style="padding: 8px;" onchange="uploadBannerImage(this)">
-            </div>
-        </section>
+  <nav class="sub-nav">
+    <a href="index.html">홈</a>
+    <a href="market.html">중고마켓</a>
+    <a href="community.html">커뮤니티</a>
+    <a href="admin.html" class="active">관리자</a>
+  </nav>
 
-        <!-- 📦 주문 내역 관리 (7단계 상태) -->
-        <section class="card glass-panel">
-            <h3><i class="fas fa-clipboard-list"></i> 주문 내역 및 배송/처리 상태 관리</h3>
-            <p style="font-size: 0.85rem; color: var(--text-sub);">주문 상태를 7단계 중 하나로 변경하면 즉시 반영됩니다.</p>
-            
-            <div style="overflow-x: auto;">
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>주문번호</th>
-                            <th>주문자</th>
-                            <th>상품명</th>
-                            <th>금액</th>
-                            <th>주문일시</th>
-                            <th>상태변경 (7단계)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="orderTableBody">
-                        <tr><td colspan="6" style="text-align:center;">주문 내역을 불러오는 중...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    </main>
-
-    <script src="app.js"></script>
-    <script>
-        const STATUS_OPTIONS = ['주문접수', '배송중', '환불완료', '처리중', '보류', '처리불가', '처리완료'];
-
-        window.addEventListener('DOMContentLoaded', () => {
-            const role = localStorage.getItem('currentUserRole');
-            if (role !== '관리자' && role !== '관리진') {
-                alert('관리자 권한이 없습니다.');
-                location.href = '/';
-                return;
-            }
-
-            document.getElementById('adminBannerUrlInput').value = localStorage.getItem('mainBannerImage') || '';
-            fetchOrders();
-        });
-
-        function saveBannerUrl() {
-            const url = document.getElementById('adminBannerUrlInput').value.trim();
-            localStorage.setItem('mainBannerImage', url);
-            alert('메인 배너 이미지가 저장되었습니다! 홈 화면에 즉시 반영됩니다.');
-        }
-
-        async function uploadBannerImage(input) {
-            if (input.files && input.files[0]) {
-                const file = input.files[0];
-                const fileExt = file.name.split('.').pop();
-                const fileName = `banner_${Date.now()}.${fileExt}`;
-                const { error: uploadError } = await db.storage.from('images').upload(fileName, file);
-                if (uploadError) return alert('이미지 업로드 실패: ' + uploadError.message);
-                
-                const imageUrl = db.storage.from('images').getPublicUrl(fileName).data.publicUrl;
-                document.getElementById('adminBannerUrlInput').value = imageUrl;
-                localStorage.setItem('mainBannerImage', imageUrl);
-                alert('배너 이미지 업로드 및 저장 완료!');
-            }
-        }
-
-        async function fetchOrders() {
-            const tbody = document.getElementById('orderTableBody');
-            try {
-                const { data, error } = await db.from('orders').select('*').order('created_at', { ascending: false });
-                if (error) throw error;
-
-                if (!data || data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">주문 내역이 없습니다.</td></tr>';
-                    return;
-                }
-
-                tbody.innerHTML = data.map(order => {
-                    const optionsHtml = STATUS_OPTIONS.map(opt => `
-                        <option value="${opt}" ${order.status === opt ? 'selected' : ''}>${opt}</option>
-                    `).join('');
-
-                    return `
-                        <tr>
-                            <td>#${order.id}</td>
-                            <td>${order.user_id || '익명'}</td>
-                            <td>${order.product_name || '상품정보 없음'}</td>
-                            <td>${Number(order.amount || 0).toLocaleString()}원</td>
-                            <td>${new Date(order.created_at).toLocaleString()}</td>
-                            <td>
-                                <select class="status-select" onchange="changeOrderStatus(${order.id}, this.value)">
-                                    ${optionsHtml}
-                                </select>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-            } catch (err) {
-                console.error(err);
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">주문 목록을 불러오지 못했습니다.</td></tr>';
-            }
-        }
-
-        async function changeOrderStatus(orderId, newStatus) {
-            try {
-                const { error } = await db.from('orders').update({ status: newStatus }).eq('id', orderId);
-                if (error) throw error;
-                alert(`주문 #${orderId}의 상태가 [${newStatus}](으)로 변경되었습니다.`);
-            } catch (err) {
-                alert('상태 변경 실패: ' + err.message);
-                fetchOrders();
-            }
-        }
-    </script>
+  <main>
+    <div class="section-title">관리자 대시보드</div>
+    <div class="content-box">
+      <p>사이트 관리 및 회원 관리 영역입니다.</p>
+    </div>
+  </main>
 </body>
 </html>
