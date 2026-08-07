@@ -2,172 +2,69 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>중고마켓 - 버스벨샵</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- app.js 파일이 올바른 경로에 있는지 확인하세요! -->
-  <script src="app.js"></script>
-  <link rel="stylesheet" href="style.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>장터 - 버스벨샵</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
   <header>
-  <div class="logo">
-    <a href="index.html"><img src="icon.png" alt="로고"></a>
-  </div>
-  
-  <div class="search-gradient-wrap">
+    <div class="header-left">
+      <a href="index.html" class="logo">
+        <img src="icon.png" alt="logo" width="30" height="30" onerror="this.style.display='none'"> Bus Bell Shop
+      </a>
+      <ul class="nav-menu">
+        <li><a href="index.html">홈</a></li>
+        <li><a href="market.html">장터</a></li>
+        <li><a href="community.html">커뮤니티</a></li>
+        <li><a href="support.html">고객센터</a></li>
+      </ul>
+    </div>
+
+    <div class="header-right">
+      <span class="user-info user-greeting">로그인이 필요합니다</span>
+      <button class="theme-toggle-btn">🌙 다크모드</button>
+      <a href="mypage.html" class="btn btn-outline auth-action">마이페이지</a>
+      <a href="login.html" class="btn btn-primary auth-action">로그인</a>
+      <button class="hamburger">☰</button>
+    </div>
+
+    <div class="mobile-menu">
+      <div class="user-greeting mobile-user-greeting">로그인이 필요합니다</div>
+      <ul>
+        <li><a href="index.html">홈</a></li>
+        <li><a href="market.html">장터</a></li>
+        <li><a href="community.html">커뮤니티</a></li>
+        <li><a href="support.html">고객센터</a></li>
+        <li><a href="mypage.html">마이페이지</a></li>
+        <li><a href="#" class="logout-btn">로그아웃</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <div class="container">
+    <h2>중고 장터</h2>
+    <p style="margin-bottom: 20px;">교통 부품 및 용품을 안전하게 거래하세요.</p>
+
+    <!-- 장터 검색 기능 -->
     <div class="search-container">
-      <input type="text" id="search-input" placeholder="검색...">
-    </div>
-  </div>
-
-  <!-- 이 영역이 자바스크립트에 의해 동적으로 채워집니다 -->
-  <div class="header-actions" id="auth-menu-area"></div>
-</header>
-
-<nav class="sub-nav" id="sub-nav">
-  <a href="index.html">홈</a>
-  <a href="market.html">중고마켓</a>
-  <a href="community.html">커뮤니티</a>
-  <a href="mypage.html">마이페이지</a>
-  <a href="admin.html" id="admin-nav" style="display:none;">관리자</a>
-</nav>
-
-  <main>
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-      <div class="section-title" style="margin-bottom: 0;">중고마켓</div>
-      <button class="btn-primary" onclick="openWriteModal()">판매글 등록</button>
+      <input type="text" id="search-input" placeholder="장터 검색 (제목, 내용)...">
+      <button id="search-btn" class="btn btn-primary">검색</button>
     </div>
 
-    <!-- 판매글 작성/수정 박스 -->
-    <div id="write-box" class="content-box" style="display:none;">
-      <h3 id="modal-mode-title">판매글 작성</h3>
-      <p style="font-size: 13px; color: #ef4444; font-weight: bold; margin-bottom: 10px;">※ 판매자는 수수료 2%가 차감된 98%의 금액만 입금받습니다.</p>
-      <input type="hidden" id="edit-market-id">
-      <label>제목</label>
-      <input type="text" id="item-title" placeholder="상품명을 입력하세요">
-      <label>가격 (원)</label>
-      <input type="number" id="item-price" placeholder="가격을 숫자로 입력">
-      <label>연락처</label>
-      <input type="text" id="item-contact" placeholder="연락처">
-      <label>상세 내용</label>
-      <textarea id="item-desc" rows="4" placeholder="설명 입력"></textarea>
-      <div style="display: flex; gap: 8px; margin-top: 10px;">
-        <button class="btn-primary" onclick="saveMarketItem()">저장하기</button>
-        <button class="btn-danger" onclick="closeWriteModal()">취소</button>
-      </div>
-    </div>
-
-    <!-- 에스크로 결제 모달 -->
-    <div id="escrow-box" class="content-box" style="display:none; border: 2px solid #38bdf8;">
-      <h3>안전결제 (에스크로) 입금 안내</h3>
-      <p id="escrow-item-info" style="margin: 10px 0;"></p>
-      <p style="font-weight:bold; color:#38bdf8; margin: 10px 0;">입금 계좌: 국민은행 1234-56-789012 (버스벨샵)</p>
-      <p id="deposit-ref-text" style="font-size:15px; color:red; font-weight:bold; margin:10px 0;"></p>
-      <p style="font-size: 13px; color: gray; margin-bottom: 10px;">※ 착오송금은 환불해드리지 않습니다.</p>
-      <div style="display: flex; gap: 8px;">
-        <button class="btn-primary" onclick="executeEscrowPayment()">결제 완료 (입금 확인 요청)</button>
-        <button class="btn-danger" onclick="closeEscrowModal()">닫기</button>
-      </div>
+    <div class="card">
+      <h3>상품 등록하기</h3>
+      <form id="market-post-form" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+        <input type="text" id="post-title" placeholder="상품명을 입력하세요" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
+        <input type="text" id="post-price" placeholder="가격을 입력하세요 (예: 15,000원)" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
+        <textarea id="post-content" placeholder="상품 설명을 입력하세요" rows="4" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;"></textarea>
+        <button type="submit" class="btn btn-primary" style="align-self: flex-start;">등록하기</button>
+      </form>
     </div>
 
     <div id="market-list"></div>
-  </main>
+  </div>
 
-  <script>
-    let currentSelectedPrice = 0, currentSelectedItem = '', currentSeller = '';
-
-    // 페이지 로드 시 실행
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log("페이지 로드됨");
-      loadMarketItems();
-    });
-
-    async function loadMarketItems() {
-      console.log("목록 불러오는 중...");
-      const { data, error } = await supabaseClient.from('market').select('*').order('created_at', { ascending: false });
-      const listArea = document.getElementById('market-list');
-      
-      if (error) {
-        console.error("데이터 로딩 에러:", error);
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        listArea.innerHTML = '<div class="content-box"><p>등록된 상품이 없습니다.</p></div>';
-        return;
-      }
-      
-      const currentUser = getLoggedInUser();
-      let html = '';
-      data.forEach(item => {
-        const canEdit = currentUser && (currentUser.nickname === item.author || currentUser.role === '관리자');
-        html += `
-          <div class="content-box">
-            <h3>${item.title}</h3>
-            <p style="font-size: 18px; font-weight: bold; color: #38bdf8; margin: 6px 0;">${item.price.toLocaleString()}원</p>
-            <p style="font-size: 13px; color: var(--text-secondary);">판매자: ${item.author} | 연락처: ${item.contact}</p>
-            <hr style="margin: 10px 0; border: none; border-top: 1px solid var(--border-color);">
-            <div style="margin-bottom: 10px;">${item.description}</div>
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <button class="btn-primary" onclick="openEscrowModal('${item.title}', ${item.price}, '${item.author}')">안전결제(에스크로)</button>
-              ${canEdit ? `<button class="btn-edit" onclick="editItem(${item.id}, '${item.title.replace(/'/g, "\\'")}', ${item.price}, '${item.contact}', \`${item.description.replace(/`/g, '\\`')}\`)">수정</button>` : ''}
-              ${canEdit ? `<button class="btn-danger" onclick="deleteItem(${item.id})">삭제</button>` : ''}
-            </div>
-          </div>
-        `;
-      });
-      listArea.innerHTML = html;
-    }
-
-    function openWriteModal() {
-      const user = getLoggedInUser();
-      if (!user) {
-        alert('로그인이 필요한 서비스입니다.');
-        window.location.href = 'login.html';
-        return;
-      }
-      document.getElementById('edit-market-id').value = '';
-      document.getElementById('item-title').value = '';
-      document.getElementById('item-price').value = '';
-      document.getElementById('item-contact').value = '';
-      document.getElementById('item-desc').value = '';
-      document.getElementById('modal-mode-title').innerText = '판매글 작성';
-      document.getElementById('write-box').style.display = 'block';
-    }
-
-    function closeWriteModal() {
-      document.getElementById('write-box').style.display = 'none';
-    }
-
-    function openEscrowModal(title, price, seller) {
-      const user = getLoggedInUser();
-      if (!user) { alert('로그인 필요'); return; }
-      currentSelectedPrice = price; 
-      currentSelectedItem = title; 
-      currentSeller = seller;
-      const ref = (user.nickname.substring(0,2)) + (seller.substring(0,2)) + (title.substring(0,4));
-      document.getElementById('escrow-item-info').innerText = `상품: ${title} / 금액: ${price.toLocaleString()}원`;
-      document.getElementById('deposit-ref-text').innerText = `입금자명(필수): ${ref}`;
-      document.getElementById('escrow-box').style.display = 'block';
-    }
-
-    function closeEscrowModal() {
-      document.getElementById('escrow-box').style.display = 'none';
-    }
-
-    async function executeEscrowPayment() {
-      const user = getLoggedInUser();
-      const { error } = await supabaseClient.from('orders').insert([{ 
-        buyer_nickname: user.nickname, 
-        seller_nickname: currentSeller, 
-        item_title: currentSelectedItem, 
-        amount: currentSelectedPrice, 
-        status: '입금대기' 
-      }]);
-      if(error) alert('신청 실패'); else alert('신청 완료!');
-      closeEscrowModal();
-    }
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
