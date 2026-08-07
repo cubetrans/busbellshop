@@ -22,16 +22,22 @@
     </div>
 
     <div class="header-right">
+      <span class="user-info user-greeting">로그인이 필요합니다</span>
       <button class="theme-toggle-btn">🌙</button>
+      <a href="mypage.html" class="btn btn-outline auth-action">마이페이지</a>
+      <a href="login.html" class="btn btn-primary auth-action">로그인</a>
       <button class="hamburger">☰</button>
     </div>
 
     <div class="mobile-menu">
+      <div class="user-greeting mobile-user-greeting">로그인이 필요합니다</div>
       <ul>
         <li><a href="index.html">홈</a></li>
         <li><a href="market.html">장터</a></li>
         <li><a href="community.html">커뮤니티</a></li>
         <li><a href="support.html">고객센터</a></li>
+        <li><a href="mypage.html">마이페이지</a></li>
+        <li><a href="#" class="logout-btn">로그아웃</a></li>
       </ul>
     </div>
   </header>
@@ -40,91 +46,10 @@
     <div class="card">
       <h2>로그인</h2>
       <form id="login-form" style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px;">
-        <input type="text" id="login-username" placeholder="사용자명 (예: 서울교덕 또는 관리자)" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
+        <input type="text" id="login-username" placeholder="사용자명" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
         <input type="password" id="login-password" placeholder="비밀번호" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
         <button type="submit" class="btn btn-primary">로그인</button>
       </form>
-      <div style="margin-top: 15px; font-size: 0.9rem; text-align: center;">
-        <p>체험용 계정: <strong>서울교덕</strong> / 비밀번호: <strong>password123</strong></p>
-        <p style="margin-top: 5px;">관리자 계정: <strong>관리자</strong> / 비밀번호: <strong>adminpassword</strong></p>
-      </div>
-    </div>
-  </div>
-
-  <script src="app.js"></script>
-  <script>
-    document.getElementById('login-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const usernameInput = document.getElementById('login-username').value.trim();
-      const passwordInput = document.getElementById('login-password').value.trim();
-
-      const users = JSON.parse(localStorage.getItem('all_users')) || [
-        { id: 'user1', username: '서울교덕', accountNum: '110-123-456789', password: 'password123', role: 'user' },
-        { id: 'admin1', username: '관리자', accountNum: '333-987-654321', password: 'adminpassword', role: 'admin' },
-        { id: 'user2', username: '교통동호인', accountNum: '1002-555-778899', password: 'password456', role: 'user' }
-      ];
-
-      const found = users.find(u => u.username === usernameInput && u.password === passwordInput);
-      if (found) {
-        localStorage.setItem('currentUser', JSON.stringify(found));
-        alert(`${found.username}님 환영합니다!`);
-        window.location.href = 'index.html';
-      } else {
-        alert('아이디 또는 비밀번호가 일치하지 않습니다.');
-      }
-    });
-  </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>로그인 - 버스벨샵</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-  <header>
-    <div class="header-left">
-      <a href="index.html" class="logo">
-        <img src="icon.png" alt="logo" onerror="this.style.display='none'">
-      </a>
-      <ul class="nav-menu">
-        <li><a href="index.html">홈</a></li>
-        <li><a href="market.html">장터</a></li>
-        <li><a href="community.html">커뮤니티</a></li>
-        <li><a href="support.html">고객센터</a></li>
-      </ul>
-    </div>
-
-    <div class="header-right">
-      <button class="theme-toggle-btn">🌙</button>
-      <button class="hamburger">☰</button>
-    </div>
-
-    <div class="mobile-menu">
-      <ul>
-        <li><a href="index.html">홈</a></li>
-        <li><a href="market.html">장터</a></li>
-        <li><a href="community.html">커뮤니티</a></li>
-        <li><a href="support.html">고객센터</a></li>
-      </ul>
-    </div>
-  </header>
-
-  <div class="container" style="max-width: 400px; margin-top: 60px;">
-    <div class="card">
-      <h2>로그인</h2>
-      <form id="login-form" style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px;">
-        <input type="text" id="login-username" placeholder="사용자명 (예: 서울교덕 또는 관리자)" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
-        <input type="password" id="login-password" placeholder="비밀번호" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
-        <button type="submit" class="btn btn-primary">로그인</button>
-      </form>
-      <div style="margin-top: 15px; font-size: 0.9rem; text-align: center;">
-        <p>체험용 계정: <strong>서울교덕</strong> / 비밀번호: <strong>password123</strong></p>
-        <p style="margin-top: 5px;">관리자 계정: <strong>관리자</strong> / 비밀번호: <strong>adminpassword</strong></p>
-      </div>
     </div>
   </div>
 
