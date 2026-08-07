@@ -5,11 +5,10 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let isSignupMode = false;
 
-// 🎨 권한별 닉네임 꾸미기 (DB의 role 기준)
+// 🎨 권한별 닉네임 꾸미기
 function formatName(name, role) {
     if (!name) return '';
     const userRole = role || localStorage.getItem('currentUserRole') || '일반회원';
-    
     if (userRole === '관리자') return `👑 ${name}`;
     if (userRole === '판매자') return `💼 ${name}`;
     if (userRole === '특수회원') return `✨ ${name}`;
@@ -22,7 +21,7 @@ function toggleMobileMenu() {
     if (navGroup) navGroup.classList.toggle('active');
 }
 
-// ☀️/🌙 테마 전환 (themeBtn과 themeToggle 둘 다 인식하도록 수정)
+// ☀️/🌙 테마 전환
 function toggleTheme() {
     const body = document.body;
     const themeBtn = document.getElementById('themeBtn') || document.getElementById('themeToggle');
@@ -37,10 +36,8 @@ function toggleTheme() {
     }
 }
 
-// 페이지 로드 시 저장된 테마에 맞춰 아이콘 초기 세팅 동기화
 window.addEventListener('DOMContentLoaded', () => {
     checkLoginState();
-    
     const themeBtn = document.getElementById('themeBtn') || document.getElementById('themeToggle');
     if (themeBtn && document.body.classList.contains('light-mode')) {
         themeBtn.innerHTML = '<i class="fas fa-sun"></i>';
@@ -64,10 +61,9 @@ async function checkLoginState() {
     if (user) {
         authToggleBtn.innerHTML = `<i class="fas fa-user-check"></i> ${formatName(user, role)}님 ▾`;
         
-        // 관리자 전용 메뉴(예: 관리자 페이지 버튼) 노출 제어
         let adminMenuHtml = '';
         if (role === '관리자') {
-            adminMenuHtml = `<button class="btn-admin" onclick="location.href='/admin'" style="background:var(--accent-red, #ff4757); color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.85rem; margin-bottom:6px; width:100%;"><i class="fas fa-shield-alt"></i> 관리자 페이지</button>`;
+            adminMenuHtml = `<button class="btn-admin" onclick="location.href='/admin'" style="background:var(--danger); color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.85rem; margin-bottom:6px; width:100%;"><i class="fas fa-shield-alt"></i> 관리자 페이지</button>`;
         }
 
         authFormArea.innerHTML = `
@@ -101,10 +97,10 @@ function renderAuthForm() {
         `;
     } else {
         authFormArea.innerHTML = `
-            <h4 class="auth-title highlight">회원가입</h4>
+            <h4 class="auth-title">회원가입</h4>
             <input type="text" id="dropNickname" placeholder="사용할 닉네임" class="input-modern">
             <input type="password" id="dropPassword" placeholder="사용할 비밀번호" class="input-modern">
-            <button class="btn-auth signup" onclick="handleSignup()">가입 완료하기</button>
+            <button class="btn-auth" onclick="handleSignup()">가입 완료하기</button>
             <div class="auth-links"><span onclick="switchMode(false)">이미 계정이 있으신가요? 로그인</span></div>
         `;
     }
@@ -115,26 +111,16 @@ function switchMode(signupState) {
     renderAuthForm();
 }
 
-// 🔑 로그인 처리 (DB에서 role까지 함께 가져옴)
 async function handleLogin() {
-    const nicknameInput = document.getElementById('dropNickname');
-    const passwordInput = document.getElementById('dropPassword');
-    if (!nicknameInput || !passwordInput) return;
-
-    const nickname = nicknameInput.value.trim();
-    const password = passwordInput.value.trim();
+    const nickname = document.getElementById('dropNickname').value.trim();
+    const password = document.getElementById('dropPassword').value.trim();
 
     if (!nickname || !password) return alert('닉네임과 비밀번호를 모두 입력해주세요.');
 
     const { data: user, error } = await db.from('users').select('*').eq('nickname', nickname).maybeSingle();
-    if (error) {
-        console.error(error);
-        return alert('로그인 중 오류가 발생했습니다.');
-    }
-    if (!user) return alert('존재하지 않는 닉네임입니다.');
+    if (error || !user) return alert('존재하지 않는 닉네임이거나 오류가 발생했습니다.');
     if (user.password !== password) return alert('비밀번호가 올바르지 않습니다.');
 
-    // 로컬스토리지에 닉네임과 권한(role) 저장
     localStorage.setItem('currentUser', nickname);
     localStorage.setItem('currentUserRole', user.role || '일반회원');
     
@@ -146,25 +132,16 @@ async function handleLogin() {
     if (typeof fetchMarketItems === 'function') fetchMarketItems();
 }
 
-// ✍️ 회원가입 처리 (기본 role은 '일반회원'으로 가입)
 async function handleSignup() {
-    const nicknameInput = document.getElementById('dropNickname');
-    const passwordInput = document.getElementById('dropPassword');
-    if (!nicknameInput || !passwordInput) return;
-
-    const nickname = nicknameInput.value.trim();
-    const password = passwordInput.value.trim();
+    const nickname = document.getElementById('dropNickname').value.trim();
+    const password = document.getElementById('dropPassword').value.trim();
 
     if (!nickname || !password) return alert('모든 항목을 입력해주세요.');
 
     const { data: existing } = await db.from('users').select('*').eq('nickname', nickname).maybeSingle();
     if (existing) return alert('이미 존재하는 닉네임입니다.');
 
-    const { error } = await db.from('users').insert([{ 
-        nickname, 
-        password, 
-        role: '일반회원' // 기본값 지정
-    }]);
+    const { error } = await db.from('users').insert([{ nickname, password, role: '일반회원' }]);
 
     if (error) {
         alert('가입 실패: ' + error.message);
@@ -172,24 +149,56 @@ async function handleSignup() {
         alert('가입 완료! 자동 로그인되었습니다.');
         localStorage.setItem('currentUser', nickname);
         localStorage.setItem('currentUserRole', '일반회원');
-        
         isSignupMode = false;
         toggleAuthDropdown();
         checkLoginState();
-        
         if (typeof fetchPosts === 'function') fetchPosts();
         if (typeof fetchMarketItems === 'function') fetchMarketItems();
     }
 }
 
-// 🚪 로그아웃
 function logout() {
     localStorage.removeItem('currentUser');
     localStorage.removeItem('currentUserRole');
     alert('로그아웃 되었습니다.');
     toggleAuthDropdown();
     checkLoginState();
-    
     if (typeof fetchPosts === 'function') fetchPosts();
     if (typeof fetchMarketItems === 'function') fetchMarketItems();
+}
+
+// 💬 채널톡 고객센터 연동 스크립트 삽입
+(function(){
+    if(window.ChannelIO) return;
+    var ch=function(){ch.c(arguments);};
+    ch.q=[];ch.c=function(args){ch.q.push(args);};window.ChannelIO=ch;
+    function l(){
+        if(window.ChannelIOInitialized)return;
+        window.ChannelIOInitialized=true;
+        var s=document.createElement('script');
+        s.type='text/javascript';s.async=true;
+        s.src='https://cdn.channel.io/plugin/ch-plugin-web.js';
+        s.charset='UTF-8';
+        var n=document.getElementsByTagName('script')[0];
+        n.parentNode.insertBefore(s,n);
+    }
+    if(document.readyState==='complete'){l();}
+    else{window.addEventListener('DOMContentLoaded',l);window.addEventListener('load',l);}
+})();
+
+// 채널톡 부트 설정 (테스트용 플러그인 키 혹은 실제 키 입력)
+window.addEventListener('DOMContentLoaded', () => {
+    if (window.ChannelIO) {
+        window.ChannelIO('boot', {
+            "pluginKey": "YOUR_CHANNEL_IO_PLUGIN_KEY"
+        });
+    }
+});
+
+function openCustomerService() {
+    if (window.ChannelIO) {
+        window.ChannelIO('showMessenger');
+    } else {
+        alert('고객센터(채널톡) 모듈 로딩 중입니다. 잠시 후 다시 시도해주세요.');
+    }
 }
