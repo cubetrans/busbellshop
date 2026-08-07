@@ -10,16 +10,29 @@
 </head>
 <body>
   <header>
-    <div class="logo"><a href="index.html"><img src="icon.png" alt="버스벨샵 로고"></a></div>
-    <div class="header-actions" id="auth-menu-area"><button onclick="toggleTheme()">테마 변경</button></div>
-  </header>
-  <nav class="sub-nav">
-    <a href="index.html">홈</a>
-    <a href="market.html">중고마켓</a>
-    <a href="community.html">커뮤니티</a>
-    <a href="mypage.html">마이페이지</a>
-    <a href="admin.html" class="active">관리자</a>
-  </nav>
+  <div class="logo">
+    <a href="index.html"><img src="icon.png" alt="로고"></a>
+  </div>
+  
+  <div class="search-gradient-wrap">
+    <div class="search-container">
+      <input type="text" id="search-input" placeholder="검색...">
+    </div>
+  </div>
+
+  <div class="header-actions">
+    <button onclick="toggleTheme()">테마</button>
+    <button class="hamburger-btn" onclick="toggleMobileMenu()">☰</button>
+  </div>
+</header>
+
+<nav class="sub-nav" id="sub-nav">
+  <a href="index.html">홈</a>
+  <a href="market.html">중고마켓</a>
+  <a href="community.html">커뮤니티</a>
+  <a href="mypage.html">마이페이지</a>
+  <a href="admin.html" id="admin-nav" style="display:none;">관리자</a>
+</nav>
 
   <main>
     <div class="section-title" style="margin-bottom: 20px;">관리자 페이지</div>
