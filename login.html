@@ -92,7 +92,6 @@
         return;
       }
 
-      // 회원가입 시 기본 회원 유형은 '일반회원'으로 고정 설정
       const { error } = await supabaseClient
         .from('users')
         .insert([{ nickname: id, password: pw, role: '일반회원' }]);
@@ -101,7 +100,6 @@
         alert('회원가입 실패: 이미 존재하는 아이디이거나 오류가 발생했습니다.');
       } else {
         alert('회원가입이 완료되었습니다. 로그인해주세요.');
-        // 가입 완료 후 로그인 뷰로 자동 전환
         isSignupMode = false;
         document.getElementById('login-section').style.display = 'block';
         document.getElementById('signup-section').style.display = 'none';
