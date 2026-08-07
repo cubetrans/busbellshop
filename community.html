@@ -4,207 +4,63 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>커뮤니티 - 버스벨샵</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js"></script>
   <link rel="stylesheet" href="style.css">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
+
   <header>
-  <div class="logo">
-    <a href="index.html"><img src="icon.png" alt="로고"></a>
-  </div>
-  
-  <div class="search-gradient-wrap">
+    <div class="header-left">
+      <a href="index.html" class="logo">
+        <img src="icon.png" alt="logo" width="30" height="30" onerror="this.style.display='none'"> Bus Bell Shop
+      </a>
+      <ul class="nav-menu">
+        <li><a href="index.html">홈</a></li>
+        <li><a href="market.html">장터</a></li>
+        <li><a href="community.html">커뮤니티</a></li>
+        <li><a href="support.html">고객센터</a></li>
+      </ul>
+    </div>
+
+    <div class="header-right">
+      <span class="user-info user-greeting">로그인이 필요합니다</span>
+      <button class="theme-toggle-btn">🌙 다크모드</button>
+      <a href="mypage.html" class="btn btn-outline auth-action">마이페이지</a>
+      <a href="login.html" class="btn btn-primary auth-action">로그인</a>
+      <button class="hamburger">☰</button>
+    </div>
+
+    <div class="mobile-menu">
+      <div class="user-greeting mobile-user-greeting">로그인이 필요합니다</div>
+      <ul>
+        <li><a href="index.html">홈</a></li>
+        <li><a href="market.html">장터</a></li>
+        <li><a href="community.html">커뮤니티</a></li>
+        <li><a href="support.html">고객센터</a></li>
+        <li><a href="mypage.html">마이페이지</a></li>
+        <li><a href="#" class="logout-btn">로그아웃</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <div class="container">
+    <h2>동호인 커뮤니티</h2>
+    <p style="margin-bottom: 20px;">버스 및 대중교통에 대한 이야기를 나누는 공간입니다.</p>
+
+    <!-- 커뮤니티 검색 기능 -->
     <div class="search-container">
-      <input type="text" id="search-input" placeholder="검색...">
+      <input type="text" id="search-input" placeholder="커뮤니티 검색...">
+      <button id="search-btn" class="btn btn-primary">검색</button>
+    </div>
+
+    <div id="community-list">
+      <div class="card">
+        <h3>서울 시내버스 노선 개편 토론</h3>
+        <p><strong>작성자:</strong> 서울교덕</p>
+        <p style="margin-top: 10px;">이번에 신설되는 노선 다들 어떻게 보시나요?</p>
+      </div>
     </div>
   </div>
 
-  <!-- 이 영역이 자바스크립트에 의해 동적으로 채워집니다 -->
-  <div class="header-actions" id="auth-menu-area"></div>
-</header>
-
-<nav class="sub-nav" id="sub-nav">
-  <a href="index.html">홈</a>
-  <a href="market.html">중고마켓</a>
-  <a href="community.html">커뮤니티</a>
-  <a href="mypage.html">마이페이지</a>
-  <a href="admin.html" id="admin-nav" style="display:none;">관리자</a>
-</nav>
-
-  <main>
-    <div class="section-title">커뮤니티 게시판</div>
-    
-    <!-- 게시판 탭 및 글쓰기 버튼 영역 -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
-      <div class="board-tabs">
-        <button class="board-tab active" onclick="changeCategory(null, this)">전체 게시판</button>
-        <button class="board-tab" onclick="changeCategory('공지게시판', this)">공지게시판</button>
-        <button class="board-tab" onclick="changeCategory('질문게시판', this)">질문게시판</button>
-        <button class="board-tab" onclick="changeCategory('자랑/공유게시판', this)">자랑/공유게시판</button>
-      </div>
-      <button class="btn-primary" id="write-btn" onclick="openPostModal()">글쓰기</button>
-    </div>
-
-    <!-- 게시글 작성/수정 박스 -->
-    <div id="post-write-box" class="content-box" style="display:none;">
-      <h3 id="post-modal-title">새 글 작성</h3>
-      <input type="hidden" id="edit-post-id">
-      <label>카테고리</label>
-      <select id="post-category">
-        <option value="공지게시판">공지게시판</option>
-        <option value="질문게시판">질문게시판</option>
-        <option value="자랑/공유게시판">자랑/공유게시판</option>
-      </select>
-      <label>제목</label>
-      <input type="text" id="post-title" placeholder="제목을 입력하세요">
-      <label>내용</label>
-      <textarea id="post-content" rows="4" placeholder="내용을 입력하세요"></textarea>
-      <label>이미지 URL (사진 1개 첨부 가능)</label>
-      <input type="text" id="post-image" placeholder="이미지 주소(URL) 입력 (비우면 사진 삭제)">
-      <button class="btn-primary" onclick="savePost()">등록하기</button>
-      <button class="header-actions" onclick="closePostModal()" style="display:inline-block; margin-left:10px;">취소</button>
-    </div>
-
-    <div class="content-box" id="post-list-area"></div>
-  </main>
-
-  <script>
-    let currentCategory = null; // null 이면 전체 게시판
-
-    document.addEventListener('DOMContentLoaded', () => {
-      loadPosts();
-    });
-
-    function changeCategory(categoryName, btnElement) {
-      currentCategory = categoryName;
-      document.querySelectorAll('.board-tab').forEach(b => b.classList.remove('active'));
-      btnElement.classList.add('active');
-      loadPosts();
-    }
-
-    async function loadPosts() {
-      const keyword = document.getElementById('search-input').value.trim();
-      let query = supabaseClient
-        .from('posts')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (currentCategory) {
-        query = query.eq('category', currentCategory);
-      }
-
-      if (keyword) {
-        query = query.ilike('title', `%${keyword}%`);
-      }
-
-      const { data, error } = await query;
-      const listArea = document.getElementById('post-list-area');
-      const currentUser = getLoggedInUser();
-
-      if (error || !data || data.length === 0) {
-        const boardName = currentCategory || '전체';
-        listArea.innerHTML = `<p>[${boardName}]에 등록된 글이 없습니다.</p>`;
-        return;
-      }
-
-      const boardTitleText = currentCategory ? `현재 게시판: ${currentCategory}` : '전체 게시판 보기';
-      let html = `<p style="font-weight: bold; margin-bottom: 12px; color: #38bdf8;">${boardTitleText}</p>`;
-      
-      for (const p of data) {
-        const canEdit = currentUser && (currentUser.nickname === p.author || currentUser.role === '관리자');
-        html += `
-          <div style="border-bottom: 1px solid var(--border-color); padding: 16px 0;">
-            <div style="font-size: 12px; color: #38bdf8; font-weight: 600; margin-bottom: 4px;">[${p.category}]</div>
-            <h4 style="font-size: 16px; margin-bottom: 6px;">${p.title}</h4>
-            <p style="font-size: 12px; color: var(--text-secondary); margin: 4px 0;">작성자: ${p.author} | 작성일: ${new Date(p.created_at).toLocaleString()}</p>
-            <div style="margin: 10px 0; line-height: 1.5;">${p.content}</div>
-            ${p.image_url ? `<img src="${p.image_url}" style="max-width: 100%; height: auto; border-radius: 4px; margin-top: 6px;" alt="첨부사진">` : ''}
-            <div style="margin-top: 12px; display: flex; gap: 8px;">
-              ${canEdit ? `<button class="btn-edit" onclick="editPost(${p.id}, '${p.category}', '${p.title.replace(/'/g, "\\'")}', \`${p.content.replace(/`/g, '\\`')}\`, '${p.image_url || ''}')">수정</button>` : ''}
-              ${canEdit ? `<button class="btn-danger" onclick="deletePost(${p.id})">삭제</button>` : ''}
-            </div>
-          </div>
-        `;
-      }
-      listArea.innerHTML = html;
-    }
-
-    function openPostModal() {
-      const user = getLoggedInUser();
-      if (!user) {
-        alert('로그인이 필요합니다.');
-        window.location.href = 'login.html';
-        return;
-      }
-
-      document.getElementById('edit-post-id').value = '';
-      document.getElementById('post-category').value = currentCategory || '질문게시판';
-      document.getElementById('post-title').value = '';
-      document.getElementById('post-content').value = '';
-      document.getElementById('post-image').value = '';
-      document.getElementById('post-modal-title').innerText = '새 글 작성';
-      document.getElementById('post-write-box').style.display = 'block';
-    }
-
-    function closePostModal() {
-      document.getElementById('post-write-box').style.display = 'none';
-    }
-
-    function editPost(id, category, title, content, imageUrl) {
-      document.getElementById('edit-post-id').value = id;
-      document.getElementById('post-category').value = category;
-      document.getElementById('post-title').value = title;
-      document.getElementById('post-content').value = content;
-      document.getElementById('post-image').value = imageUrl;
-      document.getElementById('post-modal-title').innerText = '게시글 수정';
-      document.getElementById('post-write-box').style.display = 'block';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    async function savePost() {
-      const id = document.getElementById('edit-post-id').value;
-      const category = document.getElementById('post-category').value;
-      const title = document.getElementById('post-title').value.trim();
-      const content = document.getElementById('post-content').value.trim();
-      const image_url = document.getElementById('post-image').value.trim() || null;
-      const user = getLoggedInUser();
-
-      if (!title || !content) {
-        alert('제목과 내용을 모두 입력해주세요.');
-        return;
-      }
-
-      if (category === '공지게시판' && user.role !== '관리자') {
-        alert('공지게시판은 관리자만 작성할 수 있습니다.');
-        return;
-      }
-
-      if (id) {
-        const { error } = await supabaseClient
-          .from('posts')
-          .update({ category, title, content, image_url })
-          .eq('id', id);
-
-        if (error) alert('수정 실패');
-        else { alert('수정되었습니다.'); closePostModal(); loadPosts(); }
-      } else {
-        const { error } = await supabaseClient
-          .from('posts')
-          .insert([{ category, title, content, image_url, author: user.nickname }]);
-
-        if (error) alert('등록 실패');
-        else { alert('등록되었습니다.'); closePostModal(); loadPosts(); }
-      }
-    }
-
-    async function deletePost(id) {
-      if (!confirm('정말 삭제하시겠습니까?')) return;
-      const { error } = await supabaseClient.from('posts').delete().eq('id', id);
-      if (error) alert('삭제 실패');
-      else { alert('삭제되었습니다.'); loadPosts(); }
-    }
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
