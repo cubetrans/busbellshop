@@ -11,16 +11,15 @@
 <body>
   <header>
     <div class="logo">
-      <a href="index.html"><img src="icon.svg" alt="버스벨샵 로고"></a>
+      <a href="index.html"><img src="icon.png" alt="버스벨샵 로고"></a>
     </div>
     <div class="search-gradient-wrap">
       <div class="search-container">
-        <input type="text" placeholder="게시글 검색">
+        <input type="text" id="search-input" placeholder="게시글 검색" onkeyup="loadPosts()">
       </div>
     </div>
-    <div class="header-actions">
+    <div class="header-actions" id="auth-menu-area">
       <button onclick="toggleTheme()">테마 변경</button>
-      <a href="mypage.html">마이페이지</a>
     </div>
   </header>
 
@@ -33,27 +32,186 @@
 
   <main>
     <div class="section-title">커뮤니티 게시판</div>
-    <div style="display: flex; gap: 10px; margin-bottom: 16px;">
-      <button class="header-actions" onclick="switchCategory('공지게시판')">공지게시판</button>
-      <button class="header-actions" onclick="switchCategory('질문게시판')">질문게시판</button>
-      <button class="header-actions" onclick="switchCategory('자랑/공유게시판')">자랑/공유게시판</button>
-    </div>
-    <div class="content-box">
-      <p id="board-title">현재 선택된 게시판: 공지게시판 (관리자만 작성 가능)</p>
-      <div style="margin-top: 15px;" id="post-list">
-        <!-- Supabase posts 테이블 데이터 연동 -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <div style="display: flex; gap: 10px;">
+        <button class="header-actions active-board" onclick="changeCategory('공지게시판', this)">공지게시판</button>
+        <button class="header-actions" onclick="changeCategory('질문게시판', this)">질문게시판</button>
+        <button class="header-actions" onclick="changeCategory('자랑/공유게시판', this)">자랑/공유게시판</button>
       </div>
+      <button class="btn-primary" id="write-btn" onclick="openPostModal()">글쓰기</button>
+    </div>
+
+    <!-- 게시글 작성/수정 박스 -->
+    <div id="post-write-box" class="content-box" style="display:none;">
+      <h3 id="post-modal-title">새 글 작성</h3>
+      <input type="hidden" id="edit-post-id">
+      <label>카테고리</label>
+      <select id="post-category">
+        <option value="공지게시판">공지게시판</option>
+        <option value="질문게시판">질문게시판</option>
+        <option value="자랑/공유게시판">자랑/공유게시판</option>
+      </select>
+      <label>제목</label>
+      <input type="text" id="post-title" placeholder="제목을 입력하세요">
+      <label>내용</label>
+      <textarea id="post-content" rows="4" placeholder="내용을 입력하세요"></textarea>
+      <label>이미지 URL (사진 1개 첨부 가능)</label>
+      <input type="text" id="post-image" placeholder="이미지 주소(URL)를 입력하거나 기존 사진 유지">
+      <button class="btn-primary" onclick="savePost()">등록하기</button>
+      <button class="header-actions" onclick="closePostModal()" style="display:inline-block; margin-left:10px;">취소</button>
+    </div>
+
+    <div class="content-box" id="post-list-area">
+      <!-- 게시글 목록 출력 -->
     </div>
   </main>
 
   <script>
-    const user = getCurrentUser();
-    if (user && user.role === '관리자') {
-      document.getElementById('admin-nav').style.display = 'block';
+    let currentCategory = '공지게시판';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadPosts();
+    });
+
+    function changeCategory(categoryName, btnElement) {
+      currentCategory = categoryName;
+      document.querySelectorAll('.sub-nav ~ main button').forEach(b => b.classList?.remove('active-board'));
+      loadPosts();
     }
 
-    function switchCategory(categoryName) {
-      document.getElementById('board-title').innerText = `현재 선택된 게시판: ${categoryName}` + (categoryName === '공지게시판' ? ' (관리자만 작성 가능)' : '');
+    async function loadPosts() {
+      const keyword = document.getElementById('search-input').value.trim();
+      let query = supabaseClient
+        .from('posts')
+        .select('*')
+        .eq('category', currentCategory)
+        .order('created_at', { ascending: false });
+
+      if (keyword) {
+        query = query.ilike('title', `%${keyword}%`);
+      }
+
+      const { data, error } = await query;
+      const listArea = document.getElementById('post-list-area');
+      const currentUser = getLoggedInUser();
+
+      // 공지게시판은 관리자만 글쓰기 가능 체크
+      const writeBtn = document.getElementById('write-btn');
+      if (currentCategory === '공지게시판') {
+        if (!currentUser || currentUser.role !== '관리자') {
+          writeBtn.style.display = 'none';
+        } else {
+          writeBtn.style.display = 'block';
+        }
+      } else {
+        if (!currentUser) {
+          writeBtn.style.display = 'none'; // 로그인 필요
+        } else {
+          writeBtn.style.display = 'block';
+        }
+      }
+
+      if (error || !data || data.length === 0) {
+        listArea.innerHTML = `<p>[${currentCategory}]에 등록된 글이 없습니다.</p>`;
+        return;
+      }
+
+      let html = `<p style="font-weight: bold; margin-bottom: 12px;">현재 게시판: ${currentCategory}</p>`;
+      for (const p of data) {
+        const canEdit = currentUser && (currentUser.nickname === p.author || currentUser.role === '관리자');
+        html += `
+          <div style="border-bottom: 1px solid var(--border-color); padding: 12px 0;">
+            <h4>${p.title}</h4>
+            <p style="font-size: 12px; color: var(--text-secondary); margin: 4px 0;">작성자: ${p.author} | 작성일: new Date(${p.created_at}).toLocaleString()</p>
+            <div style="margin: 8px 0;">${p.content}</div>
+            ${p.image_url ? `<img src="${p.image_url}" style="max-width: 100%; height: auto; border-radius: 4px; margin-top: 6px;" alt="첨부사진">` : ''}
+            <div style="margin-top: 8px; display: flex; gap: 8px;">
+              ${canEdit ? `<button class="header-actions" onclick="editPost(${p.id}, '${p.category}', '${p.title.replace(/'/g, "\\'")}', \`${p.content.replace(/`/g, '\\`')}\`, '${p.image_url || ''}')">수정</button>` : ''}
+              ${canEdit ? `<button class="btn-danger" onclick="deletePost(${p.id})">삭제</button>` : ''}
+            </div>
+          </div>
+        `;
+      }
+      listArea.innerHTML = html;
+    }
+
+    function openPostModal() {
+      const user = getLoggedInUser();
+      if (!user) {
+        alert('로그인이 필요합니다.');
+        window.location.href = 'login.html';
+        return;
+      }
+      if (currentCategory === '공지게시판' && user.role !== '관리자') {
+        alert('공지게시판은 관리자만 작성할 수 있습니다.');
+        return;
+      }
+
+      document.getElementById('edit-post-id').value = '';
+      document.getElementById('post-category').value = currentCategory;
+      document.getElementById('post-title').value = '';
+      document.getElementById('post-content').value = '';
+      document.getElementById('post-image').value = '';
+      document.getElementById('post-modal-title').innerText = '새 글 작성';
+      document.getElementById('post-write-box').style.display = 'block';
+    }
+
+    function closePostModal() {
+      document.getElementById('post-write-box').style.display = 'none';
+    }
+
+    function editPost(id, category, title, content, imageUrl) {
+      document.getElementById('edit-post-id').value = id;
+      document.getElementById('post-category').value = category;
+      document.getElementById('post-title').value = title;
+      document.getElementById('post-content').value = content;
+      document.getElementById('post-image').value = imageUrl;
+      document.getElementById('post-modal-title').innerText = '게시글 수정';
+      document.getElementById('post-write-box').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function savePost() {
+      const id = document.getElementById('edit-post-id').value;
+      const category = document.getElementById('post-category').value;
+      const title = document.getElementById('post-title').value.trim();
+      const content = document.getElementById('post-content').value.trim();
+      const image_url = document.getElementById('post-image').value.trim() || null;
+      const user = getLoggedInUser();
+
+      if (!title || !content) {
+        alert('제목과 내용을 모두 입력해주세요.');
+        return;
+      }
+
+      if (category === '공지게시판' && user.role !== '관리자') {
+        alert('공지게시판은 관리자만 작성할 수 있습니다.');
+        return;
+      }
+
+      if (id) {
+        const { error } = await supabaseClient
+          .from('posts')
+          .update({ category, title, content, image_url })
+          .eq('id', id);
+
+        if (error) alert('수정 실패');
+        else { alert('수정되었습니다.'); closePostModal(); loadPosts(); }
+      } else {
+        const { error } = await supabaseClient
+          .from('posts')
+          .insert([{ category, title, content, image_url, author: user.nickname }]);
+
+        if (error) alert('등록 실패');
+        else { alert('등록되었습니다.'); closePostModal(); loadPosts(); }
+      }
+    }
+
+    async function deletePost(id) {
+      if (!confirm('정말 삭제하시겠습니까?')) return;
+      const { error } = await supabaseClient.from('posts').delete().eq('id', id);
+      if (error) alert('삭제 실패');
+      else { alert('삭제되었습니다.'); loadPosts(); }
     }
   </script>
 </body>
