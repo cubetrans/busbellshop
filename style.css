@@ -69,8 +69,8 @@ header {
 }
 
 .logo img {
-  width: auto;
-  height: 160px;
+  height: 160px; /* 원하는 높이 (예: 40px) */
+  width: auto;  /* 너비 자동 조절 */
   object-fit: contain;
   display: block;
 }
