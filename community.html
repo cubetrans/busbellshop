@@ -46,18 +46,35 @@
     <h2>동호인 커뮤니티</h2>
     <p style="margin-bottom: 20px;">버스 및 대중교통에 대한 이야기를 나누는 공간입니다.</p>
 
-    <div class="search-container">
-      <input type="text" id="search-input" placeholder="커뮤니티 검색...">
-      <button id="search-btn" class="btn btn-primary">검색</button>
+    <!-- 게시판 카테고리 탭 -->
+    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+      <button class="btn btn-outline category-btn active" data-category="공지게시판">공지게시판</button>
+      <button class="btn btn-outline category-btn" data-category="질문게시판">질문게시판</button>
+      <button class="btn btn-outline category-btn" data-category="수집/자랑게시판">수집/자랑게시판</button>
     </div>
 
-    <div id="community-list">
-      <div class="card">
-        <h3>서울 시내버스 노선 개편 토론</h3>
-        <p><strong>작성자:</strong> 서울교덕</p>
-        <p style="margin-top: 10px;">이번에 신설되는 노선 다들 어떻게 보시나요?</p>
-      </div>
+    <!-- 글쓰기 버튼 -->
+    <div style="margin-bottom: 20px;">
+      <button id="toggle-community-form-btn" class="btn btn-primary">글쓰기</button>
     </div>
+
+    <!-- 글 작성 폼 (기본 숨김) -->
+    <div id="community-form-container" class="card" style="display: none; margin-bottom: 20px;">
+      <h3>새 글 작성</h3>
+      <form id="community-post-form" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+        <select id="post-category-select" style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
+          <option value="공지게시판">공지게시판 (관리자 전용)</option>
+          <option value="질문게시판">질문게시판</option>
+          <option value="수집/자랑게시판">수집/자랑게시판</option>
+        </select>
+        <input type="text" id="community-post-title" placeholder="제목을 입력하세요" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
+        <textarea id="community-post-content" placeholder="내용을 입력하세요" rows="4" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;"></textarea>
+        <button type="submit" class="btn btn-primary" style="align-self: flex-start;">작성 완료</button>
+      </form>
+    </div>
+
+    <!-- 커뮤니티 글 목록 출력 영역 -->
+    <div id="community-list"></div>
   </div>
 
   <script src="app.js"></script>
