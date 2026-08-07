@@ -7,6 +7,42 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* 장터 전용 바둑판(Grid) 카드 디자인 추가 */
+        .market-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .market-card {
+            background: var(--card-bg, #ffffff);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease;
+        }
+        .market-card:hover {
+            transform: translateY(-5px);
+        }
+        .market-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        .market-card h4 { margin: 0 0 5px 0; font-size: 1.1rem; }
+        .market-card .price { color: var(--primary-color); font-weight: bold; font-size: 1.2rem; margin-bottom: 10px; }
+        .market-card .seller-info { font-size: 0.85rem; color: var(--text-sub); margin-bottom: 10px; }
+        .market-card .desc { font-size: 0.9rem; margin-bottom: 15px; flex-grow: 1; }
+        .market-card .btn-group { display: flex; gap: 8px; margin-top: auto; }
+        
+        .light-mode .market-card { background: #fff; }
+    </style>
     <script>
         if (localStorage.getItem('theme') === 'light') {
             window.addEventListener('DOMContentLoaded', () => {
@@ -38,7 +74,7 @@
     </header>
 
     <main class="container">
-        <!-- 📝 상단: 검색 및 글쓰기 권한 영역 -->
+        <!-- 📝 상단: 검색 및 글쓰기 영역 -->
         <section class="card glass-panel search-section">
             <div class="search-bar-group">
                 <div class="search-input-wrapper">
@@ -46,7 +82,7 @@
                     <input type="text" id="searchInput" placeholder="상품 검색..." class="input-modern" onkeyup="filterItems()">
                 </div>
                 <div id="registerButtonArea">
-                    <!-- JS에서 권한 체크 후 글쓰기 버튼 렌더링 -->
+                    <!-- JS 렌더링 -->
                 </div>
             </div>
         </section>
@@ -54,8 +90,8 @@
         <!-- 📦 목록 표시 영역 -->
         <section class="card glass-panel">
             <h2><i class="fas fa-box-open"></i> 판매 목록</h2>
-            <div id="marketItemList" class="post-list">
-                <p style="text-align:center;">상품을 불러오는 중...</p>
+            <div id="marketItemList" class="market-grid">
+                <p style="text-align:center; grid-column: 1 / -1;">상품을 불러오는 중...</p>
             </div>
         </section>
     </main>
@@ -87,26 +123,25 @@
     <script src="app.js"></script>
     <script>
         let allItems = [];
-        let editingItemId = null; // 수정 모드 판별 변수
+        let editingItemId = null;
 
         window.addEventListener('DOMContentLoaded', () => {
             checkSellerPermission();
             fetchMarketItems();
         });
 
-        // 1. 판매 권한 체크 (관리진, 특수회원, 판매자만 등록 가능)
         function checkSellerPermission() {
             const role = localStorage.getItem('currentUserRole') || '일반회원';
             const area = document.getElementById('registerButtonArea');
+            const isAdmin = (role === '관리진' || role === '관리자'); // 관리진/관리자 유연하게 대응
             
-            if (['관리진', '특수회원', '판매자'].includes(role)) {
+            if (isAdmin || role === '특수회원' || role === '판매자') {
                 area.innerHTML = `<button class="btn-primary-large btn-write" onclick="openProductForm()"><i class="fas fa-pen"></i> 상품 등록</button>`;
             } else {
                 area.innerHTML = `<span style="font-size: 0.8rem; color: var(--text-sub);">* 상품 등록은 판매자 이상만 가능합니다.</span>`;
             }
         }
 
-        // 2. 폼 열기 (새 글 or 수정)
         function openProductForm(id = null) {
             const modal = document.getElementById('productFormModal');
             modal.style.display = 'flex';
@@ -131,11 +166,11 @@
             editingItemId = null;
         }
 
-        // 3. 상품 목록 불러오기 및 렌더링
         async function fetchMarketItems() {
             const listContainer = document.getElementById('marketItemList');
             const currentUser = localStorage.getItem('currentUser');
-            const currentRole = localStorage.getItem('currentUserRole');
+            const currentRole = localStorage.getItem('currentUserRole') || '';
+            const isAdmin = (currentRole === '관리진' || currentRole === '관리자');
 
             try {
                 const { data, error } = await db.from('market').select('*').order('created_at', { ascending: false });
@@ -143,40 +178,36 @@
                 allItems = data;
 
                 if(data.length === 0) {
-                    listContainer.innerHTML = '<p style="text-align:center;">등록된 상품이 없습니다.</p>';
+                    listContainer.innerHTML = '<p style="text-align:center; grid-column: 1 / -1;">등록된 상품이 없습니다.</p>';
                     return;
                 }
 
                 listContainer.innerHTML = data.map(item => {
-                    // 본인 글이거나 관리진이면 수정/삭제 버튼 렌더링
-                    const canEdit = (currentUser === item.author || currentRole === '관리진');
+                    const canEdit = (currentUser === item.author || isAdmin);
                     const adminButtons = canEdit ? `
-                        <div style="margin-top: 10px; display:flex; gap:10px;">
-                            <button onclick='openProductForm(${item.id})' class="btn-auth" style="padding: 5px 10px; font-size: 0.8rem;">수정</button>
-                            <button onclick="deleteMarketItem(${item.id})" class="btn-logout" style="padding: 5px 10px; font-size: 0.8rem;">삭제</button>
+                        <div class="btn-group">
+                            <button onclick='openProductForm(${item.id})' class="btn-auth" style="flex:1; padding: 6px; font-size: 0.85rem;">수정</button>
+                            <button onclick="deleteMarketItem(${item.id})" class="btn-logout" style="flex:1; padding: 6px; font-size: 0.85rem;">삭제</button>
                         </div>
                     ` : '';
 
                     return `
-                        <div class="post-item" style="display:flex; flex-direction:column; gap:10px;">
-                            ${item.image_url ? `<img src="${item.image_url}" style="width: 100%; height: 200px; object-fit: cover; border-radius:8px;">` : ''}
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <h4>${item.title}</h4>
-                                <strong style="color:var(--primary-color);">${Number(item.price).toLocaleString()}원</strong>
-                            </div>
-                            <p style="font-size:0.9rem; color:var(--text-sub);">판매자: ${item.author} | 연락처: ${item.contact}</p>
-                            <p style="white-space: pre-wrap;">${item.description}</p>
+                        <div class="market-card post-item">
+                            ${item.image_url ? `<img src="${item.image_url}">` : ''}
+                            <h4>${item.title}</h4>
+                            <div class="price">${Number(item.price).toLocaleString()}원</div>
+                            <div class="seller-info"><i class="fas fa-user"></i> ${item.author} <br> <i class="fas fa-phone"></i> ${item.contact}</div>
+                            <div class="desc">${item.description}</div>
                             ${adminButtons}
                         </div>
                     `;
                 }).join('');
             } catch (err) {
                 console.error(err);
-                listContainer.innerHTML = '<p>데이터를 불러오는데 실패했습니다.</p>';
+                listContainer.innerHTML = '<p style="grid-column: 1 / -1;">데이터를 불러오는데 실패했습니다.</p>';
             }
         }
 
-        // 4. 상품 등록 / 수정 처리 (이미지 업로드 포함)
         async function submitMarketItem(e) {
             e.preventDefault();
             const currentUser = localStorage.getItem('currentUser');
@@ -190,10 +221,12 @@
 
             let imageUrl = '';
             
-            // 사진이 선택되었다면 업로드
+            // 확장자 오류 방지 로직 적용
             if (imageInput.files && imageInput.files[0]) {
                 const file = imageInput.files[0];
-                const fileName = `market_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                const fileExt = file.name.split('.').pop(); // 원본 확장자 추출
+                const fileName = `market_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+                
                 const { error: uploadError } = await db.storage.from('images').upload(fileName, file);
                 
                 if (uploadError) return alert('이미지 업로드 실패: ' + uploadError.message);
@@ -202,7 +235,6 @@
 
             let query;
             if (editingItemId) {
-                // 기존 데이터 유지 로직 (새 이미지가 없으면 URL 업데이트 안 함)
                 const updateData = { title, price, contact, description };
                 if (imageUrl) updateData.image_url = imageUrl; 
                 query = db.from('market').update(updateData).eq('id', editingItemId);
@@ -219,7 +251,6 @@
             }
         }
 
-        // 5. 상품 삭제
         async function deleteMarketItem(id) {
             if (!confirm('정말 삭제하시겠습니까?')) return;
             const { error } = await db.from('market').delete().eq('id', id);
@@ -230,10 +261,9 @@
             }
         }
 
-        // 검색 기능
         function filterItems() {
             const query = document.getElementById('searchInput').value.toLowerCase();
-            const items = document.querySelectorAll('#marketItemList .post-item');
+            const items = document.querySelectorAll('.market-card');
             items.forEach(item => {
                 const text = item.innerText.toLowerCase();
                 item.style.display = text.includes(query) ? 'flex' : 'none';
