@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>로그인 - 버스벨샵</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <a href="index.html"><img src="icon.png" alt="버스벨샵 로고"></a>
+    </div>
+    <div class="header-actions">
+      <button onclick="toggleTheme()">테마 변경</button>
+      <a href="index.html">홈으로</a>
+    </div>
+  </header>
+
+  <main style="max-width: 400px; margin-top: 50px;">
+    <div class="content-box">
+      <div class="section-title">로그인</div>
+      <label>아이디 (닉네임)</label>
+      <input type="text" id="login-id" placeholder="아이디 입력">
+      <label>비밀번호</label>
+      <input type="password" id="login-pw" placeholder="비밀번호 입력">
+      <button class="btn-primary" style="width: 100%; margin-top: 10px;" onclick="handleLogin()">로그인</button>
+    </div>
+
+    <div class="content-box" style="margin-top: 20px;">
+      <div class="section-title">회원가입</div>
+      <label>아이디 (닉네임)</label>
+      <input type="text" id="signup-id" placeholder="사용할 닉네임">
+      <label>비밀번호</label>
+      <input type="password" id="signup-pw" placeholder="비밀번호">
+      <label>회원 유형</label>
+      <select id="signup-role">
+        <option value="일반회원">일반회원</option>
+        <option value="특수회원">특수회원 (VIP)</option>
+      </select>
+      <button class="btn-primary" style="width: 100%; margin-top: 10px;" onclick="handleSignup()">회원가입</button>
+    </div>
+  </main>
+
+  <script>
+    async function handleLogin() {
+      const id = document.getElementById('login-id').value.trim();
+      const pw = document.getElementById('login-pw').value.trim();
+      if (!id || !pw) {
+        alert('아이디와 비밀번호를 입력해주세요.');
+        return;
+      }
+
+      const { data, error } = await supabaseClient
+        .from('users')
+        .select('*')
+        .eq('nickname', id)
+        .eq('password', pw)
+        .single();
+
+      if (error || !data) {
+        alert('아이디 또는 비밀번호가 일치하지 않습니다.');
+      } else {
+        setLoggedInUser(data);
+        alert(`${data.nickname}님 환영합니다!`);
+        window.location.href = 'index.html';
+      }
+    }
+
+    async function handleSignup() {
+      const id = document.getElementById('signup-id').value.trim();
+      const pw = document.getElementById('signup-pw').value.trim();
+      const role = document.getElementById('signup-role').value;
+
+      if (!id || !pw) {
+        alert('모든 정보를 입력해주세요.');
+        return;
+      }
+
+      const { error } = await supabaseClient
+        .from('users')
+        .insert([{ nickname: id, password: pw, role: role }]);
+
+      if (error) {
+        alert('회원가입 실패: 이미 존재하는 아이디이거나 오류가 발생했습니다.');
+      } else {
+        alert('회원가입이 완료되었습니다. 로그인해주세요.');
+        window.location.reload();
+      }
+    }
+  </script>
+</body>
+</html>
