@@ -4,33 +4,39 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>관리자 페이지 - 버스벨샵</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
-    <div class="logo"><a href="index.html">버스벨샵</a></div>
-    <div class="search-container">
-      <input type="text" placeholder="상품명, 지역, 브랜드 등 통합검색">
+    <div class="logo">
+      <a href="index.html"><img src="icon.png" alt="버스벨샵 로고"></a>
+    </div>
+    <div class="search-gradient-wrap">
+      <div class="search-container">
+        <input type="text" placeholder="통합검색">
+      </div>
     </div>
     <div class="header-actions">
       <button onclick="toggleTheme()">테마 변경</button>
-      <a href="mypage.html">내정보</a>
+      <a href="index.html">홈으로</a>
     </div>
   </header>
 
-  <nav class="sub-nav">
-    <a href="index.html">홈</a>
-    <a href="market.html">중고마켓</a>
-    <a href="community.html">커뮤니티</a>
-    <a href="admin.html" class="active">관리자</a>
-  </nav>
-
   <main>
-    <div class="section-title">관리자 대시보드</div>
-    <div class="content-box">
-      <p>사이트 관리 및 회원 관리 영역입니다.</p>
+    <div class="section-title">관리자 전용 대시보드</div>
+    <div class="content-box" id="admin-content">
+      <p>관리자 권한 계정만 접근할 수 있는 페이지입니다.</p>
     </div>
   </main>
+
+  <script>
+    const user = getCurrentUser();
+    if (!user || user.role !== '관리자') {
+      alert('관리자 권한이 없습니다.');
+      window.location.href = 'index.html';
+    }
+  </script>
 </body>
 </html>
