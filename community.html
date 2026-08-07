@@ -4,18 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>커뮤니티 - 버스벨샵</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
-    <div class="logo"><a href="index.html">버스벨샵</a></div>
-    <div class="search-container">
-      <input type="text" placeholder="상품명, 지역, 브랜드 등 통합검색">
+    <div class="logo">
+      <a href="index.html"><img src="icon.png" alt="버스벨샵 로고"></a>
+    </div>
+    <div class="search-gradient-wrap">
+      <div class="search-container">
+        <input type="text" placeholder="게시글 검색">
+      </div>
     </div>
     <div class="header-actions">
       <button onclick="toggleTheme()">테마 변경</button>
-      <a href="mypage.html">내정보</a>
+      <a href="mypage.html">마이페이지</a>
     </div>
   </header>
 
@@ -23,14 +28,33 @@
     <a href="index.html">홈</a>
     <a href="market.html">중고마켓</a>
     <a href="community.html" class="active">커뮤니티</a>
-    <a href="admin.html">관리자</a>
+    <a href="admin.html" id="admin-nav" style="display:none;">관리자</a>
   </nav>
 
   <main>
-    <div class="section-title">커뮤니티</div>
+    <div class="section-title">커뮤니티 게시판</div>
+    <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+      <button class="header-actions" onclick="switchCategory('공지게시판')">공지게시판</button>
+      <button class="header-actions" onclick="switchCategory('질문게시판')">질문게시판</button>
+      <button class="header-actions" onclick="switchCategory('자랑/공유게시판')">자랑/공유게시판</button>
+    </div>
     <div class="content-box">
-      <p>대중교통 및 중고 거래와 관련된 자유로운 이야기를 나누는 공간입니다.</p>
+      <p id="board-title">현재 선택된 게시판: 공지게시판 (관리자만 작성 가능)</p>
+      <div style="margin-top: 15px;" id="post-list">
+        <!-- Supabase posts 테이블 데이터 연동 -->
+      </div>
     </div>
   </main>
+
+  <script>
+    const user = getCurrentUser();
+    if (user && user.role === '관리자') {
+      document.getElementById('admin-nav').style.display = 'block';
+    }
+
+    function switchCategory(categoryName) {
+      document.getElementById('board-title').innerText = `현재 선택된 게시판: ${categoryName}` + (categoryName === '공지게시판' ? ' (관리자만 작성 가능)' : '');
+    }
+  </script>
 </body>
 </html>
