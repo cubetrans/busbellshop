@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>장터 - 버스벨샵</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -46,6 +47,11 @@
     <h2>중고 장터</h2>
     <p style="margin-bottom: 20px;">교통 부품 및 용품을 안전하게 거래하세요.</p>
 
+    <!-- 검색창 -->
+    <div class="search-container" style="margin-bottom: 20px;">
+      <input type="text" id="search-input" placeholder="제목으로 검색..." style="width: 100%; padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
+    </div>
+
     <!-- 상품 등록하기 버튼 -->
     <div style="margin-bottom: 20px;">
       <button id="toggle-market-form-btn" class="btn btn-primary">상품 등록하기</button>
@@ -56,13 +62,13 @@
       <h3>상품 등록</h3>
       <form id="market-post-form" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
         <input type="text" id="post-title" placeholder="상품명을 입력하세요" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
-        <input type="text" id="post-price" placeholder="가격을 입력하세요 (예: 15000 또는 15,000원)" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
+        <input type="text" id="post-price" placeholder="가격을 입력하세요 (예: 15,000원)" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
         <textarea id="post-content" placeholder="상품 설명을 입력하세요" rows="4" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;"></textarea>
         <button type="submit" class="btn btn-primary" style="align-self: flex-start;">등록 완료</button>
       </form>
     </div>
 
-    <!-- 기본 판매글 목록 출력 영역 -->
+    <!-- 판매글 목록 출력 영역 -->
     <div id="market-list"></div>
   </div>
 
