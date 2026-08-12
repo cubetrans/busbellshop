@@ -2,8 +2,13 @@
 const SUPABASE_URL = 'https://ipgzhipiebcnkfqzufgm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwZ3poaXBpZWJjbmtmcXp1ZmdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5ODMxMTgsImV4cCI6MjEwMTU1OTExOH0.byzqUDMvoAIbybPYbyKsR6KoPnpLPs0jsdawAnW0Eww';
 
-// window.supabase를 사용하여 충돌 없이 안전하게 초기화
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// 안전한 Supabase 클라이언트 초기화 (CDN 누락 대비 방어 코드)
+let supabaseClient = null;
+if (window.supabase && typeof window.supabase.createClient === 'function') {
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} else {
+  console.error('Supabase SDK가 로드되지 않았습니다. HTML 파일 <head>에 Supabase 스크립트를 추가해주세요.');
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
@@ -71,6 +76,11 @@ function initAuthHeader() {
 
 // Supabase 연동 로그인 및 회원가입 처리
 async function handleAuth(nickname, password, isLoginMode) {
+  if (!supabaseClient) {
+    alert('데이터베이스 연결 설정이 올바르지 않습니다.');
+    return;
+  }
+
   if (isLoginMode) {
     const { data, error } = await supabaseClient
       .from('users')
@@ -140,6 +150,8 @@ function initMarketSystem() {
   if (postForm) {
     postForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (!supabaseClient) return alert('DB 연결 오류');
+
       const currentUser = JSON.parse(localStorage.getItem('currentUser'));
       if (!currentUser) {
         alert('로그인 후 작성 가능합니다.');
@@ -170,7 +182,7 @@ function initMarketSystem() {
 
 async function renderMarketPosts(searchTerm = '') {
   const container = document.getElementById('market-list');
-  if (!container) return;
+  if (!container || !supabaseClient) return;
 
   let query = supabaseClient.from('market_posts').select('*').order('created_at', { ascending: false });
   if (searchTerm) {
@@ -246,6 +258,8 @@ function initCommunitySystem() {
   if (postForm) {
     postForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (!supabaseClient) return alert('DB 연결 오류');
+
       const currentUser = JSON.parse(localStorage.getItem('currentUser'));
       if (!currentUser) {
         alert('로그인 후 작성 가능합니다.');
@@ -281,7 +295,7 @@ function initCommunitySystem() {
 
 async function renderCommunityPosts(category, searchTerm = '') {
   const container = document.getElementById('community-list');
-  if (!container) return;
+  if (!container || !supabaseClient) return;
 
   let query = supabaseClient.from('community_posts').select('*').eq('category', category).order('created_at', { ascending: false });
   if (searchTerm) {
