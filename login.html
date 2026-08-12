@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>로그인 - 버스벨샵</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Supabase CDN 스크립트 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -46,57 +45,38 @@
 
   <div class="container" style="max-width: 400px; margin-top: 60px;">
     <div class="card">
-      <h2>로그인</h2>
-      <form id="login-form" style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px;">
+      <h2 id="form-title">로그인</h2>
+      <form id="auth-form" style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px;">
         <input type="text" id="login-nickname" placeholder="닉네임 (예: 서울교덕)" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
         <input type="password" id="login-password" placeholder="비밀번호" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
-        <button type="submit" class="btn btn-primary">로그인</button>
+        <button type="submit" id="submit-btn" class="btn btn-primary">로그인</button>
       </form>
+      <p style="text-align: center; margin-top: 15px;">
+        <a href="#" id="toggle-auth" style="color: var(--primary-color);">회원가입 하러가기</a>
+      </p>
     </div>
   </div>
 
   <script src="app.js"></script>
   <script>
-    // Supabase 설정 (본인의 URL과 ANON_KEY를 입력하세요)
-    const SUPABASE_URL = '여기에_본인의_Supabase_URL_입력';
-    const SUPABASE_ANON_KEY = '여기에_본인의_Supabase_ANON_KEY_입력';
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let isLoginMode = true;
+    const toggleBtn = document.getElementById('toggle-auth');
+    const formTitle = document.getElementById('form-title');
+    const submitBtn = document.getElementById('submit-btn');
 
-    // Supabase 연동 로그인 처리
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
+    toggleBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      const nicknameInput = document.getElementById('login-nickname').value.trim();
-      const passwordInput = document.getElementById('login-password').value.trim();
+      isLoginMode = !isLoginMode;
+      formTitle.textContent = isLoginMode ? '로그인' : '회원가입';
+      submitBtn.textContent = isLoginMode ? '로그인' : '회원가입';
+      toggleBtn.textContent = isLoginMode ? '회원가입 하러가기' : '로그인 하러가기';
+    });
 
-      try {
-        const { data, error } = await supabaseClient
-          .from('users')
-          .select('*')
-          .eq('nickname', nicknameInput)
-          .eq('password', passwordInput)
-          .single();
-
-        if (error || !data) {
-          alert('아이디(닉네임) 또는 비밀번호가 일치하지 않습니다.');
-          return;
-        }
-
-        const currentUser = {
-          username: data.nickname,
-          role: data.role === '관리자' ? 'admin' : 'user',
-          accountNum: data.account_number || '',
-          bankName: data.bank_name || '',
-          accountHolder: data.account_holder || ''
-        };
-
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        alert(`${currentUser.username}님 환영합니다!`);
-        window.location.href = 'index.html';
-
-      } catch (err) {
-        console.error('로그인 오류:', err);
-        alert('로그인 처리 중 오류가 발생했습니다.');
-      }
+    document.getElementById('auth-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nickname = document.getElementById('login-nickname').value.trim();
+      const password = document.getElementById('login-password').value.trim();
+      await handleAuth(nickname, password, isLoginMode);
     });
   </script>
 </body>
