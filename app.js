@@ -242,38 +242,35 @@ async function initAdminSystem() {
 }
 
 async function renderAdminUsers() {
+  console.log("renderAdminUsers 함수 실행 시작!"); // <-- 이 줄 추가
   const tbody = document.getElementById('admin-users-tbody');
-  if (!tbody) return;
-
-  const { data: users, error } = await supabaseClient.from('users').select('*');
-  if (error) return console.error('사용자 데이터 로드 실패:', error);
-
-  tbody.innerHTML = '';
-  if (!users || users.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">등록된 사용자가 없습니다.</td></tr>';
+  
+  if (!tbody) {
+    console.error("오류: admin-users-tbody를 찾을 수 없습니다.");
     return;
   }
 
-  users.forEach(u => {
-    const tr = document.createElement('tr');
-    tr.style.borderBottom = '1px solid var(--input-border)';
-    
-    // 예금주가 없으면 '-' 표시
-    const accountHolder = u.account_holder || '-';
+  const { data: users, error } = await supabaseClient.from('users').select('*');
+  
+  if (error) {
+    console.error("Supabase 데이터 호출 에러:", error);
+    return;
+  }
+  
+  console.log("데이터 확인:", users); // <-- 이 줄 추가 (데이터가 몇 개 들어오는지 확인)
 
-    tr.innerHTML = `
-      <td style="padding:10px;">${escapeHtml(u.nickname)}</td>
-      <td style="padding:10px;">${escapeHtml(u.role || '일반회원')}</td>
-      <td style="padding:10px;">${escapeHtml(u.bank_name || '-')}</td>
-      <td style="padding:10px;">${escapeHtml(u.account_number || '-')}</td>
-      <td style="padding:10px; font-weight:bold; color:#d9534f;">${escapeHtml(accountHolder)}</td>
-      <td style="padding:10px;">
-        <button onclick="deleteUser('${u.id}')" class="btn btn-outline" style="color:red; border-color:red; padding:4px 8px; font-size:12px;">삭제</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
+  tbody.innerHTML = '';
+  
+  if (!users || users.length === 0) {
+    console.log("데이터가 없어서 빈 화면을 출력합니다."); // <-- 이 줄 추가
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">데이터 없음</td></tr>';
+    return;
+  }
+
+  // ... 이하 코드 동일 ...
 }
+
+
 // 장터 시스템
 function initMarketSystem() {
   const marketListContainer = document.getElementById('market-list');
