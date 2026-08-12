@@ -242,70 +242,36 @@ async function initAdminSystem() {
 }
 
 async function renderAdminUsers() {
-  const tbody = document.getElementById('admin-user-tbody');
+  const tbody = document.getElementById('admin-users-tbody');
   if (!tbody) return;
 
-  const { data: users } = await supabaseClient.from('users').select('*').order('nickname');
+  const { data: users, error } = await supabaseClient.from('users').select('*');
+  if (error) return console.error('사용자 데이터 로드 실패:', error);
+
   tbody.innerHTML = '';
-  
   if (!users || users.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="padding: 20px; text-align: center;">사용자가 없습니다.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">등록된 사용자가 없습니다.</td></tr>';
     return;
   }
 
   users.forEach(u => {
     const tr = document.createElement('tr');
     tr.style.borderBottom = '1px solid var(--input-border)';
+    
+    // 예금주가 없으면 '-' 표시
+    const accountHolder = u.account_holder || '-';
+
     tr.innerHTML = `
-      <td style="padding: 8px; font-size: 11px;">${u.id}</td>
-      <td style="padding: 8px;"><input type="text" value="${escapeHtml(u.nickname)}" class="ed-nick" data-id="${u.id}" style="width: 90px; padding: 4px;"></td>
-      <td style="padding: 8px;"><input type="text" value="${escapeHtml(u.password)}" class="ed-pw" data-id="${u.id}" style="width: 80px; padding: 4px;"></td>
-      <td style="padding: 8px;"><input type="text" value="${escapeHtml(u.bank_name || '')}" class="ed-bank" data-id="${u.id}" style="width: 80px; padding: 4px;" placeholder="은행명"></td>
-      <td style="padding: 8px;"><input type="text" value="${escapeHtml(u.account_number || '')}" class="ed-acc" data-id="${u.id}" style="width: 100px; padding: 4px;" placeholder="계좌번호"></td>
-      <td style="padding: 8px;"><input type="text" value="${escapeHtml(u.shipping_address || '')}" class="ed-addr" data-id="${u.id}" style="width: 120px; padding: 4px;" placeholder="배송지"></td>
-      <td style="padding: 8px;">
-        <select class="ed-role" data-id="${u.id}" style="padding: 4px;">
-          <option value="일반회원" ${u.role === '일반회원' ? 'selected' : ''}>일반회원</option>
-          <option value="특수회원" ${u.role === '특수회원' ? 'selected' : ''}>특수회원</option>
-          <option value="관리자" ${u.role === '관리자' ? 'selected' : ''}>관리자</option>
-        </select>
-      </td>
-      <td style="padding: 8px;">
-        <button class="btn btn-primary save-u" data-id="${u.id}" style="padding: 4px 8px; font-size: 11px; margin-right: 4px;">저장</button>
-        <button class="btn btn-outline del-u" data-id="${u.id}" style="padding: 4px 8px; font-size: 11px; color: red; border-color: red;">삭제</button>
+      <td style="padding:10px;">${escapeHtml(u.nickname)}</td>
+      <td style="padding:10px;">${escapeHtml(u.role || '일반회원')}</td>
+      <td style="padding:10px;">${escapeHtml(u.bank_name || '-')}</td>
+      <td style="padding:10px;">${escapeHtml(u.account_number || '-')}</td>
+      <td style="padding:10px; font-weight:bold; color:#d9534f;">${escapeHtml(accountHolder)}</td>
+      <td style="padding:10px;">
+        <button onclick="deleteUser('${u.id}')" class="btn btn-outline" style="color:red; border-color:red; padding:4px 8px; font-size:12px;">삭제</button>
       </td>
     `;
     tbody.appendChild(tr);
-  });
-
-  // 저장 버튼 이벤트
-  document.querySelectorAll('.save-u').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const id = e.target.dataset.id;
-      const row = e.target.closest('tr');
-      const nickname = row.querySelector('.ed-nick').value;
-      const password = row.querySelector('.ed-pw').value;
-      const bank_name = row.querySelector('.ed-bank').value;
-      const account_number = row.querySelector('.ed-acc').value;
-      const shipping_address = row.querySelector('.ed-addr').value;
-      const role = row.querySelector('.ed-role').value;
-
-      const { error } = await supabaseClient.from('users').update({ nickname, password, bank_name, account_number, shipping_address, role }).eq('id', id);
-      if (error) return alert('수정 실패');
-      alert('사용자 정보가 수정되었습니다.');
-      renderAdminUsers();
-    });
-  });
-
-  // 삭제 버튼 이벤트
-  document.querySelectorAll('.del-u').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      if (!confirm('정말 삭제하시겠습니까?')) return;
-      const { error } = await supabaseClient.from('users').delete().eq('id', e.target.dataset.id);
-      if (error) return alert('삭제 실패');
-      alert('삭제되었습니다.');
-      renderAdminUsers();
-    });
   });
 }
 // 장터 시스템
