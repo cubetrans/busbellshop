@@ -576,3 +576,33 @@ async function updateOrderStatus(orderId, newStatus) {
         renderAdminOrders(); // 관리자 페이지 새로고침
     }
 }
+
+// --- 입금자명 생성 및 구매 로직 ---
+function generateDepositName(seller, buyer, item) {
+    const s = (seller || '판매').slice(0, 2);
+    const b = (buyer || '구매').slice(0, 2);
+    const i = (item || '상품').slice(0, 5);
+    const r = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+    return `${s}${b}${i}${r}`;
+}
+
+async function buyMarketItem(seller, title, price) {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) return window.location.href = 'login.html';
+    
+    const depositName = generateDepositName(seller, user.username, title);
+    
+    const { error } = await supabaseClient.from('orders').insert([{
+        buyer_name: user.username,
+        seller_name: seller,
+        item_title: title,
+        price: price,
+        deposit_name: depositName,
+        status: '입금확인중'
+    }]);
+
+    if (error) return alert('주문 실패');
+    
+    alert(`[관리진 계좌 안내]\n카카오뱅크 3333-01-9999999 (예금주: 버스벨샵)\n\n입금자명: ${depositName}\n\n확인되었습니다. 추후 입금 확인 후 배송 진행 예정입니다.`);
+    location.reload();
+}
