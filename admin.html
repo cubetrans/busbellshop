@@ -47,40 +47,52 @@
     <h2>관리자 대시보드</h2>
     <p style="margin-bottom: 20px;">모든 사용자의 데이터를 실시간으로 관리할 수 있습니다.</p>
 
-    <div class="card" style="overflow-x: auto;">
+    <!-- 사용자 관리 카드 (기존에 있던 것) -->
+    <div class="card" style="overflow-x: auto; margin-bottom: 20px;">
+      <h3>사용자 관리</h3>
       <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 800px;">
         <thead>
           <tr style="border-bottom: 2px solid var(--input-border);">
             <th style="padding: 10px;">UUID</th>
             <th style="padding: 10px;">닉네임(ID)</th>
             <th style="padding: 10px;">비밀번호</th>
+            <th style="padding: 10px;">은행명</th>
             <th style="padding: 10px;">계좌번호</th>
+            <th style="padding: 10px;">배송지</th>
             <th style="padding: 10px;">권한 설정</th>
             <th style="padding: 10px;">관리</th>
           </tr>
         </thead>
         <tbody id="admin-user-tbody">
           <tr>
-            <td colspan="6" style="padding: 20px; text-align: center;">데이터를 불러오는 중...</td>
+            <td colspan="8" style="padding: 20px; text-align: center;">사용자 데이터를 불러오는 중...</td>
           </tr>
         </tbody>
       </table>
     </div>
-  </div>
 
-  <div class="card">
-  <h3>전체 주문 관리</h3>
-  <table style="width: 100%;">
-    <thead>
-      <tr>
-        <th>구매자</th><th>상품</th><th>입금자명</th><th>상태</th><th>사유</th><th>관리</th>
-      </tr>
-    </thead>
-    <tbody id="admin-orders-tbody">
-      <!-- JS로 동적 생성 -->
-    </tbody>
-  </table>
-</div>
+    <!-- 💡 이 부분을 추가해 주세요! (전체 주문 관리) -->
+    <div class="card" style="overflow-x: auto;">
+      <h3>전체 주문 관리</h3>
+      <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 800px;">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--input-border);">
+            <th style="padding: 10px;">구매자</th>
+            <th style="padding: 10px;">판매자</th>
+            <th style="padding: 10px;">상품명</th>
+            <th style="padding: 10px;">입금자명</th>
+            <th style="padding: 10px;">상태 설정</th>
+            <th style="padding: 10px;">사유</th>
+            <th style="padding: 10px;">관리</th>
+          </tr>
+        </thead>
+        <tbody id="admin-orders-tbody">
+          <tr>
+            <td colspan="7" style="padding: 20px; text-align: center;">주문 데이터를 불러오는 중...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   
   <script src="app.js"></script>
 </body>
