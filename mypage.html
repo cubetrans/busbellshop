@@ -42,7 +42,7 @@
       </ul>
     </div>
   </header>
-
+  
   <div class="container" style="max-width: 600px;">
     <h2>마이페이지</h2>
     <p style="margin-bottom: 20px;">회원 정보를 확인하고 관리하세요.</p>
@@ -61,6 +61,29 @@
       </form>
     </div>
 
+    <!-- 마이페이지 계좌/배송지 관리 부분 -->
+<div class="card">
+  <h3>개인정보 및 배송 관리</h3>
+  <form id="profile-update-form" style="display:flex; flex-direction:column; gap:10px;">
+    <input type="text" id="my-bank-name" placeholder="은행명 (예: 국민은행)">
+    <input type="text" id="my-account-num" placeholder="계좌번호">
+    <textarea id="my-address" placeholder="배송지 주소"></textarea>
+    <button type="submit" class="btn btn-primary">정보 저장</button>
+  </form>
+</div>
+
+<!-- 자신의 주문 내역 -->
+<div class="card">
+  <h3>내 주문 내역</h3>
+  <div id="my-orders-list"></div>
+</div>
+    
+<!-- 자신의 주문 내역 -->
+<div class="card">
+  <h3>내 주문 내역</h3>
+  <div id="my-orders-list"></div>
+</div>
+    
     <!-- 관리자 전용 이동 버튼 (기본 숨김) -->
     <div id="admin-link-container" style="display: none;">
       <a href="admin.html" class="btn btn-primary" style="background-color: #d9534f; width: 100%; text-align: center; display: block; padding: 12px;">관리자 페이지로 이동</a>
