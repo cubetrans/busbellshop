@@ -524,3 +524,55 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
+
+// --- 주문 시스템 (장터 구매 및 관리자용) ---
+
+// 입금자명 생성 함수
+function generateDepositName(seller, buyer, item) {
+    const s = (seller || '판매').slice(0, 2);
+    const b = (buyer || '구매').slice(0, 2);
+    const i = (item || '상품').slice(0, 5);
+    const r = String.fromCharCode(65 + Math.floor(Math.random() * 26)); // A~Z 난수 1개
+    return `${s}${b}${i}${r}`;
+}
+
+// 상품 구매 로직 (장터 게시글 내 "구매하기" 버튼 클릭 시)
+async function purchaseItem(seller, title, price) {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser) return alert('로그인 후 구매 가능합니다.');
+    
+    const depositName = generateDepositName(seller, currentUser.username, title);
+    
+    const { error } = await supabaseClient.from('orders').insert([{
+        buyer_name: currentUser.username,
+        seller_name: seller,
+        item_title: title,
+        price: price,
+        deposit_name: depositName,
+        status: '입금확인중'
+    }]);
+
+    if (error) return alert('주문 실패');
+    
+    alert(`[에스크로 안내]\n\n구매가 요청되었습니다.\n관리진 계좌: (예시) 카카오뱅크 3333-01-1234567\n\n입금자명: ${depositName}\n\n입금 완료 버튼을 누르시면 확인 후 배송이 진행됩니다.`);
+}
+
+// 주문 상태 업데이트 (관리자용)
+async function updateOrderStatus(orderId, newStatus) {
+    let reason = null;
+    if (newStatus === '처리불가' || newStatus === '보류') {
+        reason = prompt('사유를 입력하세요:');
+        if (!reason) return alert('사유는 필수입니다.');
+    }
+
+    const { error } = await supabaseClient
+        .from('orders')
+        .update({ status: newStatus, rejection_reason: reason })
+        .eq('id', orderId);
+
+    if (error) alert('수정 실패');
+    else {
+        alert('상태가 업데이트되었습니다.');
+        renderAdminOrders(); // 관리자 페이지 새로고침
+    }
+}
