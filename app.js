@@ -623,6 +623,15 @@ async function buyMarketItem(seller, title, price) {
     return window.location.href = 'login.html';
   }
 
+  // 구매자의 등록된 배송지 가져오기
+  const { data: userData } = await supabaseClient.from('users').select('shipping_address').eq('nickname', user.username).single();
+  const shippingAddress = userData ? userData.shipping_address : '';
+
+  if (!shippingAddress) {
+    alert('마이페이지에서 배송지 주소를 먼저 등록해주세요!');
+    return window.location.href = 'mypage.html';
+  }
+
   // 입금자명 생성: 판매자명 앞2글자 + 구매자명 앞2글자 + 상품명 앞5글자 + 임의난수 1글자
   const s = seller.slice(0, 2);
   const b = user.username.slice(0, 2);
@@ -636,7 +645,8 @@ async function buyMarketItem(seller, title, price) {
     item_title: title,
     price: price,
     deposit_name: depositName,
-    status: '입금확인중'
+    status: '입금확인중',
+    shipping_address: shippingAddress
   }]);
 
   if (error) return alert('주문 요청 중 오류가 발생했습니다.');
@@ -644,7 +654,6 @@ async function buyMarketItem(seller, title, price) {
   alert(`[관리진 계좌 안내]\n카카오뱅크 3333-01-9999999 (예금주: 버스벨샵)\n\n입금자명: ${depositName}\n\n확인되었습니다. 추후 입금 확인 후 배송 진행 예정입니다.`);
   location.reload();
 }
-
 async function editMarketPost(id, oldTitle, oldPrice, oldContent) {
   const newTitle = prompt('수정할 제목을 입력하세요:', oldTitle);
   if (newTitle === null) return;
