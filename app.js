@@ -269,7 +269,12 @@ async function renderAdminUsers() {
 
     tr.innerHTML = `
       <td style="padding:10px;">${escapeHtml(u.nickname)}</td>
-      <td style="padding:10px;">${escapeHtml(u.role || '일반회원')}</td>
+      <td style="padding:10px;">
+        <select onchange="changeUserRole('${u.id}', this.value)" style="padding:4px; background:var(--input-bg); color:var(--text-color); border:1px solid var(--input-border); border-radius:4px;">
+          <option value="일반회원" ${u.role === '일반회원' ? 'selected' : ''}>일반회원</option>
+          <option value="관리자" ${u.role === '관리자' ? 'selected' : ''}>관리자</option>
+        </select>
+      </td>
       <td style="padding:10px;">${escapeHtml(u.bank_name || '-')}</td>
       <td style="padding:10px;">${escapeHtml(u.account_number || '-')}</td>
       <td style="padding:10px; font-weight:bold; color:#d9534f;">${escapeHtml(accountHolder)}</td>
@@ -279,6 +284,18 @@ async function renderAdminUsers() {
     `;
     tbody.appendChild(tr);
   });
+}
+
+// 사용자 역할 변경 함수
+async function changeUserRole(userId, newRole) {
+  const { error } = await supabaseClient.from('users').update({ role: newRole }).eq('id', userId);
+  if (error) {
+    alert('사용자 역할 변경 실패');
+    renderAdminUsers();
+    return;
+  }
+  alert('사용자 역할이 성공적으로 변경되었습니다.');
+  renderAdminUsers();
 }
 
 async function deleteUser(userId) {
@@ -731,5 +748,3 @@ async function updateTracking(orderId) {
   alert('운송장 번호가 등록되었습니다.');
   location.reload();
 }
-
-
