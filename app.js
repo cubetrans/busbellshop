@@ -184,7 +184,7 @@ async function initMypageSystem() {
     });
   }
 
-  // 내 주문 내역 로드
+ // 내 주문 내역 로드
   const orderContainer = document.getElementById('my-orders-list');
   if (orderContainer) {
     const { data: orders } = await supabaseClient.from('orders').select('*').eq('buyer_name', user.username).order('created_at', { ascending: false });
@@ -193,10 +193,16 @@ async function initMypageSystem() {
       orderContainer.innerHTML = '<p style="margin-top:10px;">주문 내역이 없습니다.</p>';
     } else {
       orders.forEach(o => {
+        // 판매자가 입력한 택배사와 운송장 번호 표시
+        const trackingHtml = o.tracking_number 
+          ? `<p><strong>배송정보:</strong> <span style="color:green; font-weight:bold;">${escapeHtml(o.courier_company)} / ${escapeHtml(o.tracking_number)}</span></p>` 
+          : `<p><strong>배송정보:</strong> <span style="color:gray;">배송 준비 중 (운송장 미등록)</span></p>`;
+
         orderContainer.innerHTML += `
           <div style="border:1px solid var(--input-border); padding:10px; margin-top:10px; border-radius:4px;">
             <p><strong>상품:</strong> ${escapeHtml(o.item_title)} (${escapeHtml(o.price)}원)</p>
             <p><strong>입금자명:</strong> ${escapeHtml(o.deposit_name)}</p>
+            ${trackingHtml}
             <p><strong>상태:</strong> <span style="color:blue;">${escapeHtml(o.status)}</span> ${o.rejection_reason ? `(사유: ${escapeHtml(o.rejection_reason)})` : ''}</p>
           </div>
         `;
@@ -691,9 +697,12 @@ async function renderAdminOrders() {
     .select('*')
     .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('주문 불러오기 에러:', error);
-    return;
+  if (error) return console.error(error);
+
+  const { data: usersData } = await supabaseClient.from('users').select('nickname, bank_name, account_holder, account_number');
+  const userMap = {};
+  if (usersData) {
+    usersData.forEach(u => { userMap[u.nickname] = u; });
   }
 
   tbody.innerHTML = '';
@@ -703,13 +712,23 @@ async function renderAdminOrders() {
   }
 
   orders.forEach(o => {
+    const sellerInfo = userMap[o.seller_name] || {};
+    const sellerBankText = sellerInfo.account_number 
+      ? `<br><small style="color:#d9534f; font-weight:bold;">정산계좌: ${escapeHtml(sellerInfo.bank_name)} ${escapeHtml(sellerInfo.account_number)} (${escapeHtml(sellerInfo.account_holder)})</small>` 
+      : `<br><small style="color:red;">정산계좌 미등록</small>`;
+
+    // 관리자 페이지에서도 택배사와 운송장 번호가 명확히 보이도록 설정
+    const trackingDisplay = o.tracking_number 
+      ? `<br><small style="color:green; font-weight:bold;">[${escapeHtml(o.courier_company)}] ${escapeHtml(o.tracking_number)}</small>` 
+      : `<br><small style="color:gray;">[운송장 미등록]</small>`;
+
     const tr = document.createElement('tr');
     tr.style.borderBottom = '1px solid var(--input-border)';
     tr.innerHTML = `
       <td style="padding:8px;">${escapeHtml(o.buyer_name)}</td>
-      <td style="padding:8px;">${escapeHtml(o.seller_name)}</td>
+      <td style="padding:8px;">${escapeHtml(o.seller_name)} ${sellerBankText}</td>
       <td style="padding:8px;">${escapeHtml(o.item_title)}</td>
-      <td style="padding:8px;"><b>${escapeHtml(o.deposit_name)}</b></td>
+      <td style="padding:8px;"><b>${escapeHtml(o.deposit_name)}</b> ${trackingDisplay}</td>
       <td style="padding:8px;">
         <select onchange="changeOrderStatus('${o.id}', this.value)" style="padding:4px;">
           <option value="입금확인중" ${o.status === '입금확인중' ? 'selected' : ''}>입금확인중</option>
@@ -717,7 +736,7 @@ async function renderAdminOrders() {
           <option value="처리중" ${o.status === '처리중' ? 'selected' : ''}>처리중</option>
           <option value="처리불가" ${o.status === '처리불가' ? 'selected' : ''}>처리불가</option>
           <option value="보류" ${o.status === '보류' ? 'selected' : ''}>보류</option>
-          <option value="처리완료" ${o.status === '처리완료' ? 'selected' : ''}>처리완료</option>
+          <option value="처리완료" ${o.status === '처리완료' ? 'selected' : ''}>처리완료 (정산완료)</option>
         </select>
       </td>
       <td style="padding:8px;">${escapeHtml(o.rejection_reason || '-')}</td>
