@@ -669,3 +669,75 @@ async function deleteMarketPost(id) {
   alert('삭제되었습니다.');
   renderMarketPosts();
 }
+
+// 관리자 주문 목록 불러오기
+async function renderAdminOrders() {
+  const tbody = document.getElementById('admin-orders-tbody');
+  if (!tbody) return;
+
+  const { data: orders, error } = await supabaseClient
+    .from('orders')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('주문 불러오기 에러:', error);
+    return;
+  }
+
+  tbody.innerHTML = '';
+  if (!orders || orders.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="padding: 20px; text-align: center;">주문 내역이 없습니다.</td></tr>';
+    return;
+  }
+
+  orders.forEach(o => {
+    const tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid var(--input-border)';
+    tr.innerHTML = `
+      <td style="padding:8px;">${escapeHtml(o.buyer_name)}</td>
+      <td style="padding:8px;">${escapeHtml(o.seller_name)}</td>
+      <td style="padding:8px;">${escapeHtml(o.item_title)}</td>
+      <td style="padding:8px;"><b>${escapeHtml(o.deposit_name)}</b></td>
+      <td style="padding:8px;">
+        <select onchange="changeOrderStatus('${o.id}', this.value)" style="padding:4px;">
+          <option value="입금확인중" ${o.status === '입금확인중' ? 'selected' : ''}>입금확인중</option>
+          <option value="입금확인완료" ${o.status === '입금확인완료' ? 'selected' : ''}>입금확인완료</option>
+          <option value="처리중" ${o.status === '처리중' ? 'selected' : ''}>처리중</option>
+          <option value="처리불가" ${o.status === '처리불가' ? 'selected' : ''}>처리불가</option>
+          <option value="보류" ${o.status === '보류' ? 'selected' : ''}>보류</option>
+          <option value="처리완료" ${o.status === '처리완료' ? 'selected' : ''}>처리완료</option>
+        </select>
+      </td>
+      <td style="padding:8px;">${escapeHtml(o.rejection_reason || '-')}</td>
+      <td style="padding:8px;"><button onclick="deleteOrder('${o.id}')" class="btn btn-outline" style="color:red; border-color:red; padding:2px 6px; font-size:11px;">삭제</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// 주문 상태 변경 함수
+async function changeOrderStatus(id, status) {
+  let rejection_reason = null;
+  if (status === '처리불가' || status === '보류') {
+    rejection_reason = prompt('사유를 입력하세요:');
+    if (!rejection_reason) {
+      alert('사유는 필수입니다.');
+      renderAdminOrders();
+      return;
+    }
+  }
+
+  const { error } = await supabaseClient.from('orders').update({ status, rejection_reason }).eq('id', id);
+  if (error) return alert('상태 변경 실패');
+  alert('상태가 변경되었습니다.');
+  renderAdminOrders();
+}
+
+// 주문 삭제 함수
+async function deleteOrder(id) {
+  if (!confirm('정말 삭제하시겠습니까?')) return;
+  const { error } = await supabaseClient.from('orders').delete().eq('id', id);
+  if (error) return alert('삭제 실패');
+  renderAdminOrders();
+}
