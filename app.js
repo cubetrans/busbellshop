@@ -587,7 +587,7 @@ async function buyMarketItem(seller, title, price) {
 
   if (error) return alert('주문 요청 중 오류가 발생했습니다.');
 
-  alert(`[관리진 계좌 안내]\n카카오뱅크 3333-01-9999999 (예금주: 버스벨샵)\n\n입금자명: ${depositName}\n\n확인되었습니다. 추후 입금 확인 후 배송 진행 예정입니다.`);
+  alert(`[관리진 계좌 안내]\n하나은행 154-920580-98807 (예금주: 안수현)\n\n입금자명: ${depositName}\n\n 추후 입금 확인 후 배송 진행 예정입니다.`);
   location.reload();
 }
 
