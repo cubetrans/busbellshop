@@ -2,12 +2,12 @@
 const SUPABASE_URL = 'https://ipgzhipiebcnkfqzufgm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwZ3poaXBpZWJjbmtmcXp1ZmdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5ODMxMTgsImV4cCI6MjEwMTU1OTExOH0.byzqUDMvoAIbybPYbyKsR6KoPnpLPs0jsdawAnW0Eww';
 
-// 안전한 Supabase 클라이언트 초기화 (CDN 누락 대비 방어 코드)
+// 안전한 Supabase 클라이언트 초기화
 let supabaseClient = null;
 if (window.supabase && typeof window.supabase.createClient === 'function') {
   supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 } else {
-  console.error('Supabase SDK가 로드되지 않았습니다. HTML 파일 <head>에 Supabase 스크립트를 추가해주세요.');
+  console.error('Supabase SDK가 로드되지 않았습니다.');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -16,6 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initAuthHeader();
   initMarketSystem();
   initCommunitySystem();
+  initMypageSystem();
+  initAdminSystem();
 });
 
 // 테마 변경 기능
@@ -50,16 +52,33 @@ function initMobileMenu() {
   }
 }
 
-// 로그인 상태 및 환영 메시지 관리
+// 로그인 상태 및 환영 메시지 관리 + 로그인/로그아웃 버튼 동적 변경
 function initAuthHeader() {
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
   const userGreetingEls = document.querySelectorAll('.user-greeting, .mobile-user-greeting');
+  const authActionBtns = document.querySelectorAll('.auth-action');
 
   userGreetingEls.forEach(el => {
     if (currentUser) {
       el.textContent = `${currentUser.username}님 환영합니다`;
     } else {
       el.textContent = '로그인이 필요합니다';
+    }
+  });
+
+  // 상단 배너의 로그인 버튼을 로그아웃 버튼으로 동적 변환
+  authActionBtns.forEach(btn => {
+    if (btn.textContent.includes('로그인')) {
+      if (currentUser) {
+        btn.textContent = '로그아웃';
+        btn.href = '#';
+        btn.onclick = (e) => {
+          e.preventDefault();
+          localStorage.removeItem('currentUser');
+          alert('로그아웃 되었습니다.');
+          window.location.href = 'index.html';
+        };
+      }
     }
   });
 
@@ -96,7 +115,7 @@ async function handleAuth(nickname, password, isLoginMode) {
 
     const currentUser = {
       username: data.nickname,
-      role: data.role || 'user',
+      role: data.role || '일반회원',
       accountNum: data.account_number || ''
     };
 
@@ -104,9 +123,10 @@ async function handleAuth(nickname, password, isLoginMode) {
     alert(`${currentUser.username}님 환영합니다!`);
     window.location.href = 'index.html';
   } else {
+    // 회원가입 시 기본 권한은 '일반회원'
     const { error } = await supabaseClient
       .from('users')
-      .insert([{ nickname, password, role: 'user' }]);
+      .insert([{ nickname, password, role: '일반회원' }]);
 
     if (error) {
       alert('이미 사용중인 아이디입니다. 다른 아이디로 설정해주세요.');
@@ -116,6 +136,175 @@ async function handleAuth(nickname, password, isLoginMode) {
     alert('회원가입이 완료되었습니다! 로그인해 주세요.');
     window.location.reload();
   }
+}
+
+// 마이페이지 시스템 (계좌번호 등록/수정 및 관리자 버튼 표시)
+async function initMypageSystem() {
+  const myNicknameEl = document.getElementById('my-nickname');
+  if (!myNicknameEl) return;
+
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) {
+    alert('로그인이 필요합니다.');
+    window.location.href = 'login.html';
+    return;
+  }
+
+  // 최신 사용자 정보 DB에서 조회
+  const { data: userData, error } = await supabaseClient
+    .from('users')
+    .select('*')
+    .eq('nickname', currentUser.username)
+    .single();
+
+  if (error || !userData) {
+    alert('사용자 정보를 불러올 수 없습니다.');
+    return;
+  }
+
+  myNicknameEl.textContent = userData.nickname;
+  document.getElementById('my-role').textContent = userData.role || '일반회원';
+  document.getElementById('account-input').value = userData.account_number || '';
+
+  // 관리자일 경우 관리자 페이지 이동 버튼 표시 ('관리자' 권한 확인)
+  if (userData.role === '관리자') {
+    const adminContainer = document.getElementById('admin-link-container');
+    if (adminContainer) adminContainer.style.display = 'block';
+  }
+
+  // 계좌번호 수정/등록 폼 제출
+  const accountForm = document.getElementById('account-form');
+  if (accountForm) {
+    accountForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const newAccount = document.getElementById('account-input').value.trim();
+
+      const { error: updateError } = await supabaseClient
+        .from('users')
+        .update({ account_number: newAccount })
+        .eq('nickname', currentUser.username);
+
+      if (updateError) {
+        alert('계좌번호 수정 중 오류가 발생했습니다.');
+        return;
+      }
+
+      alert('계좌번호가 성공적으로 등록/수정되었습니다.');
+      currentUser.accountNum = newAccount;
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    });
+  }
+}
+
+// 관리자 대시보드 시스템 (권한 체크 및 전체 정보 관리)
+async function initAdminSystem() {
+  const tableBody = document.getElementById('admin-user-tbody');
+  if (!tableBody) return;
+
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) {
+    alert('로그인이 필요합니다.');
+    window.location.href = 'login.html';
+    return;
+  }
+
+  // DB에서 현재 사용자 권한 재확인 (비로그인 및 관리자 권한 없는 사용자 접근 원천 차단)
+  const { data: userData, error: userError } = await supabaseClient
+    .from('users')
+    .select('role')
+    .eq('nickname', currentUser.username)
+    .single();
+
+  if (userError || !userData || userData.role !== '관리자') {
+    alert('관리자 권한이 없습니다.');
+    window.location.href = 'index.html';
+    return;
+  }
+
+  renderAdminUsers();
+}
+
+async function renderAdminUsers() {
+  const tableBody = document.getElementById('admin-user-tbody');
+  if (!tableBody) return;
+
+  const { data: users, error } = await supabaseClient
+    .from('users')
+    .select('*')
+    .order('nickname', { ascending: true });
+
+  if (error) {
+    tableBody.innerHTML = '<tr><td colspan="6">사용자 정보를 불러오지 못했습니다.</td></tr>';
+    return;
+  }
+
+  tableBody.innerHTML = '';
+  users.forEach(user => {
+    const tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid var(--input-border)';
+    tr.innerHTML = `
+      <td style="padding: 10px; font-size: 11px; word-break: break-all; max-width: 150px;">${user.id}</td>
+      <td style="padding: 10px;"><input type="text" value="${escapeHtml(user.nickname)}" data-id="${user.id}" class="edit-nickname" style="padding: 5px; width: 100px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;"></td>
+      <td style="padding: 10px;"><input type="text" value="${escapeHtml(user.password)}" data-id="${user.id}" class="edit-password" style="padding: 5px; width: 90px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;"></td>
+      <td style="padding: 10px;"><input type="text" value="${escapeHtml(user.account_number || '')}" data-id="${user.id}" class="edit-account" style="padding: 5px; width: 120px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;"></td>
+      <td style="padding: 10px;">
+        <select data-id="${user.id}" class="edit-role" style="padding: 5px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
+          <option value="일반회원" ${user.role === '일반회원' ? 'selected' : ''}>일반회원</option>
+          <option value="특수회원" ${user.role === '특수회원' ? 'selected' : ''}>특수회원</option>
+          <option value="관리자" ${user.role === '관리자' ? 'selected' : ''}>관리자</option>
+        </select>
+      </td>
+      <td style="padding: 10px; display: flex; gap: 5px;">
+        <button class="btn btn-primary save-user-btn" data-id="${user.id}" style="padding: 5px 10px; font-size: 12px;">저장</button>
+        <button class="btn btn-outline delete-user-btn" data-id="${user.id}" style="padding: 5px 10px; font-size: 12px; color: #d9534f; border-color: #d9534f;">삭제</button>
+      </td>
+    `;
+    tableBody.appendChild(tr);
+  });
+
+  // 저장 버튼 이벤트
+  document.querySelectorAll('.save-user-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const id = e.target.getAttribute('data-id');
+      const row = e.target.closest('tr');
+      const nickname = row.querySelector('.edit-nickname').value.trim();
+      const password = row.querySelector('.edit-password').value.trim();
+      const account_number = row.querySelector('.edit-account').value.trim();
+      const role = row.querySelector('.edit-role').value;
+
+      const { error } = await supabaseClient
+        .from('users')
+        .update({ nickname, password, account_number, role })
+        .eq('id', id);
+
+      if (error) {
+        alert('수정 중 오류가 발생했습니다.');
+        return;
+      }
+      alert('사용자 정보가 성공적으로 수정되었습니다.');
+      renderAdminUsers();
+    });
+  });
+
+  // 삭제 버튼 이벤트
+  document.querySelectorAll('.delete-user-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const id = e.target.getAttribute('data-id');
+      if (!confirm('정말 이 사용자를 삭제하시겠습니까?')) return;
+
+      const { error } = await supabaseClient
+        .from('users')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        alert('삭제 중 오류가 발생했습니다.');
+        return;
+      }
+      alert('사용자가 삭제되었습니다.');
+      renderAdminUsers();
+    });
+  });
 }
 
 // 장터 시스템
@@ -268,7 +457,7 @@ function initCommunitySystem() {
       }
 
       const category = document.getElementById('post-category-select').value;
-      if (category === '공지게시판' && currentUser.role !== 'admin') {
+      if (category === '공지게시판' && currentUser.role !== '관리자') {
         alert('공지게시판은 관리자만 작성할 수 있습니다.');
         return;
       }
