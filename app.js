@@ -378,39 +378,48 @@ function initMarketSystem() {
   }
 }
 
+// --- 1. 장터 글 목록 렌더링 (구매, 수정, 삭제 버튼 포함) ---
 async function renderMarketPosts(searchTerm = '') {
   const container = document.getElementById('market-list');
-  if (!container || !supabaseClient) return;
+  if (!container) return;
 
   let query = supabaseClient.from('market_posts').select('*').order('created_at', { ascending: false });
-  if (searchTerm) {
-    query = query.ilike('title', `%${searchTerm}%`);
-  }
+  if (searchTerm) query = query.ilike('title', `%${searchTerm}%`);
 
-  const { data: posts, error } = await query;
-  if (error) {
-    container.innerHTML = '<p>게시글을 불러오는 중 오류가 발생했습니다.</p>';
-    return;
-  }
-
+  const { data: posts } = await query;
   container.innerHTML = '';
   if (!posts || posts.length === 0) {
-    container.innerHTML = '<p>등록된 장터 글이 없습니다.</p>';
+    container.innerHTML = '<p>등록된 상품이 없습니다.</p>';
     return;
   }
+
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
 
   posts.forEach(post => {
     const card = document.createElement('div');
     card.className = 'card';
+    card.style.marginBottom = '15px';
+
+    // 구매하기 버튼 (누구나 구매 가능)
+    let actionBtns = `<button onclick="buyMarketItem('${escapeHtml(post.author_name)}', '${escapeHtml(post.title)}', '${escapeHtml(post.price)}')" class="btn btn-primary" style="margin-top:10px; margin-right:5px;">구매하기</button>`;
+
+    // 작성자 본인 또는 관리자일 경우 수정/삭제 버튼 추가
+    if (currentUser && (currentUser.username === post.author_name || currentUser.role === '관리자')) {
+      actionBtns += `
+        <button onclick="editMarketPost('${post.id}', '${escapeHtml(post.title)}', '${escapeHtml(post.price)}', '${escapeHtml(post.content)}')" class="btn btn-outline" style="margin-top:10px; margin-right:5px;">수정</button>
+        <button onclick="deleteMarketPost('${post.id}')" class="btn btn-outline" style="margin-top:10px; color:red; border-color:red;">삭제</button>
+      `;
+    }
+
     card.innerHTML = `
       <h3>${escapeHtml(post.title)}</h3>
       <p><strong>가격:</strong> ${escapeHtml(post.price)} | <strong>작성자:</strong> ${escapeHtml(post.author_name)}</p>
-      <p style="margin-top: 10px;">${escapeHtml(post.content)}</p>
+      <p style="margin-top:5px;">${escapeHtml(post.content)}</p>
+      ${actionBtns}
     `;
     container.appendChild(card);
   });
 }
-
 // 커뮤니티 시스템
 function initCommunitySystem() {
   const communityListContainer = document.getElementById('community-list');
@@ -491,39 +500,65 @@ function initCommunitySystem() {
   }
 }
 
-async function renderCommunityPosts(category, searchTerm = '') {
+// --- 4. 커뮤니티 글 목록 렌더링 (수정, 삭제 포함) ---
+async function renderCommunityPosts(category) {
   const container = document.getElementById('community-list');
-  if (!container || !supabaseClient) return;
+  if (!container) return;
 
-  let query = supabaseClient.from('community_posts').select('*').eq('category', category).order('created_at', { ascending: false });
-  if (searchTerm) {
-    query = query.ilike('title', `%${searchTerm}%`);
-  }
-
-  const { data: posts, error } = await query;
-  if (error) {
-    container.innerHTML = '<p>게시글을 불러오는 중 오류가 발생했습니다.</p>';
-    return;
-  }
-
+  const { data: posts } = await supabaseClient.from('community_posts').select('*').eq('category', category).order('created_at', { ascending: false });
   container.innerHTML = '';
   if (!posts || posts.length === 0) {
-    container.innerHTML = `<p>[${category}]에 등록된 글이 없습니다.</p>`;
+    container.innerHTML = '<p>등록된 글이 없습니다.</p>';
     return;
   }
+
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
 
   posts.forEach(post => {
     const card = document.createElement('div');
     card.className = 'card';
+    card.style.marginBottom = '15px';
+
+    let authorBtns = '';
+    if (currentUser && (currentUser.username === post.author_name || currentUser.role === '관리자')) {
+      authorBtns = `
+        <button onclick="editCommunityPost('${post.id}', '${escapeHtml(post.title)}', '${escapeHtml(post.content)}')" class="btn btn-outline" style="margin-top:10px; margin-right:5px;">수정</button>
+        <button onclick="deleteCommunityPost('${post.id}')" class="btn btn-outline" style="margin-top:10px; color:red; border-color:red;">삭제</button>
+      `;
+    }
+
     card.innerHTML = `
       <h3>[${escapeHtml(post.category)}] ${escapeHtml(post.title)}</h3>
       <p><strong>작성자:</strong> ${escapeHtml(post.author_name)}</p>
-      <p style="margin-top: 10px;">${escapeHtml(post.content)}</p>
+      <p style="margin-top:5px;">${escapeHtml(post.content)}</p>
+      ${authorBtns}
     `;
     container.appendChild(card);
   });
 }
 
+async function editCommunityPost(id, oldTitle, oldContent) {
+  const newTitle = prompt('수정할 제목을 입력하세요:', oldTitle);
+  if (newTitle === null) return;
+  const newContent = prompt('수정할 내용을 입력하세요:', oldContent);
+  if (newContent === null) return;
+
+  const { error } = await supabaseClient.from('community_posts').update({
+    title: newTitle,
+    content: newContent
+  }).eq('id', id);
+
+  if (error) return alert('수정 중 오류가 발생했습니다.');
+  alert('글이 수정되었습니다.');
+  location.reload();
+}
+
+async function deleteCommunityPost(id) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  await supabaseClient.from('community_posts').delete().eq('id', id);
+  alert('삭제되었습니다.');
+  location.reload();
+}
 function escapeHtml(str) {
   if (!str) return '';
   return String(str)
@@ -595,23 +630,58 @@ function generateDepositName(seller, buyer, item) {
     return `${s}${b}${i}${r}`;
 }
 
+// --- 2. 장터 상품 구매 기능 ---
 async function buyMarketItem(seller, title, price) {
-    const user = JSON.parse(localStorage.getItem('currentUser'));
-    if (!user) return window.location.href = 'login.html';
-    
-    const depositName = generateDepositName(seller, user.username, title);
-    
-    const { error } = await supabaseClient.from('orders').insert([{
-        buyer_name: user.username,
-        seller_name: seller,
-        item_title: title,
-        price: price,
-        deposit_name: depositName,
-        status: '입금확인중'
-    }]);
+  const user = JSON.parse(localStorage.getItem('currentUser'));
+  if (!user) {
+    alert('로그인이 필요합니다.');
+    return window.location.href = 'login.html';
+  }
 
-    if (error) return alert('주문 실패');
-    
-    alert(`[관리진 계좌 안내]\n카카오뱅크 3333-01-9999999 (예금주: 버스벨샵)\n\n입금자명: ${depositName}\n\n확인되었습니다. 추후 입금 확인 후 배송 진행 예정입니다.`);
-    location.reload();
+  // 입금자명 생성: 판매자명 앞2글자 + 구매자명 앞2글자 + 상품명 앞5글자 + 임의난수 1글자
+  const s = seller.slice(0, 2);
+  const b = user.username.slice(0, 2);
+  const t = title.slice(0, 5);
+  const randChar = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+  const depositName = `${s}${b}${t}${randChar}`;
+
+  const { error } = await supabaseClient.from('orders').insert([{
+    buyer_name: user.username,
+    seller_name: seller,
+    item_title: title,
+    price: price,
+    deposit_name: depositName,
+    status: '입금확인중'
+  }]);
+
+  if (error) return alert('주문 요청 중 오류가 발생했습니다.');
+
+  alert(`[관리진 계좌 안내]\n카카오뱅크 3333-01-9999999 (예금주: 버스벨샵)\n\n입금자명: ${depositName}\n\n확인되었습니다. 추후 입금 확인 후 배송 진행 예정입니다.`);
+  location.reload();
+}
+
+async function editMarketPost(id, oldTitle, oldPrice, oldContent) {
+  const newTitle = prompt('수정할 제목을 입력하세요:', oldTitle);
+  if (newTitle === null) return;
+  const newPrice = prompt('수정할 가격을 입력하세요:', oldPrice);
+  if (newPrice === null) return;
+  const newContent = prompt('수정할 내용을 입력하세요:', oldContent);
+  if (newContent === null) return;
+
+  const { error } = await supabaseClient.from('market_posts').update({
+    title: newTitle,
+    price: newPrice,
+    content: newContent
+  }).eq('id', id);
+
+  if (error) return alert('수정 중 오류가 발생했습니다.');
+  alert('상품 정보가 수정되었습니다.');
+  renderMarketPosts();
+}
+
+async function deleteMarketPost(id) {
+  if (!confirm('정말 삭제하시겠습니까?')) return;
+  await supabaseClient.from('market_posts').delete().eq('id', id);
+  alert('삭제되었습니다.');
+  renderMarketPosts();
 }
