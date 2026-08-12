@@ -43,35 +43,30 @@
     </div>
   </header>
 
-  <div class="container">
+  <div class="container" style="max-width: 600px;">
     <h2>마이페이지</h2>
-    
-    <div class="card" style="margin-top: 20px;">
-      <h3>회원 정보</h3>
-      <p id="mypage-user-info" style="margin-top: 10px;">로그인 정보를 불러오는 중...</p>
+    <p style="margin-bottom: 20px;">회원 정보를 확인하고 관리하세요.</p>
+
+    <div class="card" style="margin-bottom: 20px;">
+      <h3>기본 회원 정보</h3>
+      <p style="margin-top: 10px;"><strong>닉네임(ID):</strong> <span id="my-nickname">로딩중...</span></p>
+      <p style="margin-top: 5px;"><strong>권한:</strong> <span id="my-role">로딩중...</span></p>
     </div>
 
-    <div class="card">
-      <h2>내 주문 내역</h2>
-      <div style="margin-top: 15px;">
-        <p>상품: 현대 짧은 도어스위치 | 가격: 5,000원</p>
-        <p>상태: 처리 불가</p>
-      </div>
+    <div class="card" style="margin-bottom: 20px;">
+      <h3>계좌번호 관리</h3>
+      <form id="account-form" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+        <input type="text" id="account-input" placeholder="계좌번호를 입력하세요 (예: 카카오뱅크 123-456-...)" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
+        <button type="submit" class="btn btn-primary" style="align-self: flex-start;">계좌번호 저장</button>
+      </form>
+    </div>
+
+    <!-- 관리자 전용 이동 버튼 (기본 숨김) -->
+    <div id="admin-link-container" style="display: none;">
+      <a href="admin.html" class="btn btn-primary" style="background-color: #d9534f; width: 100%; text-align: center; display: block; padding: 12px;">관리자 페이지로 이동</a>
     </div>
   </div>
 
   <script src="app.js"></script>
-  <script>
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (currentUser) {
-      document.getElementById('mypage-user-info').innerHTML = `
-        아이디(이름): <strong>${currentUser.username}</strong><br>
-        계좌번호: <strong>${currentUser.accountNum || '미등록'}</strong><br>
-        회원 등급: <strong>${currentUser.role === 'admin' ? '관리자' : '일반 회원'}</strong>
-      `;
-    } else {
-      document.getElementById('mypage-user-info').innerHTML = '로그인이 필요합니다. <a href="login.html">로그인하기</a>';
-    }
-  </script>
 </body>
 </html>
