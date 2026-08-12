@@ -2,8 +2,8 @@
 const SUPABASE_URL = 'https://ipgzhipiebcnkfqzufgm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwZ3poaXBpZWJjbmtmcXp1ZmdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5ODMxMTgsImV4cCI6MjEwMTU1OTExOH0.byzqUDMvoAIbybPYbyKsR6KoPnpLPs0jsdawAnW0Eww';
 
-// Supabase 클라이언트 초기화
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// 전역 충돌 방지를 위해 변수명을 supabaseClient로 변경
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
@@ -69,10 +69,10 @@ function initAuthHeader() {
   });
 }
 
-// Supabase 연동 로그인 및 회원가입 처리 (경고 문구 반영)
+// Supabase 연동 로그인 및 회원가입 처리
 async function handleAuth(nickname, password, isLoginMode) {
   if (isLoginMode) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('users')
       .select('*')
       .eq('nickname', nickname)
@@ -94,7 +94,7 @@ async function handleAuth(nickname, password, isLoginMode) {
     alert(`${currentUser.username}님 환영합니다!`);
     window.location.href = 'index.html';
   } else {
-    const { error } = await supabase
+    const { error } = await supabaseClient
       .from('users')
       .insert([{ nickname, password, role: 'user' }]);
 
@@ -108,7 +108,7 @@ async function handleAuth(nickname, password, isLoginMode) {
   }
 }
 
-// 장터 시스템 (Supabase + 검색 + 글 목록 표시)
+// 장터 시스템
 function initMarketSystem() {
   const marketListContainer = document.getElementById('market-list');
   if (!marketListContainer) return;
@@ -151,7 +151,7 @@ function initMarketSystem() {
       const price = document.getElementById('post-price').value;
       const content = document.getElementById('post-content').value;
 
-      const { error } = await supabase.from('market_posts').insert([
+      const { error } = await supabaseClient.from('market_posts').insert([
         { title, price, content, author_name: currentUser.username }
       ]);
 
@@ -172,7 +172,7 @@ async function renderMarketPosts(searchTerm = '') {
   const container = document.getElementById('market-list');
   if (!container) return;
 
-  let query = supabase.from('market_posts').select('*').order('created_at', { ascending: false });
+  let query = supabaseClient.from('market_posts').select('*').order('created_at', { ascending: false });
   if (searchTerm) {
     query = query.ilike('title', `%${searchTerm}%`);
   }
@@ -201,7 +201,7 @@ async function renderMarketPosts(searchTerm = '') {
   });
 }
 
-// 커뮤니티 시스템 (Supabase + 카테고리 + 검색 + 글 목록 표시)
+// 커뮤니티 시스템
 function initCommunitySystem() {
   const communityListContainer = document.getElementById('community-list');
   if (!communityListContainer) return;
@@ -262,7 +262,7 @@ function initCommunitySystem() {
       const title = document.getElementById('community-post-title').value;
       const content = document.getElementById('community-post-content').value;
 
-      const { error } = await supabase.from('community_posts').insert([
+      const { error } = await supabaseClient.from('community_posts').insert([
         { category, title, content, author_name: currentUser.username }
       ]);
 
@@ -283,7 +283,7 @@ async function renderCommunityPosts(category, searchTerm = '') {
   const container = document.getElementById('community-list');
   if (!container) return;
 
-  let query = supabase.from('community_posts').select('*').eq('category', category).order('created_at', { ascending: false });
+  let query = supabaseClient.from('community_posts').select('*').eq('category', category).order('created_at', { ascending: false });
   if (searchTerm) {
     query = query.ilike('title', `%${searchTerm}%`);
   }
