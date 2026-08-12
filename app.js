@@ -1,4 +1,4 @@
-// supabase api 가져오기 -- 서울교덕 제작[cite: 2]
+// supabase api 가져오기 -- 서울교덕 제작
 const SUPABASE_URL = 'https://ipgzhipiebcnkfqzufgm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwZ3poaXBpZWJjbmtmcXp1ZmdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5ODMxMTgsImV4cCI6MjEwMTU1OTExOH0.byzqUDMvoAIbybPYbyKsR6KoPnpLPs0jsdawAnW0Eww';
 
@@ -66,7 +66,6 @@ function initAuthHeader() {
     }
   });
 
-  // 상단 배너의 로그인 버튼을 로그아웃 버튼으로 동적 변환
   authActionBtns.forEach(btn => {
     if (btn.textContent.includes('로그인')) {
       if (currentUser) {
@@ -123,7 +122,6 @@ async function handleAuth(nickname, password, isLoginMode) {
     alert(`${currentUser.username}님 환영합니다!`);
     window.location.href = 'index.html';
   } else {
-    // 회원가입 시 기본 권한은 '일반회원'
     const { error } = await supabaseClient
       .from('users')
       .insert([{ nickname, password, role: '일반회원' }]);
@@ -138,6 +136,16 @@ async function handleAuth(nickname, password, isLoginMode) {
   }
 }
 
+// 입금자명 생성 함수
+function generateDepositName(seller, buyer, item) {
+  const s = (seller || '판매').slice(0, 2);
+  const b = (buyer || '구매').slice(0, 2);
+  const i = (item || '상품').slice(0, 5);
+  const r = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+  return `${s}${b}${i}${r}`;
+}
+
+// 마이페이지 시스템
 async function initMypageSystem() {
   const myNicknameEl = document.getElementById('my-nickname');
   if (!myNicknameEl) return;
@@ -151,7 +159,6 @@ async function initMypageSystem() {
   myNicknameEl.textContent = userData.nickname;
   document.getElementById('my-role').textContent = userData.role || '일반회원';
   
-  // 기존 저장된 정보를 입력란에 미리 채워넣기 (Prefill)
   document.getElementById('my-bank-name').value = userData.bank_name || '';
   document.getElementById('my-account-holder').value = userData.account_holder || '';
   document.getElementById('my-account-num').value = userData.account_number || '';
@@ -162,7 +169,6 @@ async function initMypageSystem() {
     if (adminLink) adminLink.style.display = 'block';
   }
 
-  // 개인정보 및 배송지/계좌/예금주 수정 저장
   const form = document.getElementById('profile-update-form');
   if (form) {
     form.addEventListener('submit', async (e) => {
@@ -184,7 +190,7 @@ async function initMypageSystem() {
     });
   }
 
- // 내 주문 내역 로드
+  // 내 주문 내역 로드
   const orderContainer = document.getElementById('my-orders-list');
   if (orderContainer) {
     const { data: orders } = await supabaseClient.from('orders').select('*').eq('buyer_name', user.username).order('created_at', { ascending: false });
@@ -193,7 +199,6 @@ async function initMypageSystem() {
       orderContainer.innerHTML = '<p style="margin-top:10px;">주문 내역이 없습니다.</p>';
     } else {
       orders.forEach(o => {
-        // 판매자가 입력한 택배사와 운송장 번호 표시
         const trackingHtml = o.tracking_number 
           ? `<p><strong>배송정보:</strong> <span style="color:green; font-weight:bold;">${escapeHtml(o.courier_company)} / ${escapeHtml(o.tracking_number)}</span></p>` 
           : `<p><strong>배송정보:</strong> <span style="color:gray;">배송 준비 중 (운송장 미등록)</span></p>`;
@@ -212,10 +217,11 @@ async function initMypageSystem() {
   renderMySales(user.username);
 }
 
-// 관리자 대시보드 시스템 (권한 체크 및 전체 정보 관리)
+// 관리자 대시보드 시스템
 async function initAdminSystem() {
-  const tableBody = document.getElementById('admin-user-tbody');
-  if (!tableBody) return;
+  const adminUsersTbody = document.getElementById('admin-users-tbody');
+  const adminOrdersTbody = document.getElementById('admin-orders-tbody');
+  if (!adminUsersTbody && !adminOrdersTbody) return;
 
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
   if (!currentUser) {
@@ -224,7 +230,6 @@ async function initAdminSystem() {
     return;
   }
 
-  // DB에서 현재 사용자 권한 재확인 (비로그인 및 관리자 권한 없는 사용자 접근 원천 차단)
   const { data: userData, error: userError } = await supabaseClient
     .from('users')
     .select('role')
@@ -251,32 +256,38 @@ async function renderAdminUsers() {
     return;
   }
 
-  console.log("✅ 데이터 배열 길이:", data.length);
-  
-  if (data.length === 0) {
-    console.log("⚠️ 에러는 없는데 데이터가 비어있음. (RLS 정책 문제일 확률 99%)");
-  }
-
-  const { data: users, error } = await supabaseClient.from('users').select('*');
-  
-  if (error) {
-    console.error("Supabase 데이터 호출 에러:", error);
-    return;
-  }
-  
-  console.log("데이터 확인:", users); // <-- 이 줄 추가 (데이터가 몇 개 들어오는지 확인)
-
   tbody.innerHTML = '';
-  
   if (!users || users.length === 0) {
-    console.log("데이터가 없어서 빈 화면을 출력합니다."); // <-- 이 줄 추가
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">데이터 없음</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">등록된 사용자가 없습니다.</td></tr>';
     return;
   }
 
-  // ... 이하 코드 동일 ...
+  users.forEach(u => {
+    const tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid var(--input-border)';
+    const accountHolder = u.account_holder || '-';
+
+    tr.innerHTML = `
+      <td style="padding:10px;">${escapeHtml(u.nickname)}</td>
+      <td style="padding:10px;">${escapeHtml(u.role || '일반회원')}</td>
+      <td style="padding:10px;">${escapeHtml(u.bank_name || '-')}</td>
+      <td style="padding:10px;">${escapeHtml(u.account_number || '-')}</td>
+      <td style="padding:10px; font-weight:bold; color:#d9534f;">${escapeHtml(accountHolder)}</td>
+      <td style="padding:10px;">
+        <button onclick="deleteUser('${u.id}')" class="btn btn-outline" style="color:red; border-color:red; padding:4px 8px; font-size:12px;">삭제</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
 
+async function deleteUser(userId) {
+  if (!confirm('정말 이 사용자를 삭제하시겠습니까?')) return;
+  const { error } = await supabaseClient.from('users').delete().eq('id', userId);
+  if (error) return alert('사용자 삭제 실패');
+  alert('삭제되었습니다.');
+  renderAdminUsers();
+}
 
 // 장터 시스템
 function initMarketSystem() {
@@ -340,7 +351,6 @@ function initMarketSystem() {
   }
 }
 
-// --- 1. 장터 글 목록 렌더링 (구매, 수정, 삭제 버튼 포함) ---
 async function renderMarketPosts(searchTerm = '') {
   const container = document.getElementById('market-list');
   if (!container) return;
@@ -362,10 +372,8 @@ async function renderMarketPosts(searchTerm = '') {
     card.className = 'card';
     card.style.marginBottom = '15px';
 
-    // 구매하기 버튼 (누구나 구매 가능)
     let actionBtns = `<button onclick="buyMarketItem('${escapeHtml(post.author_name)}', '${escapeHtml(post.title)}', '${escapeHtml(post.price)}')" class="btn btn-primary" style="margin-top:10px; margin-right:5px;">구매하기</button>`;
 
-    // 작성자 본인 또는 관리자일 경우 수정/삭제 버튼 추가
     if (currentUser && (currentUser.username === post.author_name || currentUser.role === '관리자')) {
       actionBtns += `
         <button onclick="editMarketPost('${post.id}', '${escapeHtml(post.title)}', '${escapeHtml(post.price)}', '${escapeHtml(post.content)}')" class="btn btn-outline" style="margin-top:10px; margin-right:5px;">수정</button>
@@ -382,6 +390,7 @@ async function renderMarketPosts(searchTerm = '') {
     container.appendChild(card);
   });
 }
+
 // 커뮤니티 시스템
 function initCommunitySystem() {
   const communityListContainer = document.getElementById('community-list');
@@ -462,7 +471,6 @@ function initCommunitySystem() {
   }
 }
 
-// --- 4. 커뮤니티 글 목록 렌더링 (수정, 삭제 포함) ---
 async function renderCommunityPosts(category) {
   const container = document.getElementById('community-list');
   if (!container) return;
@@ -521,6 +529,7 @@ async function deleteCommunityPost(id) {
   alert('삭제되었습니다.');
   location.reload();
 }
+
 function escapeHtml(str) {
   if (!str) return '';
   return String(str)
@@ -531,68 +540,7 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
-// --- 주문 시스템 (장터 구매 및 관리자용) ---
-
-// 입금자명 생성 함수
-function generateDepositName(seller, buyer, item) {
-    const s = (seller || '판매').slice(0, 2);
-    const b = (buyer || '구매').slice(0, 2);
-    const i = (item || '상품').slice(0, 5);
-    const r = String.fromCharCode(65 + Math.floor(Math.random() * 26)); // A~Z 난수 1개
-    return `${s}${b}${i}${r}`;
-}
-
-// 상품 구매 로직 (장터 게시글 내 "구매하기" 버튼 클릭 시)
-async function purchaseItem(seller, title, price) {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (!currentUser) return alert('로그인 후 구매 가능합니다.');
-    
-    const depositName = generateDepositName(seller, currentUser.username, title);
-    
-    const { error } = await supabaseClient.from('orders').insert([{
-        buyer_name: currentUser.username,
-        seller_name: seller,
-        item_title: title,
-        price: price,
-        deposit_name: depositName,
-        status: '입금확인중'
-    }]);
-
-    if (error) return alert('주문 실패');
-    
-    alert(`[에스크로 안내]\n\n구매가 요청되었습니다.\n관리진 계좌: (예시) 카카오뱅크 3333-01-1234567\n\n입금자명: ${depositName}\n\n입금 완료 버튼을 누르시면 확인 후 배송이 진행됩니다.`);
-}
-
-// 주문 상태 업데이트 (관리자용)
-async function updateOrderStatus(orderId, newStatus) {
-    let reason = null;
-    if (newStatus === '처리불가' || newStatus === '보류') {
-        reason = prompt('사유를 입력하세요:');
-        if (!reason) return alert('사유는 필수입니다.');
-    }
-
-    const { error } = await supabaseClient
-        .from('orders')
-        .update({ status: newStatus, rejection_reason: reason })
-        .eq('id', orderId);
-
-    if (error) alert('수정 실패');
-    else {
-        alert('상태가 업데이트되었습니다.');
-        renderAdminOrders(); // 관리자 페이지 새로고침
-    }
-}
-
-// --- 입금자명 생성 및 구매 로직 ---
-function generateDepositName(seller, buyer, item) {
-    const s = (seller || '판매').slice(0, 2);
-    const b = (buyer || '구매').slice(0, 2);
-    const i = (item || '상품').slice(0, 5);
-    const r = String.fromCharCode(65 + Math.floor(Math.random() * 26));
-    return `${s}${b}${i}${r}`;
-}
-
-// --- 2. 장터 상품 구매 기능 ---
+// 장터 상품 구매 기능 (배송지 주소 포함)
 async function buyMarketItem(seller, title, price) {
   const user = JSON.parse(localStorage.getItem('currentUser'));
   if (!user) {
@@ -600,7 +548,6 @@ async function buyMarketItem(seller, title, price) {
     return window.location.href = 'login.html';
   }
 
-  // 구매자의 등록된 배송지 가져오기
   const { data: userData } = await supabaseClient.from('users').select('shipping_address').eq('nickname', user.username).single();
   const shippingAddress = userData ? userData.shipping_address : '';
 
@@ -609,12 +556,7 @@ async function buyMarketItem(seller, title, price) {
     return window.location.href = 'mypage.html';
   }
 
-  // 입금자명 생성: 판매자명 앞2글자 + 구매자명 앞2글자 + 상품명 앞5글자 + 임의난수 1글자
-  const s = seller.slice(0, 2);
-  const b = user.username.slice(0, 2);
-  const t = title.slice(0, 5);
-  const randChar = String.fromCharCode(65 + Math.floor(Math.random() * 26));
-  const depositName = `${s}${b}${t}${randChar}`;
+  const depositName = generateDepositName(seller, user.username, title);
 
   const { error } = await supabaseClient.from('orders').insert([{
     buyer_name: user.username,
@@ -631,6 +573,7 @@ async function buyMarketItem(seller, title, price) {
   alert(`[관리진 계좌 안내]\n카카오뱅크 3333-01-9999999 (예금주: 버스벨샵)\n\n입금자명: ${depositName}\n\n확인되었습니다. 추후 입금 확인 후 배송 진행 예정입니다.`);
   location.reload();
 }
+
 async function editMarketPost(id, oldTitle, oldPrice, oldContent) {
   const newTitle = prompt('수정할 제목을 입력하세요:', oldTitle);
   if (newTitle === null) return;
@@ -687,7 +630,6 @@ async function renderAdminOrders() {
       ? `<br><small style="color:#d9534f; font-weight:bold;">정산계좌: ${escapeHtml(sellerInfo.bank_name)} ${escapeHtml(sellerInfo.account_number)} (${escapeHtml(sellerInfo.account_holder)})</small>` 
       : `<br><small style="color:red;">정산계좌 미등록</small>`;
 
-    // 관리자 페이지에서도 택배사와 운송장 번호가 명확히 보이도록 설정
     const trackingDisplay = o.tracking_number 
       ? `<br><small style="color:green; font-weight:bold;">[${escapeHtml(o.courier_company)}] ${escapeHtml(o.tracking_number)}</small>` 
       : `<br><small style="color:gray;">[운송장 미등록]</small>`;
@@ -789,3 +731,5 @@ async function updateTracking(orderId) {
   alert('운송장 번호가 등록되었습니다.');
   location.reload();
 }
+
+
