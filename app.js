@@ -242,12 +242,22 @@ async function initAdminSystem() {
 }
 
 async function renderAdminUsers() {
-  console.log("renderAdminUsers 함수 실행 시작!"); // <-- 이 줄 추가
+  console.log("함수 시작!");
   const tbody = document.getElementById('admin-users-tbody');
   
-  if (!tbody) {
-    console.error("오류: admin-users-tbody를 찾을 수 없습니다.");
+  const { data, error } = await supabaseClient.from('users').select('*');
+
+  if (error) {
+    console.error("❌ 상세 에러 메시지:", error.message);
+    console.error("❌ 에러 코드:", error.code);
+    console.error("❌ 전체 에러 객체:", error);
     return;
+  }
+
+  console.log("✅ 데이터 배열 길이:", data.length);
+  
+  if (data.length === 0) {
+    console.log("⚠️ 에러는 없는데 데이터가 비어있음. (RLS 정책 문제일 확률 99%)");
   }
 
   const { data: users, error } = await supabaseClient.from('users').select('*');
