@@ -203,6 +203,7 @@ async function initMypageSystem() {
       });
     }
   }
+  renderMySales(user.username);
 }
 
 // 관리자 대시보드 시스템 (권한 체크 및 전체 정보 관리)
@@ -750,4 +751,52 @@ async function deleteOrder(id) {
   const { error } = await supabaseClient.from('orders').delete().eq('id', id);
   if (error) return alert('삭제 실패');
   renderAdminOrders();
+}
+
+// 판매 내역 불러오기 (판매자용)
+async function renderMySales(username) {
+  const salesContainer = document.getElementById('my-sales-list');
+  if (!salesContainer) return;
+
+  const { data: sales } = await supabaseClient.from('orders').select('*').eq('seller_name', username).order('created_at', { ascending: false });
+  salesContainer.innerHTML = '';
+  if (!sales || sales.length === 0) {
+    salesContainer.innerHTML = '<p style="margin-top:10px;">판매 중인 내역이 없습니다.</p>';
+    return;
+  }
+
+  sales.forEach(s => {
+    salesContainer.innerHTML += `
+      <div style="border:1px solid var(--input-border); padding:10px; margin-top:10px; border-radius:4px;">
+        <p><strong>상품명:</strong> ${escapeHtml(s.item_title)} (${escapeHtml(s.price)}원)</p>
+        <p><strong>구매자:</strong> ${escapeHtml(s.buyer_name)}</p>
+        <p><strong>배송지 주소:</strong> <span style="color:#d9534f; font-weight:bold;">${escapeHtml(s.shipping_address || '주소 정보 없음')}</span></p>
+        <p><strong>상태:</strong> <span style="color:blue;">${escapeHtml(s.status)}</span></p>
+        <div style="margin-top:10px; display:flex; gap:5px; flex-wrap:wrap; align-items:center;">
+          <input type="text" id="courier-${s.id}" placeholder="택배사 (예: 우체국)" value="${escapeHtml(s.courier_company || '')}" style="padding:6px; font-size:12px; width:110px; border:1px solid var(--input-border); background:var(--input-bg); color:var(--text-color); border-radius:4px;">
+          <input type="text" id="tracking-${s.id}" placeholder="운송장 번호" value="${escapeHtml(s.tracking_number || '')}" style="padding:6px; font-size:12px; width:140px; border:1px solid var(--input-border); background:var(--input-bg); color:var(--text-color); border-radius:4px;">
+          <button onclick="updateTracking('${s.id}')" class="btn btn-primary" style="padding:6px 10px; font-size:12px;">운송장 등록</button>
+        </div>
+      </div>
+    `;
+  });
+}
+
+// 운송장 번호 저장 함수
+async function updateTracking(orderId) {
+  const courier = document.getElementById(`courier-${orderId}`).value;
+  const tracking = document.getElementById(`tracking-${orderId}`).value;
+
+  if (!courier || !tracking) {
+    return alert('택배사와 운송장 번호를 모두 입력해주세요.');
+  }
+
+  const { error } = await supabaseClient.from('orders').update({
+    courier_company: courier,
+    tracking_number: tracking
+  }).eq('id', orderId);
+
+  if (error) return alert('등록 실패');
+  alert('운송장 번호가 등록되었습니다.');
+  location.reload();
 }
