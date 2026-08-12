@@ -138,61 +138,70 @@ async function handleAuth(nickname, password, isLoginMode) {
   }
 }
 
-// 마이페이지 시스템 (계좌번호 등록/수정 및 관리자 버튼 표시)
 async function initMypageSystem() {
   const myNicknameEl = document.getElementById('my-nickname');
   if (!myNicknameEl) return;
 
-  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-  if (!currentUser) {
-    alert('로그인이 필요합니다.');
-    window.location.href = 'login.html';
-    return;
-  }
+  const user = JSON.parse(localStorage.getItem('currentUser'));
+  if (!user) return (window.location.href = 'login.html');
 
-  // 최신 사용자 정보 DB에서 조회
-  const { data: userData, error } = await supabaseClient
-    .from('users')
-    .select('*')
-    .eq('nickname', currentUser.username)
-    .single();
-
-  if (error || !userData) {
-    alert('사용자 정보를 불러올 수 없습니다.');
-    return;
-  }
+  const { data: userData } = await supabaseClient.from('users').select('*').eq('nickname', user.username).single();
+  if (!userData) return;
 
   myNicknameEl.textContent = userData.nickname;
   document.getElementById('my-role').textContent = userData.role || '일반회원';
-  document.getElementById('account-input').value = userData.account_number || '';
+  
+  // 기존 저장된 정보를 입력란에 미리 채워넣기 (Prefill)
+  document.getElementById('my-bank-name').value = userData.bank_name || '';
+  document.getElementById('my-account-holder').value = userData.account_holder || '';
+  document.getElementById('my-account-num').value = userData.account_number || '';
+  document.getElementById('my-address').value = userData.shipping_address || '';
 
-  // 관리자일 경우 관리자 페이지 이동 버튼 표시 ('관리자' 권한 확인)
   if (userData.role === '관리자') {
-    const adminContainer = document.getElementById('admin-link-container');
-    if (adminContainer) adminContainer.style.display = 'block';
+    const adminLink = document.getElementById('admin-link-container');
+    if (adminLink) adminLink.style.display = 'block';
   }
 
-  // 계좌번호 수정/등록 폼 제출
-  const accountForm = document.getElementById('account-form');
-  if (accountForm) {
-    accountForm.addEventListener('submit', async (e) => {
+  // 개인정보 및 배송지/계좌/예금주 수정 저장
+  const form = document.getElementById('profile-update-form');
+  if (form) {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const newAccount = document.getElementById('account-input').value.trim();
+      const bank_name = document.getElementById('my-bank-name').value;
+      const account_holder = document.getElementById('my-account-holder').value;
+      const account_number = document.getElementById('my-account-num').value;
+      const shipping_address = document.getElementById('my-address').value;
 
-      const { error: updateError } = await supabaseClient
-        .from('users')
-        .update({ account_number: newAccount })
-        .eq('nickname', currentUser.username);
-
-      if (updateError) {
-        alert('계좌번호 수정 중 오류가 발생했습니다.');
-        return;
-      }
-
-      alert('계좌번호가 성공적으로 등록/수정되었습니다.');
-      currentUser.accountNum = newAccount;
-      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+      const { error } = await supabaseClient.from('users').update({ 
+        bank_name, 
+        account_holder, 
+        account_number, 
+        shipping_address 
+      }).eq('nickname', user.username);
+      
+      if (error) return alert('수정 실패');
+      alert('정보가 성공적으로 저장되었습니다.');
     });
+  }
+
+  // 내 주문 내역 로드
+  const orderContainer = document.getElementById('my-orders-list');
+  if (orderContainer) {
+    const { data: orders } = await supabaseClient.from('orders').select('*').eq('buyer_name', user.username).order('created_at', { ascending: false });
+    orderContainer.innerHTML = '';
+    if (!orders || orders.length === 0) {
+      orderContainer.innerHTML = '<p style="margin-top:10px;">주문 내역이 없습니다.</p>';
+    } else {
+      orders.forEach(o => {
+        orderContainer.innerHTML += `
+          <div style="border:1px solid var(--input-border); padding:10px; margin-top:10px; border-radius:4px;">
+            <p><strong>상품:</strong> ${escapeHtml(o.item_title)} (${escapeHtml(o.price)}원)</p>
+            <p><strong>입금자명:</strong> ${escapeHtml(o.deposit_name)}</p>
+            <p><strong>상태:</strong> <span style="color:blue;">${escapeHtml(o.status)}</span> ${o.rejection_reason ? `(사유: ${escapeHtml(o.rejection_reason)})` : ''}</p>
+          </div>
+        `;
+      });
+    }
   }
 }
 
