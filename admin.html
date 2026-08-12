@@ -51,23 +51,18 @@
     <div class="card" style="overflow-x: auto; margin-bottom: 20px;">
       <h3>사용자 관리</h3>
       <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 800px;">
-        <thead>
-          <tr style="border-bottom: 2px solid var(--input-border);">
-            <th style="padding: 10px;">UUID</th>
-            <th style="padding: 10px;">닉네임(ID)</th>
-            <th style="padding: 10px;">비밀번호</th>
-            <th style="padding: 10px;">은행명</th>
-            <th style="padding: 10px;">계좌번호</th>
-            <th style="padding: 10px;">배송지</th>
-            <th style="padding: 10px;">권한 설정</th>
-            <th style="padding: 10px;">관리</th>
-          </tr>
-        </thead>
-        <tbody id="admin-user-tbody">
-          <tr>
-            <td colspan="8" style="padding: 20px; text-align: center;">사용자 데이터를 불러오는 중...</td>
-          </tr>
-        </tbody>
+        <!-- admin.html의 사용자 관리 테이블 헤더 부분 예시 -->
+<thead>
+  <tr>
+    <th>닉네임</th>
+    <th>역할</th>
+    <th>은행명</th>
+    <th>계좌번호</th>
+    <th>예금주</th> <!-- 이 줄을 추가하세요 -->
+    <th>관리</th>
+  </tr>
+</thead>
+<tbody id="admin-users-tbody"></tbody>
       </table>
     </div>
 
