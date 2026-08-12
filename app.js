@@ -231,6 +231,7 @@ async function initAdminSystem() {
   }
 
   renderAdminUsers();
+  renderAdminOrders();
 }
 
 async function renderAdminUsers() {
