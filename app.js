@@ -1,4 +1,4 @@
-// supabase api 가져오기 -- 서울교덕 제작
+// supabase api 가져오기 -- 서울교덕 제작[cite: 2]
 const SUPABASE_URL = 'https://ipgzhipiebcnkfqzufgm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwZ3poaXBpZWJjbmtmcXp1ZmdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5ODMxMTgsImV4cCI6MjEwMTU1OTExOH0.byzqUDMvoAIbybPYbyKsR6KoPnpLPs0jsdawAnW0Eww';
 
@@ -69,7 +69,7 @@ function initAuthHeader() {
   });
 }
 
-// Supabase 연동 로그인 및 회원가입 처리
+// Supabase 연동 로그인 및 회원가입 처리 (경고 문구 반영)
 async function handleAuth(nickname, password, isLoginMode) {
   if (isLoginMode) {
     const { data, error } = await supabase
@@ -80,7 +80,7 @@ async function handleAuth(nickname, password, isLoginMode) {
       .single();
 
     if (error || !data) {
-      alert('아이디(닉네임) 또는 비밀번호가 일치하지 않습니다.');
+      alert('아이디나 비밀번호가 잘못되었습니다. 다시 확인하세요.');
       return;
     }
 
@@ -99,7 +99,7 @@ async function handleAuth(nickname, password, isLoginMode) {
       .insert([{ nickname, password, role: 'user' }]);
 
     if (error) {
-      alert('회원가입 실패: 이미 존재하는 닉네임이거나 입력 오류입니다.');
+      alert('이미 사용중인 아이디입니다. 다른 아이디로 설정해주세요.');
       return;
     }
 
