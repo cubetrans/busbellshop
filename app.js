@@ -242,15 +242,12 @@ async function initAdminSystem() {
 }
 
 async function renderAdminUsers() {
-  console.log("함수 시작!");
   const tbody = document.getElementById('admin-users-tbody');
-  
-  const { data, error } = await supabaseClient.from('users').select('*');
+  if (!tbody) return;
 
-  if (error) {
-    console.error("❌ 상세 에러 메시지:", error.message);
-    console.error("❌ 에러 코드:", error.code);
-    console.error("❌ 전체 에러 객체:", error);
+  const { data: users, error: userError } = await supabaseClient.from('users').select('*');
+  if (userError) {
+    console.error('사용자 불러오기 에러:', userError);
     return;
   }
 
