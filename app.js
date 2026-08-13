@@ -55,42 +55,6 @@ function initMobileMenu() {
 
 // 로그인 상태 및 환영 메시지 관리 + 로그인/로그아웃 버튼 동적 변경
 // 로그인 상태 및 환영 메시지 관리 + 로그인/로그아웃 버튼 동적 변경
-function initAuthHeader() {
-  const currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
-  const userGreetingEls = document.querySelectorAll('.user-greeting, .mobile-user-greeting');
-
-  // 1. 환영 메시지 업데이트
-  userGreetingEls.forEach(el => {
-    if (currentUser) {
-      el.textContent = `${currentUser.username}님 환영합니다`;
-    } else {
-      el.textContent = '로그인이 필요합니다';
-    }
-  });
-
-  // 2. PC 및 모바일 인증 버튼 동적 제어 (로그인 여부에 따라 강제 변경)
-  const authActionBtns = document.querySelectorAll('.auth-action, .mobile-auth-action');
-
-  authActionBtns.forEach(btn => {
-    if (currentUser) {
-      // [로그인 상태] -> 무조건 '로그아웃' 버튼으로 변경
-      btn.textContent = '로그아웃';
-      btn.href = '#';
-      btn.onclick = (e) => {
-        e.preventDefault();
-        localStorage.removeItem('currentUser');
-        alert('로그아웃 되었습니다.');
-        window.location.href = 'index.html';
-      };
-    } else {
-      // [비로그인 상태] -> 무조건 '로그인' 버튼으로 유지
-      btn.textContent = '로그인';
-      btn.href = 'login.html';
-      btn.onclick = null;
-    }
-  });
-}
-
 // Supabase 연동 로그인 및 회원가입 처리
 async function handleAuth(nickname, password, isLoginMode) {
   if (!supabaseClient) {
