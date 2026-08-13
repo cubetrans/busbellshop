@@ -47,6 +47,16 @@
     <h2>관리자 대시보드</h2>
     <p style="margin-bottom: 20px;">모든 사용자의 데이터를 실시간으로 관리할 수 있습니다.</p>
 
+    <!-- 긴급공지 관리 카드 -->
+    <div class="card" style="margin-bottom: 20px;">
+      <h3>긴급공지 관리</h3>
+      <p style="margin-bottom: 10px; font-size: 14px; color: gray;">내용을 비우고 저장하면 긴급공지 배너가 사라집니다.</p>
+      <form id="emergency-form">
+        <textarea id="emergency-input" rows="3" placeholder="긴급공지 내용을 입력하세요 (비워두면 숨김 처리)" style="width: 100%; padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px; margin-bottom: 10px;"></textarea>
+        <button type="submit" class="btn btn-primary">긴급공지 저장/수정</button>
+      </form>
+    </div>
+    
     <!-- 사용자 관리 카드 -->
     <div class="card" style="overflow-x: auto; margin-bottom: 20px;">
       <h3>사용자 관리</h3>
