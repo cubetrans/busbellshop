@@ -554,25 +554,47 @@ async function buyMarketItem(seller, title, price) {
   location.reload();
 }
 
-async function editMarketPost(id, oldTitle, oldPrice, oldContent) {
-  const newTitle = prompt('수정할 제목을 입력하세요:', oldTitle);
+async function editMarketPost(id) {
+  // 1. 데이터베이스에서 해당 글의 기존 정보를 직접 가져옴
+  const { data: post, error: fetchError } = await supabaseClient
+    .from('market_posts')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (fetchError || !post) {
+    alert('게시글 정보를 불러오지 못했습니다.');
+    return;
+  }
+
+  // 2. 차례대로 제목, 가격, 내용 수정 창 띄우기 (기존 값 자동 세팅)
+  const newTitle = prompt('수정할 제목을 입력하세요:', post.title);
   if (newTitle === null) return;
-  
-  const newPrice = prompt('수정할 가격을 입력하세요:', oldPrice);
+
+  const newPrice = prompt('수정할 가격을 입력하세요:', post.price);
   if (newPrice === null) return;
-  
-  const newContent = prompt('수정할 내용을 입력하세요:', oldContent);
+
+  const newContent = prompt('수정할 내용을 입력하세요:', post.content);
   if (newContent === null) return;
 
-  const { error } = await supabaseClient.from('market_posts').update({
-    title: newTitle,
-    price: newPrice,
-    content: newContent
-  }).eq('id', id);
+  // 3. Supabase에 세 가지 모두 업데이트 반영
+  const { error: updateError } = await supabaseClient
+    .from('market_posts')
+    .update({
+      title: newTitle,
+      price: newPrice,
+      content: newContent
+    })
+    .eq('id', id);
 
-  if (error) return alert('상품 수정 중 오류가 발생했습니다.');
-  alert('상품 정보(제목, 가격, 내용)가 성공적으로 수정되었습니다.');
-  renderMarketPosts();
+  if (updateError) {
+    alert('상품 수정 중 오류가 발생했습니다.');
+    console.error(updateError);
+    return;
+  }
+
+  alert('상품의 제목, 가격, 내용이 모두 성공적으로 수정되었습니다!');
+  renderMarketPosts(); // 목록 새로고침
 }
 
 async function deleteMarketPost(id) {
