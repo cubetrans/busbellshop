@@ -784,3 +784,50 @@ async function initEmergencyBanner() {
     });
   }
 }
+
+// 로그인 상태 및 헤더/모바일 메뉴 관리 함수
+function initAuthHeader() {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+  const userGreetingEls = document.querySelectorAll('.user-greeting, .mobile-user-greeting');
+
+  // 1. 환영 메시지 업데이트
+  userGreetingEls.forEach(el => {
+    if (currentUser) {
+      el.textContent = `${currentUser.username}님 환영합니다`;
+    } else {
+      el.textContent = '로그인이 필요합니다';
+    }
+  });
+
+  // 2. 마이페이지 버튼 처리 (로그인 상태일 때만 노출)
+  const mypageBtns = document.querySelectorAll('.mypage-btn, .mobile-mypage-btn');
+  mypageBtns.forEach(btn => {
+    if (currentUser) {
+      btn.style.display = 'inline-block';
+      btn.href = 'mypage.html';
+    } else {
+      btn.style.display = 'none';
+    }
+  });
+
+  // 3. 로그인 / 로그아웃 버튼 동적 제어
+  const authActionBtns = document.querySelectorAll('.auth-action, .mobile-auth-action');
+  authActionBtns.forEach(btn => {
+    if (currentUser) {
+      // [로그인 상태] -> '로그아웃' 버튼으로 변경
+      btn.textContent = '로그아웃';
+      btn.href = '#';
+      btn.onclick = (e) => {
+        e.preventDefault();
+        localStorage.removeItem('currentUser');
+        alert('로그아웃 되었습니다.');
+        window.location.href = 'index.html';
+      };
+    } else {
+      // [비로그인 상태] -> '로그인' 버튼으로 유지
+      btn.textContent = '로그인';
+      btn.href = 'login.html';
+      btn.onclick = null;
+    }
+  });
+}
