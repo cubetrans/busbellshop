@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCommunitySystem();
   initMypageSystem();
   initAdminSystem();
+  initEmergencyBanner();
 });
 
 // 테마 변경 기능
@@ -747,4 +748,51 @@ async function updateTracking(orderId) {
   if (error) return alert('등록 실패');
   alert('운송장 번호가 등록되었습니다.');
   location.reload();
+}
+
+// 긴급공지 배너 불러오기 (모든 페이지 공통 실행)
+async function initEmergencyBanner() {
+  const banner = document.getElementById('emergency-banner');
+  const textEl = document.getElementById('emergency-text');
+  if (!banner || !textEl) return;
+
+  const { data, error } = await supabaseClient
+    .from('site_settings')
+    .select('value')
+    .eq('key', 'emergency_notice')
+    .single();
+
+  if (error || !data || !data.value || data.value.trim() === '') {
+    banner.style.display = 'none'; // 내용이 없거나 공백이면 숨김
+  } else {
+    textEl.textContent = data.value;
+    banner.style.display = 'block'; // 내용이 있으면 표시
+  }
+
+  // 관리자 페이지일 경우 폼에 기존 내용 채워넣기
+  const emergencyInput = document.getElementById('emergency-input');
+  if (emergencyInput && data) {
+    emergencyInput.value = data.value || '';
+  }
+
+  const emergencyForm = document.getElementById('emergency-form');
+  if (emergencyForm) {
+    emergencyForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const newValue = emergencyInput.value;
+
+      const { error: updateError } = await supabaseClient
+        .from('site_settings')
+        .update({ value: newValue })
+        .eq('key', 'emergency_notice');
+
+      if (updateError) {
+        alert('긴급공지 저장 실패');
+        return;
+      }
+
+      alert('긴급공지가 성공적으로 적용되었습니다.');
+      location.reload();
+    });
+  }
 }
