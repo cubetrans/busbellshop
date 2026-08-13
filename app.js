@@ -331,44 +331,46 @@ function initMarketSystem() {
   }
 }
 
-async function renderMarketPosts(searchTerm = '') {
-  const container = document.getElementById('market-list');
-  if (!container) return;
-
-  let query = supabaseClient.from('market_posts').select('*').order('created_at', { ascending: false });
-  if (searchTerm) query = query.ilike('title', `%${searchTerm}%`);
-
-  const { data: posts } = await query;
-  container.innerHTML = '';
-  if (!posts || posts.length === 0) {
-    container.innerHTML = '<p>등록된 상품이 없습니다.</p>';
+async function renderMarketPosts() {
+  // 💡 장터 글이 들어갈 HTML 컨테이너 ID를 확인하세요 (예: 'market-list', 'market-posts' 등)
+  const marketContainer = document.getElementById('market-list') || document.getElementById('market-posts-container');
+  
+  if (!marketContainer) {
+    console.error('치명적 오류: 장터 목록을 표시할 HTML 태그(id="market-list" 등)를 찾을 수 없습니다!');
     return;
   }
 
-  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  marketContainer.innerHTML = '<p style="text-align: center; color: gray;">상품을 불러오는 중...</p>';
 
-  posts.forEach(post => {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.style.marginBottom = '15px';
+  // Supabase에서 데이터 가져오기
+  const { data, error } = await supabaseClient
+    .from('market_posts')
+    .select('*')
+    .order('created_at', { ascending: false });
 
-    let actionBtns = `<button onclick="buyMarketItem('${escapeHtml(post.author_name)}', '${escapeHtml(post.title)}', '${escapeHtml(post.price)}')" class="btn btn-primary" style="margin-top:10px; margin-right:5px;">구매하기</button>`;
+  if (error) {
+    console.error('Supabase 데이터 조회 실패 상세내용:', error);
+    alert('장터 글을 불러오지 못했습니다. (콘솔 에러 확인 필요)');
+    marketContainer.innerHTML = '<p style="text-align: center; color: red;">데이터를 불러오는 중 오류가 발생했습니다.</p>';
+    return;
+  }
 
-    if (currentUser && (currentUser.username === post.author_name || currentUser.role === '관리자')) {
-      actionBtns += `
-        <button onclick="editMarketPost('${post.id}', '${escapeHtml(post.title)}', '${escapeHtml(post.price)}', '${escapeHtml(post.content)}')" class="btn btn-outline" style="margin-top:10px; margin-right:5px;">수정</button>
-        <button onclick="deleteMarketPost('${post.id}')" class="btn btn-outline" style="margin-top:10px; color:red; border-color:red;">삭제</button>
-      `;
-    }
+  if (!data || data.length === 0) {
+    marketContainer.innerHTML = '<p style="text-align: center; color: gray;">등록된 상품이 없습니다.</p>';
+    return;
+  }
 
-    card.innerHTML = `
-      <h3>${escapeHtml(post.title)}</h3>
-      <p><strong>가격:</strong> ${escapeHtml(post.price)} | <strong>작성자:</strong> ${escapeHtml(post.author_name)}</p>
-      <p style="margin-top:5px;">${escapeHtml(post.content)}</p>
-      ${actionBtns}
-    `;
-    container.appendChild(card);
-  });
+  // 데이터 화면에 렌더링 (기존에 작성하셨던 HTML 템플릿에 맞춰서 렌더링)
+  marketContainer.innerHTML = data.map(post => `
+    <div class="market-item" style="border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 8px;">
+      <h3>${post.title}</h3>
+      <p><strong>가격:</strong> ${Number(post.price).toLocaleString()}원</p>
+      <p>${post.content}</p>
+      <p style="font-size: 12px; color: gray;">작성자: ${post.username || '익명'} | 등록일: ${new Date(post.created_at).toLocaleDateString()}</p>
+      <!-- 수정/삭제 버튼 등 필요한 버튼 추가 -->
+      <button onclick="editMarketPost(${post.id})" class="btn btn-outline" style="padding: 5px 10px; font-size: 12px;">수정</button>
+    </div>
+  `).join('');
 }
 
 // 커뮤니티 시스템
