@@ -592,8 +592,10 @@ async function buyMarketItem(seller, title, price) {
 async function editMarketPost(id, oldTitle, oldPrice, oldContent) {
   const newTitle = prompt('수정할 제목을 입력하세요:', oldTitle);
   if (newTitle === null) return;
+  
   const newPrice = prompt('수정할 가격을 입력하세요:', oldPrice);
   if (newPrice === null) return;
+  
   const newContent = prompt('수정할 내용을 입력하세요:', oldContent);
   if (newContent === null) return;
 
@@ -603,8 +605,8 @@ async function editMarketPost(id, oldTitle, oldPrice, oldContent) {
     content: newContent
   }).eq('id', id);
 
-  if (error) return alert('수정 중 오류가 발생했습니다.');
-  alert('상품 정보가 수정되었습니다.');
+  if (error) return alert('상품 수정 중 오류가 발생했습니다.');
+  alert('상품 정보(제목, 가격, 내용)가 성공적으로 수정되었습니다.');
   renderMarketPosts();
 }
 
