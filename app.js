@@ -1,6 +1,6 @@
 // Supabase API 설정
 const SUPABASE_URL = 'https://ipgzhipiebcnkfqzufgm.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwZ3poaXBpZWJjbmtmcXp1ZmdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5ODMxMTgsImV4cCI6MjEwMTU1OTExOH0.byzqUDMvoAIbybPYbyKsR6KoPnpLPs0jsdawAnW0Eww';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInRefiI6ImlwZ3poaXBpZWJjbmtmcXp1ZmdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5ODMxMTgsImV4cCI6MjEwMTU1OTExOH0.byzqUDMvoAIbybPYbyKsR6KoPnpLPs0jsdawAnW0Eww';
 
 // 안전한 Supabase 클라이언트 초기화
 let supabaseClient = null;
@@ -35,6 +35,15 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+// 커뮤니티 전용 마크다운 파서 (marked 및 DOMPurify 활용)
+function parseMarkdown(text) {
+  if (!text) return '';
+  if (window.marked && window.DOMPurify) {
+    return window.DOMPurify.sanitize(window.marked.parse(text));
+  }
+  return escapeHtml(text); // 라이브러리가 없을 경우 보안 처리된 일반 텍스트로 대체
 }
 
 function initTheme() {
@@ -157,7 +166,7 @@ async function handleAuth(nickname, password, isLoginMode) {
 window.handleAuth = handleAuth;
 
 // ----------------------------------------------------
-// 3. 중고 장터 시스템 (수정 모드/등록 모드 지원)
+// 3. 중고 장터 시스템 (마크다운 적용 X - 일반 텍스트 유지)
 // ----------------------------------------------------
 function initMarketSystem() {
   const marketListContainer = document.getElementById('market-list') || document.getElementById('market-posts-container');
@@ -165,7 +174,7 @@ function initMarketSystem() {
 
   const toggleBtn = document.getElementById('toggle-market-form-btn');
   const formContainer = document.getElementById('market-form-container');
-  
+
   if (toggleBtn && formContainer) {
     toggleBtn.addEventListener('click', () => {
       const currentUser = JSON.parse(localStorage.getItem('currentUser'));
@@ -215,10 +224,8 @@ function initMarketSystem() {
         return alert('모든 항목을 입력해주세요.');
       }
 
-      // 가격 처리 (숫자인 경우 숫자형 변환, 불필요한 에러 방지)
       const price = isNaN(rawPrice) ? rawPrice : parseInt(rawPrice, 10);
 
-      // 1. 수정 모드 (UPDATE)
       if (currentEditingPostId) {
         const { error } = await supabaseClient
           .from('market_posts')
@@ -232,9 +239,7 @@ function initMarketSystem() {
         }
 
         alert('상품이 성공적으로 수정되었습니다.');
-      } 
-      // 2. 신규 등록 모드 (INSERT) - 존재하지 않는 author/username 필드 제외
-      else {
+      } else {
         const { error } = await supabaseClient.from('market_posts').insert([
           {
             title: title,
@@ -259,7 +264,6 @@ function initMarketSystem() {
   }
 }
 
-// 폼 초기화 함수
 function resetMarketForm() {
   currentEditingPostId = null;
   const postForm = document.getElementById('market-post-form');
@@ -341,7 +345,6 @@ async function renderMarketPosts(keyword = '') {
   }).join('');
 }
 
-// 수정 버튼 클릭 시 폼에 내용 채우고 수정 모드로 변환
 window.editMarketPost = async function(id) {
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
   if (!currentUser) return alert('로그인이 필요합니다.');
@@ -454,7 +457,7 @@ window.buyMarketItem = async function(seller, title, price) {
 };
 
 // ----------------------------------------------------
-// 4. 커뮤니티 시스템
+// 4. 커뮤니티 시스템 (마크다운 적용 O)
 // ----------------------------------------------------
 function initCommunitySystem() {
   const communityListContainer = document.getElementById('community-list');
@@ -569,10 +572,13 @@ async function renderCommunityPosts(category, keyword = '') {
       `;
     }
 
+    // 커뮤니티 본문만 parseMarkdown 함수 적용
     card.innerHTML = `
       <h3>[${escapeHtml(post.category)}] ${escapeHtml(post.title)}</h3>
       <p><strong>작성자:</strong> ${escapeHtml(post.author_name)}</p>
-      <p style="margin-top:5px; white-space: pre-wrap;">${escapeHtml(post.content)}</p>
+      <div class="community-content" style="margin-top:10px; line-height:1.6;">
+        ${parseMarkdown(post.content)}
+      </div>
       ${authorBtns}
     `;
     container.appendChild(card);
