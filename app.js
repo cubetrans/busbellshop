@@ -110,74 +110,67 @@ function generateDepositName(seller, buyer, item) {
 
 // 마이페이지 시스템
 async function initMypageSystem() {
-  const myNicknameEl = document.getElementById('my-nickname');
-  if (!myNicknameEl) return;
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) return;
 
-  const user = JSON.parse(localStorage.getItem('currentUser'));
-  if (!user) return (window.location.href = 'login.html');
+  // 1. Supabase에서 최신 사용자 정보 가져오기
+  const { data: user, error } = await supabaseClient
+    .from('users')
+    .select('*')
+    .eq('username', currentUser.username)
+    .single();
 
-  const { data: userData } = await supabaseClient.from('users').select('*').eq('nickname', user.username).single();
-  if (!userData) return;
-
-  myNicknameEl.textContent = userData.nickname;
-  document.getElementById('my-role').textContent = userData.role || '일반회원';
-  
-  document.getElementById('my-bank-name').value = userData.bank_name || '';
-  document.getElementById('my-account-holder').value = userData.account_holder || '';
-  document.getElementById('my-account-num').value = userData.account_number || '';
-  document.getElementById('my-address').value = userData.shipping_address || '';
-
-  if (userData.role === '관리자') {
-    const adminLink = document.getElementById('admin-link-container');
-    if (adminLink) adminLink.style.display = 'block';
+  if (error || !user) {
+    console.error('사용자 정보를 불러오지 못했습니다.', error);
+    return;
   }
 
-  const form = document.getElementById('profile-update-form');
-  if (form) {
-    form.addEventListener('submit', async (e) => {
+  // 2. 닉네임 및 권한 렌더링
+  const nicknameEl = document.getElementById('my-nickname');
+  const roleEl = document.getElementById('my-role');
+  if (nicknameEl) nicknameEl.textContent = user.username;
+  if (roleEl) roleEl.textContent = user.role || '일반회원';
+
+  // 3. 기존 계좌 및 배송지 정보 인풋창에 자동 세팅
+  if (document.getElementById('my-bank-name')) document.getElementById('my-bank-name').value = user.bank_name || '';
+  if (document.getElementById('my-account-holder')) document.getElementById('my-account-holder').value = user.account_holder || '';
+  if (document.getElementById('my-account-num')) document.getElementById('my-account-num').value = user.account_num || '';
+  if (document.getElementById('my-address')) document.getElementById('my-address').value = user.address || '';
+
+  // 4. 관리자 등급 확인 후 관리자 페이지 이동 버튼 표시
+  const adminLinkContainer = document.getElementById('admin-link-container');
+  if (adminLinkContainer && (user.role === 'admin' || user.role === '관리자')) {
+    adminLinkContainer.style.display = 'block';
+  }
+
+  // 5. 정보 수정폼 제출 이벤트
+  const profileForm = document.getElementById('profile-update-form');
+  if (profileForm) {
+    profileForm.onsubmit = async (e) => {
       e.preventDefault();
-      const bank_name = document.getElementById('my-bank-name').value;
-      const account_holder = document.getElementById('my-account-holder').value;
-      const account_number = document.getElementById('my-account-num').value;
-      const shipping_address = document.getElementById('my-address').value;
+      const bankName = document.getElementById('my-bank-name').value.trim();
+      const accountHolder = document.getElementById('my-account-holder').value.trim();
+      const accountNum = document.getElementById('my-account-num').value.trim();
+      const address = document.getElementById('my-address').value.trim();
 
-      const { error } = await supabaseClient.from('users').update({ 
-        bank_name, 
-        account_holder, 
-        account_number, 
-        shipping_address 
-      }).eq('nickname', user.username);
-      
-      if (error) return alert('수정 실패');
-      alert('정보가 성공적으로 저장되었습니다.');
-    });
+      const { error: updateError } = await supabaseClient
+        .from('users')
+        .update({
+          bank_name: bankName,
+          account_holder: accountHolder,
+          account_num: accountNum,
+          address: address
+        })
+        .eq('username', user.username);
+
+      if (updateError) {
+        alert('정보 저장에 실패했습니다.');
+        return;
+      }
+
+      alert('계좌 및 배송지 정보가 성공적으로 저장되었습니다!');
+    };
   }
-
-  // 내 주문 내역 로드
-  const orderContainer = document.getElementById('my-orders-list');
-  if (orderContainer) {
-    const { data: orders } = await supabaseClient.from('orders').select('*').eq('buyer_name', user.username).order('created_at', { ascending: false });
-    orderContainer.innerHTML = '';
-    if (!orders || orders.length === 0) {
-      orderContainer.innerHTML = '<p style="margin-top:10px;">주문 내역이 없습니다.</p>';
-    } else {
-      orders.forEach(o => {
-        const trackingHtml = o.tracking_number 
-          ? `<p><strong>배송정보:</strong> <span style="color:green; font-weight:bold;">${escapeHtml(o.courier_company)} / ${escapeHtml(o.tracking_number)}</span></p>` 
-          : `<p><strong>배송정보:</strong> <span style="color:gray;">배송 준비 중 (운송장 미등록)</span></p>`;
-
-        orderContainer.innerHTML += `
-          <div style="border:1px solid var(--input-border); padding:10px; margin-top:10px; border-radius:4px;">
-            <p><strong>상품:</strong> ${escapeHtml(o.item_title)} (${escapeHtml(o.price)}원)</p>
-            <p><strong>입금자명:</strong> ${escapeHtml(o.deposit_name)}</p>
-            ${trackingHtml}
-            <p><strong>상태:</strong> <span style="color:blue;">${escapeHtml(o.status)}</span> ${o.rejection_reason ? `(사유: ${escapeHtml(o.rejection_reason)})` : ''}</p>
-          </div>
-        `;
-      });
-    }
-  }
-  renderMySales(user.username);
 }
 
 // 관리자 대시보드 시스템
@@ -270,107 +263,120 @@ async function deleteUser(userId) {
 }
 
 // 장터 시스템
+// 1. 장터 시스템 초기화 및 상품 등록 처리
 function initMarketSystem() {
-  const marketListContainer = document.getElementById('market-list');
-  if (!marketListContainer) return;
-
+  const marketFormContainer = document.getElementById('market-form-container');
   const toggleBtn = document.getElementById('toggle-market-form-btn');
-  const formContainer = document.getElementById('market-form-container');
-  if (toggleBtn && formContainer) {
+  const marketForm = document.getElementById('market-post-form');
+
+  if (toggleBtn && marketFormContainer) {
     toggleBtn.addEventListener('click', () => {
       const currentUser = JSON.parse(localStorage.getItem('currentUser'));
       if (!currentUser) {
-        alert('로그인 후 상품 등록이 가능합니다.');
+        alert('로그인이 필요한 기능입니다.');
         window.location.href = 'login.html';
         return;
       }
-      formContainer.style.display = formContainer.style.display === 'none' ? 'block' : 'none';
+      const isHidden = marketFormContainer.style.display === 'none';
+      marketFormContainer.style.display = isHidden ? 'block' : 'none';
+      toggleBtn.textContent = isHidden ? '닫기' : '상품 등록하기';
     });
   }
 
-  renderMarketPosts();
-
-  const searchInput = document.getElementById('search-input');
-  if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-      renderMarketPosts(e.target.value);
-    });
-  }
-
-  const postForm = document.getElementById('market-post-form');
-  if (postForm) {
-    postForm.addEventListener('submit', async (e) => {
+  if (marketForm) {
+    marketForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (!supabaseClient) return alert('DB 연결 오류');
-
       const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-      if (!currentUser) {
-        alert('로그인 후 작성 가능합니다.');
-        window.location.href = 'login.html';
-        return;
-      }
+      if (!currentUser) return alert('로그인이 필요합니다.');
 
-      const title = document.getElementById('post-title').value;
-      const price = document.getElementById('post-price').value;
-      const content = document.getElementById('post-content').value;
+      const title = document.getElementById('post-title').value.trim();
+      const price = document.getElementById('post-price').value.trim();
+      const content = document.getElementById('post-content').value.trim();
 
+      // 작성자 이름을 username과 author에 모두 저장해 DB 차이 대비
       const { error } = await supabaseClient.from('market_posts').insert([
-        { title, price, content, author_name: currentUser.username }
+        {
+          title: title,
+          price: price,
+          content: content,
+          username: currentUser.username,
+          author: currentUser.username
+        }
       ]);
 
       if (error) {
         alert('상품 등록 중 오류가 발생했습니다.');
+        console.error(error);
         return;
       }
 
       alert('상품이 성공적으로 등록되었습니다.');
-      postForm.reset();
-      if (formContainer) formContainer.style.display = 'none';
+      marketForm.reset();
+      marketFormContainer.style.display = 'none';
+      if (toggleBtn) toggleBtn.textContent = '상품 등록하기';
       renderMarketPosts();
     });
   }
+
+  // 장터 목록 최초 렌더링
+  if (document.getElementById('market-list')) {
+    renderMarketPosts();
+  }
 }
 
+// 2. 장터 글 목록 렌더링 (작성자명 복구 + 권한별 수정/삭제 버튼 노출)
 async function renderMarketPosts() {
-  // 💡 장터 글이 들어갈 HTML 컨테이너 ID를 확인하세요 (예: 'market-list', 'market-posts' 등)
-  const marketContainer = document.getElementById('market-list') || document.getElementById('market-posts-container');
-  
-  if (!marketContainer) {
-    console.error('치명적 오류: 장터 목록을 표시할 HTML 태그(id="market-list" 등)를 찾을 수 없습니다!');
-    return;
-  }
+  const marketList = document.getElementById('market-list');
+  if (!marketList) return;
 
-  marketContainer.innerHTML = '<p style="text-align: center; color: gray;">상품을 불러오는 중...</p>';
+  marketList.innerHTML = '<p style="text-align: center; color: gray;">상품을 불러오는 중...</p>';
 
-  // Supabase에서 데이터 가져오기
-  const { data, error } = await supabaseClient
+  const { data: posts, error } = await supabaseClient
     .from('market_posts')
     .select('*')
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Supabase 데이터 조회 실패 상세내용:', error);
-    alert('장터 글을 불러오지 못했습니다. (콘솔 에러 확인 필요)');
-    marketContainer.innerHTML = '<p style="text-align: center; color: red;">데이터를 불러오는 중 오류가 발생했습니다.</p>';
+    console.error('장터 불러오기 에러:', error);
+    marketList.innerHTML = '<p style="text-align: center; color: red;">글을 불러오지 못했습니다.</p>';
     return;
   }
 
-  if (!data || data.length === 0) {
-    marketContainer.innerHTML = '<p style="text-align: center; color: gray;">등록된 상품이 없습니다.</p>';
+  if (!posts || posts.length === 0) {
+    marketList.innerHTML = '<p style="text-align: center; color: gray;">등록된 상품이 없습니다.</p>';
     return;
   }
 
-  // 데이터 화면에 렌더링 (기존에 작성하셨던 HTML 템플릿에 맞춰서 렌더링)
-  marketContainer.innerHTML = data.map(post => `
-    <div class="market-item" style="border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 8px;">
-      <h3>${post.title}</h3>
-      <p><strong>가격:</strong> ${Number(post.price).toLocaleString()}원</p>
-      <p>${post.content}</p>
-      <p style="font-size: 12px; color: gray;">작성자: ${post.username || '익명'} | 등록일: ${new Date(post.created_at).toLocaleDateString()}</p>
-      <!-- 수정/삭제 버튼 등 필요한 버튼 추가 -->
-      <button onclick="editMarketPost(${post.id})" class="btn btn-outline" style="padding: 5px 10px; font-size: 12px;">수정</button>
-    </div>
-  `).join('');
+  const currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+
+  marketList.innerHTML = posts.map(post => {
+    // DB 컬럼에 따라 username 또는 author 속성을 가져옴
+    const authorName = post.username || post.author || post.user_id || '익명';
+    
+    // 본인 또는 관리자인지 권한 확인
+    const isAdmin = currentUser && (currentUser.role === 'admin' || currentUser.role === '관리자');
+    const isAuthor = currentUser && currentUser.username === authorName;
+    const canManage = isAuthor || isAdmin;
+
+    return `
+      <div class="card" style="margin-bottom: 15px; padding: 15px; border: 1px solid var(--input-border);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <h3>${post.title}</h3>
+          <span style="font-weight: bold; color: #356fd4; font-size: 18px;">${post.price}</span>
+        </div>
+        <p style="margin: 10px 0; white-space: pre-wrap;">${post.content}</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: gray; margin-top: 10px;">
+          <span>작성자: <strong>${authorName}</strong> | 등록일: ${new Date(post.created_at).toLocaleDateString()}</span>
+          ${canManage ? `
+            <div>
+              <button onclick="editMarketPost(${post.id})" class="btn btn-outline" style="padding: 4px 8px; font-size: 12px;">수정</button>
+              <button onclick="deleteMarketPost(${post.id})" class="btn btn-outline" style="padding: 4px 8px; font-size: 12px; color: #d9534f; border-color: #d9534f;">삭제</button>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 // 커뮤니티 시스템
@@ -557,19 +563,25 @@ async function buyMarketItem(seller, title, price) {
 }
 
 async function editMarketPost(id) {
-  // 1. 데이터베이스에서 해당 글의 기존 정보를 직접 가져옴
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) return alert('로그인이 필요합니다.');
+
   const { data: post, error: fetchError } = await supabaseClient
     .from('market_posts')
     .select('*')
     .eq('id', id)
     .single();
 
-  if (fetchError || !post) {
-    alert('게시글 정보를 불러오지 못했습니다.');
-    return;
+  if (fetchError || !post) return alert('게시글을 불러올 수 없습니다.');
+
+  const authorName = post.username || post.author;
+  const isAdmin = currentUser.role === 'admin' || currentUser.role === '관리자';
+  const isAuthor = currentUser.username === authorName;
+
+  if (!isAuthor && !isAdmin) {
+    return alert('수정 권한이 없습니다.');
   }
 
-  // 2. 차례대로 제목, 가격, 내용 수정 창 띄우기 (기존 값 자동 세팅)
   const newTitle = prompt('수정할 제목을 입력하세요:', post.title);
   if (newTitle === null) return;
 
@@ -579,7 +591,6 @@ async function editMarketPost(id) {
   const newContent = prompt('수정할 내용을 입력하세요:', post.content);
   if (newContent === null) return;
 
-  // 3. Supabase에 세 가지 모두 업데이트 반영
   const { error: updateError } = await supabaseClient
     .from('market_posts')
     .update({
@@ -590,19 +601,12 @@ async function editMarketPost(id) {
     .eq('id', id);
 
   if (updateError) {
-    alert('상품 수정 중 오류가 발생했습니다.');
+    alert('수정에 실패했습니다.');
     console.error(updateError);
     return;
   }
 
-  alert('상품의 제목, 가격, 내용이 모두 성공적으로 수정되었습니다!');
-  renderMarketPosts(); // 목록 새로고침
-}
-
-async function deleteMarketPost(id) {
-  if (!confirm('정말 삭제하시겠습니까?')) return;
-  await supabaseClient.from('market_posts').delete().eq('id', id);
-  alert('삭제되었습니다.');
+  alert('상품 정보가 수정되었습니다.');
   renderMarketPosts();
 }
 
@@ -830,4 +834,41 @@ function initAuthHeader() {
       btn.onclick = null;
     }
   });
+}
+
+async function deleteMarketPost(id) {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) return alert('로그인이 필요합니다.');
+
+  const { data: post, error: fetchError } = await supabaseClient
+    .from('market_posts')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (fetchError || !post) return alert('게시글을 불러올 수 없습니다.');
+
+  const authorName = post.username || post.author;
+  const isAdmin = currentUser.role === 'admin' || currentUser.role === '관리자';
+  const isAuthor = currentUser.username === authorName;
+
+  if (!isAuthor && !isAdmin) {
+    return alert('삭제 권한이 없습니다.');
+  }
+
+  if (!confirm('정말로 이 상품 게시글을 삭제하시겠습니까?')) return;
+
+  const { error: deleteError } = await supabaseClient
+    .from('market_posts')
+    .delete()
+    .eq('id', id);
+
+  if (deleteError) {
+    alert('삭제 중 오류가 발생했습니다.');
+    console.error(deleteError);
+    return;
+  }
+
+  alert('게시글이 삭제되었습니다.');
+  renderMarketPosts();
 }
