@@ -10,6 +10,9 @@ if (window.supabase && typeof window.supabase.createClient === 'function') {
   console.error('Supabase SDK가 로드되지 않았습니다.');
 }
 
+// 수정 모드 상태 관리를 위한 변수
+let currentEditingPostId = null;
+
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   initMobileMenu();
@@ -154,7 +157,7 @@ async function handleAuth(nickname, password, isLoginMode) {
 window.handleAuth = handleAuth;
 
 // ----------------------------------------------------
-// 3. 중고 장터 시스템
+// 3. 중고 장터 시스템 (등록/수정 폼 통합 관리)
 // ----------------------------------------------------
 function initMarketSystem() {
   const marketListContainer = document.getElementById('market-list') || document.getElementById('market-posts-container');
@@ -167,13 +170,18 @@ function initMarketSystem() {
     toggleBtn.addEventListener('click', () => {
       const currentUser = JSON.parse(localStorage.getItem('currentUser'));
       if (!currentUser) {
-        alert('로그인 후 상품 등록이 가능합니다.');
+        alert('로그인 후 이용 가능합니다.');
         window.location.href = 'login.html';
         return;
       }
+      
       const isHidden = formContainer.style.display === 'none' || formContainer.style.display === '';
-      formContainer.style.display = isHidden ? 'block' : 'none';
-      toggleBtn.textContent = isHidden ? '닫기' : '상품 등록하기';
+      if (isHidden) {
+        formContainer.style.display = 'block';
+        toggleBtn.textContent = '닫기';
+      } else {
+        resetMarketForm(); // 닫을 때 폼 초기화
+      }
     });
   }
 
@@ -194,7 +202,7 @@ function initMarketSystem() {
 
       const currentUser = JSON.parse(localStorage.getItem('currentUser'));
       if (!currentUser) {
-        alert('로그인 후 작성 가능합니다.');
+        alert('로그인 후 이용 가능합니다.');
         return window.location.href = 'login.html';
       }
 
@@ -202,30 +210,73 @@ function initMarketSystem() {
       const price = document.getElementById('post-price').value.trim();
       const content = document.getElementById('post-content').value.trim();
 
-      const { error } = await supabaseClient.from('market_posts').insert([
-        {
-          title: title,
-          price: price,
-          content: content,
-          author_name: currentUser.username,
-          username: currentUser.username,
-          author: currentUser.username
-        }
-      ]);
-
-      if (error) {
-        alert('상품 등록 중 오류가 발생했습니다.');
-        console.error(error);
-        return;
+      if (!title || !price || !content) {
+        return alert('모든 항목을 입력해주세요.');
       }
 
-      alert('상품이 성공적으로 등록되었습니다.');
-      postForm.reset();
-      if (formContainer) formContainer.style.display = 'none';
-      if (toggleBtn) toggleBtn.textContent = '상품 등록하기';
+      // 수정 모드인 경우 UPDATE
+      if (currentEditingPostId) {
+        const { error } = await supabaseClient
+          .from('market_posts')
+          .update({ title, price, content })
+          .eq('id', currentEditingPostId);
+
+        if (error) {
+          alert('상품 수정 중 오류가 발생했습니다.');
+          console.error(error);
+          return;
+        }
+
+        alert('상품이 성공적으로 수정되었습니다.');
+      } 
+      // 신규 등록 모드인 경우 INSERT
+      else {
+        const { error } = await supabaseClient.from('market_posts').insert([
+          {
+            title: title,
+            price: price,
+            content: content,
+            author_name: currentUser.username,
+            username: currentUser.username,
+            author: currentUser.username
+          }
+        ]);
+
+        if (error) {
+          alert('상품 등록 중 오류가 발생했습니다.');
+          console.error(error);
+          return;
+        }
+
+        alert('상품이 성공적으로 등록되었습니다.');
+      }
+
+      resetMarketForm();
       renderMarketPosts();
     });
   }
+}
+
+// 폼 초기화 및 일반 등록 모드로 원복
+function resetMarketForm() {
+  currentEditingPostId = null;
+  const postForm = document.getElementById('market-post-form');
+  if (postForm) postForm.reset();
+
+  const formContainer = document.getElementById('market-form-container');
+  const toggleBtn = document.getElementById('toggle-market-form-btn');
+  
+  if (formContainer) {
+    const titleEl = formContainer.querySelector('h2, h3');
+    if (titleEl) titleEl.textContent = '상품 등록';
+
+    const submitBtn = formContainer.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.textContent = '등록 완료';
+
+    formContainer.style.display = 'none';
+  }
+
+  if (toggleBtn) toggleBtn.textContent = '상품 등록하기';
 }
 
 async function renderMarketPosts(keyword = '') {
@@ -288,6 +339,7 @@ async function renderMarketPosts(keyword = '') {
   }).join('');
 }
 
+// 게시글 '수정' 버튼 클릭 시 실행: 등록 폼을 '수정 모드'로 전환 후 채우기
 window.editMarketPost = async function(id) {
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
   if (!currentUser) return alert('로그인이 필요합니다.');
@@ -308,32 +360,30 @@ window.editMarketPost = async function(id) {
     return alert('수정 권한이 없습니다.');
   }
 
-  const newTitle = prompt('수정할 제목을 입력하세요:', post.title);
-  if (newTitle === null) return;
+  // 1. 수정 데이터 세팅
+  currentEditingPostId = id;
+  document.getElementById('post-title').value = post.title;
+  document.getElementById('post-price').value = post.price;
+  document.getElementById('post-content').value = post.content;
 
-  const newPrice = prompt('수정할 가격을 입력하세요:', post.price);
-  if (newPrice === null) return;
+  // 2. 폼 UI를 '수정 모드'로 변경
+  const formContainer = document.getElementById('market-form-container');
+  const toggleBtn = document.getElementById('toggle-market-form-btn');
+  
+  if (formContainer) {
+    const titleEl = formContainer.querySelector('h2, h3');
+    if (titleEl) titleEl.textContent = '상품 수정';
 
-  const newContent = prompt('수정할 내용을 입력하세요:', post.content);
-  if (newContent === null) return;
+    const submitBtn = formContainer.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.textContent = '수정 완료';
 
-  const { error: updateError } = await supabaseClient
-    .from('market_posts')
-    .update({
-      title: newTitle,
-      price: newPrice,
-      content: newContent
-    })
-    .eq('id', id);
-
-  if (updateError) {
-    alert('수정에 실패했습니다.');
-    console.error(updateError);
-    return;
+    formContainer.style.display = 'block';
+    
+    // 화면 상단 폼 위치로 부드럽게 스크롤
+    formContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
-  alert('게시글이 성공적으로 수정되었습니다.');
-  renderMarketPosts();
+  if (toggleBtn) toggleBtn.textContent = '닫기';
 };
 
 window.deleteMarketPost = async function(id) {
@@ -401,7 +451,7 @@ window.buyMarketItem = async function(seller, title, price) {
 
   if (error) return alert('주문 요청 중 오류가 발생했습니다.');
 
-  alert(`[관리진 계좌 안내]\n하나은행 154-910580-98807 (예금주: 안수현)\n\n입금자명: ${depositName}\n\n추후 입금 확인 후 배송 진행 예정입니다.`);
+  alert(`[관리진 계좌 안내]\n하나은행 154-920580-98807 (예금주: 안수현)\n\n입금자명: ${depositName}\n\n추후 입금 확인 후 배송 진행 예정입니다.`);
   location.reload();
 };
 
