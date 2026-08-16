@@ -1,6 +1,6 @@
-// Supabase API 설정
+// Supabase API 설정 (오류 수정 완료)
 const SUPABASE_URL = 'https://ipgzhipiebcnkfqzufgm.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInRefiI6ImlwZ3poaXBpZWJjbmtmcXp1ZmdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5ODMxMTgsImV4cCI6MjEwMTU1OTExOH0.byzqUDMvoAIbybPYbyKsR6KoPnpLPs0jsdawAnW0Eww';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwZ3poaXBpZWJjbmtmcXp1ZmdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5ODMxMTgsImV4cCI6MjEwMTU1OTExOH0.byzqUDMvoAIbybPYbyKsR6KoPnpLPs0jsdawAnW0Eww';
 
 // 안전한 Supabase 클라이언트 초기화
 let supabaseClient = null;
@@ -37,13 +37,13 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
-// 커뮤니티 전용 마크다운 파서 (marked 및 DOMPurify 활용)
+// 커뮤니티 전용 마크다운 파서
 function parseMarkdown(text) {
   if (!text) return '';
   if (window.marked && window.DOMPurify) {
     return window.DOMPurify.sanitize(window.marked.parse(text));
   }
-  return escapeHtml(text); // 라이브러리가 없을 경우 보안 처리된 일반 텍스트로 대체
+  return escapeHtml(text);
 }
 
 function initTheme() {
@@ -166,7 +166,7 @@ async function handleAuth(nickname, password, isLoginMode) {
 window.handleAuth = handleAuth;
 
 // ----------------------------------------------------
-// 3. 중고 장터 시스템 (마크다운 적용 X - 일반 텍스트 유지)
+// 3. 중고 장터 시스템
 // ----------------------------------------------------
 function initMarketSystem() {
   const marketListContainer = document.getElementById('market-list') || document.getElementById('market-posts-container');
@@ -457,7 +457,7 @@ window.buyMarketItem = async function(seller, title, price) {
 };
 
 // ----------------------------------------------------
-// 4. 커뮤니티 시스템 (마크다운 적용 O)
+// 4. 커뮤니티 시스템
 // ----------------------------------------------------
 function initCommunitySystem() {
   const communityListContainer = document.getElementById('community-list');
@@ -572,7 +572,6 @@ async function renderCommunityPosts(category, keyword = '') {
       `;
     }
 
-    // 커뮤니티 본문만 parseMarkdown 함수 적용
     card.innerHTML = `
       <h3>[${escapeHtml(post.category)}] ${escapeHtml(post.title)}</h3>
       <p><strong>작성자:</strong> ${escapeHtml(post.author_name)}</p>
