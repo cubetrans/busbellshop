@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ----------------------------------------------------
-// 1. 유틸리티 및 기본 UI (테마, 모바일메뉴, HTML 이스케이프)
+// 1. 유틸리티 및 기본 UI
 // ----------------------------------------------------
 function escapeHtml(str) {
   if (!str) return '';
@@ -157,7 +157,7 @@ async function handleAuth(nickname, password, isLoginMode) {
 window.handleAuth = handleAuth;
 
 // ----------------------------------------------------
-// 3. 중고 장터 시스템 (등록/수정 폼 통합 관리)
+// 3. 중고 장터 시스템 (수정 모드/등록 모드 지원)
 // ----------------------------------------------------
 function initMarketSystem() {
   const marketListContainer = document.getElementById('market-list') || document.getElementById('market-posts-container');
@@ -177,10 +177,11 @@ function initMarketSystem() {
       
       const isHidden = formContainer.style.display === 'none' || formContainer.style.display === '';
       if (isHidden) {
+        resetMarketForm();
         formContainer.style.display = 'block';
         toggleBtn.textContent = '닫기';
       } else {
-        resetMarketForm(); // 닫을 때 폼 초기화
+        resetMarketForm();
       }
     });
   }
@@ -207,14 +208,17 @@ function initMarketSystem() {
       }
 
       const title = document.getElementById('post-title').value.trim();
-      const price = document.getElementById('post-price').value.trim();
+      const rawPrice = document.getElementById('post-price').value.trim();
       const content = document.getElementById('post-content').value.trim();
 
-      if (!title || !price || !content) {
+      if (!title || !rawPrice || !content) {
         return alert('모든 항목을 입력해주세요.');
       }
 
-      // 수정 모드인 경우 UPDATE
+      // 가격 처리 (숫자인 경우 숫자형 변환, 불필요한 에러 방지)
+      const price = isNaN(rawPrice) ? rawPrice : parseInt(rawPrice, 10);
+
+      // 1. 수정 모드 (UPDATE)
       if (currentEditingPostId) {
         const { error } = await supabaseClient
           .from('market_posts')
@@ -222,29 +226,27 @@ function initMarketSystem() {
           .eq('id', currentEditingPostId);
 
         if (error) {
-          alert('상품 수정 중 오류가 발생했습니다.');
-          console.error(error);
+          console.error('수정 실패:', error);
+          alert(`수정 실패: ${error.message}`);
           return;
         }
 
         alert('상품이 성공적으로 수정되었습니다.');
       } 
-      // 신규 등록 모드인 경우 INSERT
+      // 2. 신규 등록 모드 (INSERT) - 존재하지 않는 author/username 필드 제외
       else {
         const { error } = await supabaseClient.from('market_posts').insert([
           {
             title: title,
             price: price,
             content: content,
-            author_name: currentUser.username,
-            username: currentUser.username,
-            author: currentUser.username
+            author_name: currentUser.username
           }
         ]);
 
         if (error) {
-          alert('상품 등록 중 오류가 발생했습니다.');
-          console.error(error);
+          console.error('등록 실패:', error);
+          alert(`등록 실패: ${error.message}`);
           return;
         }
 
@@ -257,7 +259,7 @@ function initMarketSystem() {
   }
 }
 
-// 폼 초기화 및 일반 등록 모드로 원복
+// 폼 초기화 함수
 function resetMarketForm() {
   currentEditingPostId = null;
   const postForm = document.getElementById('market-post-form');
@@ -339,7 +341,7 @@ async function renderMarketPosts(keyword = '') {
   }).join('');
 }
 
-// 게시글 '수정' 버튼 클릭 시 실행: 등록 폼을 '수정 모드'로 전환 후 채우기
+// 수정 버튼 클릭 시 폼에 내용 채우고 수정 모드로 변환
 window.editMarketPost = async function(id) {
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
   if (!currentUser) return alert('로그인이 필요합니다.');
@@ -360,13 +362,11 @@ window.editMarketPost = async function(id) {
     return alert('수정 권한이 없습니다.');
   }
 
-  // 1. 수정 데이터 세팅
   currentEditingPostId = id;
   document.getElementById('post-title').value = post.title;
   document.getElementById('post-price').value = post.price;
   document.getElementById('post-content').value = post.content;
 
-  // 2. 폼 UI를 '수정 모드'로 변경
   const formContainer = document.getElementById('market-form-container');
   const toggleBtn = document.getElementById('toggle-market-form-btn');
   
@@ -378,8 +378,6 @@ window.editMarketPost = async function(id) {
     if (submitBtn) submitBtn.textContent = '수정 완료';
 
     formContainer.style.display = 'block';
-    
-    // 화면 상단 폼 위치로 부드럽게 스크롤
     formContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
