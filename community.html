@@ -9,6 +9,10 @@
 </head>
 <body>
 
+  <div id="emergency-banner" style="display: none; background-color: #d9534f; color: white; padding: 10px; text-align: center; font-weight: bold; width: 100%; z-index: 1000;">
+    🚨 <span id="emergency-text"></span>
+  </div>
+
   <header>
     <div class="header-left">
       <a href="index.html" class="logo">
@@ -41,40 +45,26 @@
         <li><a href="login.html" class="mobile-auth-action">로그인</a></li>
       </ul>
     </div>
-
-    <!-- 긴급공지 배너 영역 -->
-    <div id="emergency-banner" style="display: none; background-color: #d9534f; color: white; padding: 10px; text-align: center; font-weight: bold; position: relative; z-index: 1000;">
-      🚨 <span id="emergency-text"></span>
-    </div>
   </header>
 
   <div class="container">
     <h2>동호인 커뮤니티</h2>
-    <p style="margin-bottom: 20px;">버스 및 대중교통에 대한 이야기를 나누는 공간입니다.</p>
-
-    <!-- 검색창 -->
     <div class="search-container" style="margin-bottom: 20px;">
       <input type="text" id="search-input" placeholder="제목으로 검색..." style="width: 100%; padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
     </div>
-
-    <!-- 게시판 카테고리 탭 -->
     <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
       <button class="btn btn-outline category-btn active" data-category="공지게시판">공지게시판</button>
       <button class="btn btn-outline category-btn" data-category="질문게시판">질문게시판</button>
       <button class="btn btn-outline category-btn" data-category="수집/자랑게시판">수집/자랑게시판</button>
     </div>
-
-    <!-- 글쓰기 버튼 -->
     <div style="margin-bottom: 20px;">
       <button id="toggle-community-form-btn" class="btn btn-primary">글쓰기</button>
     </div>
-
-    <!-- 글 작성 폼 (기본 숨김) -->
     <div id="community-form-container" class="card" style="display: none; margin-bottom: 20px;">
       <h3>새 글 작성</h3>
       <form id="community-post-form" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
         <select id="post-category-select" style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
-          <option value="공지게시판">공지게시판 (관리자 전용)</option>
+          <option value="공지게시판">공지게시판</option>
           <option value="질문게시판">질문게시판</option>
           <option value="수집/자랑게시판">수집/자랑게시판</option>
         </select>
@@ -83,8 +73,6 @@
         <button type="submit" class="btn btn-primary" style="align-self: flex-start;">작성 완료</button>
       </form>
     </div>
-
-    <!-- 커뮤니티 글 목록 출력 영역 -->
     <div id="community-list"></div>
   </div>
 

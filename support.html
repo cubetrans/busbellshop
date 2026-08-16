@@ -9,6 +9,10 @@
 </head>
 <body>
 
+  <div id="emergency-banner" style="display: none; background-color: #d9534f; color: white; padding: 10px; text-align: center; font-weight: bold; width: 100%; z-index: 1000;">
+    🚨 <span id="emergency-text"></span>
+  </div>
+
   <header>
     <div class="header-left">
       <a href="index.html" class="logo">
@@ -41,29 +45,18 @@
         <li><a href="login.html" class="mobile-auth-action">로그인</a></li>
       </ul>
     </div>
-
-    <!-- 긴급공지 배너 영역 -->
-    <div id="emergency-banner" style="display: none; background-color: #d9534f; color: white; padding: 10px; text-align: center; font-weight: bold; position: relative; z-index: 1000;">
-      🚨 <span id="emergency-text"></span>
-    </div>
   </header>
 
   <div class="container">
-    // 곧삭제
-    <h1> 개발중입니다 문의 넣으셔도 답변못해드립니다 </h1>
-    // ----
     <h2>고객센터 (1:1 문의)</h2>
-    <p style="margin-bottom: 20px;">궁금하신 점이나 불편사항을 남겨주시면 신속하게 답변해 드립니다.</p>
-
     <div class="card">
       <h3>문의 작성하기</h3>
       <form id="inquiry-form" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
-        <input type="text" id="inquiry-title" placeholder="제목을 입력하세요" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
-        <textarea id="inquiry-content" placeholder="문의 내용을 입력하세요" rows="5" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;"></textarea>
-        <button type="submit" class="btn btn-primary" style="align-self: flex-start;">문의 접수</button>
+        <input type="text" id="inquiry-title" placeholder="제목" required style="padding: 10px;">
+        <textarea id="inquiry-content" placeholder="내용" rows="5" required style="padding: 10px;"></textarea>
+        <button type="submit" class="btn btn-primary">문의 접수</button>
       </form>
     </div>
-
     <h3>나의 문의 내역</h3>
     <div id="inquiry-list" style="margin-top: 15px;"></div>
   </div>

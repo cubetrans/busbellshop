@@ -9,6 +9,10 @@
 </head>
 <body>
 
+  <div id="emergency-banner" style="display: none; background-color: #d9534f; color: white; padding: 10px; text-align: center; font-weight: bold; width: 100%; z-index: 1000;">
+    🚨 <span id="emergency-text"></span>
+  </div>
+
   <header>
     <div class="header-left">
       <a href="index.html" class="logo">
@@ -41,56 +45,32 @@
         <li><a href="login.html" class="mobile-auth-action">로그인</a></li>
       </ul>
     </div>
-
-    <!-- 긴급공지 배너 영역 -->
-    <div id="emergency-banner" style="display: none; background-color: #d9534f; color: white; padding: 10px; text-align: center; font-weight: bold; position: relative; z-index: 1000;">
-      🚨 <span id="emergency-text"></span>
-    </div>
   </header>
 
   <div class="container" style="max-width: 600px;">
     <h2>마이페이지</h2>
-    <p style="margin-bottom: 20px;">회원 정보를 확인하고 관리하세요.</p>
-
     <div class="card" style="margin-bottom: 20px;">
       <h3>기본 회원 정보</h3>
-      <p style="margin-top: 10px;"><strong>닉네임(ID):</strong> <span id="my-nickname">로딩중...</span></p>
-      <p style="margin-top: 5px;"><strong>권한:</strong> <span id="my-role">로딩중...</span></p>
+      <p><strong>닉네임:</strong> <span id="my-nickname">로딩중...</span></p>
     </div>
-
-    <!-- 통합된 계좌 및 배송지 관리 폼 (기존 데이터 자동 불러옴) -->
     <div class="card" style="margin-bottom: 20px;">
       <h3>계좌 및 배송지 정보 관리</h3>
-      <form id="profile-update-form" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
-        <label style="font-size: 13px;">은행명</label>
-        <input type="text" id="my-bank-name" placeholder="예: 국민은행" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
-        
-        <label style="font-size: 13px;">예금주</label>
-        <input type="text" id="my-account-holder" placeholder="예: 홍길동" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
-        
-        <label style="font-size: 13px;">계좌번호</label>
-        <input type="text" id="my-account-num" placeholder="예: 123-456-789012" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
-        
-        <label style="font-size: 13px;">배송지 주소</label>
-        <textarea id="my-address" placeholder="배송지 주소를 입력하세요" rows="3" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;"></textarea>
-        
-        <button type="submit" class="btn btn-primary" style="align-self: flex-start; margin-top: 5px;">정보 저장</button>
+      <form id="profile-update-form" style="display: flex; flex-direction: column; gap: 10px;">
+        <input type="text" id="my-bank-name" placeholder="은행명" required style="padding: 10px;">
+        <input type="text" id="my-account-holder" placeholder="예금주" required style="padding: 10px;">
+        <input type="text" id="my-account-num" placeholder="계좌번호" required style="padding: 10px;">
+        <textarea id="my-address" placeholder="주소" rows="3" required style="padding: 10px;"></textarea>
+        <button type="submit" class="btn btn-primary">정보 저장</button>
       </form>
     </div>
-    
-    <!-- 내 주문 내역 -->
     <div class="card" style="margin-bottom: 20px;">
       <h3>내 주문 내역</h3>
       <div id="my-orders-list"></div>
     </div>
-
-    <!-- 💡 새로 추가할 판매 관리 카드 -->
     <div class="card" style="margin-bottom: 20px;">
-      <h3>내 상품 판매 현황 (판매자용)</h3>
-      <div id="my-sales-list">판매 내역을 불러오는 중...</div>
+      <h3>내 상품 판매 현황</h3>
+      <div id="my-sales-list"></div>
     </div>
-    
-    <!-- 관리자 전용 이동 버튼 (기본 숨김) -->
     <div id="admin-link-container" style="display: none; margin-bottom: 20px;">
       <a href="admin.html" class="btn btn-primary" style="background-color: #d9534f; width: 100%; text-align: center; display: block; padding: 12px;">관리자 페이지로 이동</a>
     </div>
