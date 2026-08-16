@@ -1,4 +1,4 @@
-// Supabase API 설정 (오류 수정 완료)
+// Supabase API 설정
 const SUPABASE_URL = 'https://ipgzhipiebcnkfqzufgm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwZ3poaXBpZWJjbmtmcXp1ZmdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5ODMxMTgsImV4cCI6MjEwMTU1OTExOH0.byzqUDMvoAIbybPYbyKsR6KoPnpLPs0jsdawAnW0Eww';
 
@@ -12,6 +12,7 @@ if (window.supabase && typeof window.supabase.createClient === 'function') {
 
 // 수정 모드 상태 관리를 위한 변수
 let currentEditingPostId = null;
+let currentEditingCommunityPostId = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
@@ -37,10 +38,14 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
-// 커뮤니티 전용 마크다운 파서
+// 커뮤니티 전용 마크다운 파서 (자동 줄바꿈 break 옵션 활성화)
 function parseMarkdown(text) {
   if (!text) return '';
   if (window.marked && window.DOMPurify) {
+    window.marked.setOptions({
+      gfm: true,
+      breaks: true
+    });
     return window.DOMPurify.sanitize(window.marked.parse(text));
   }
   return escapeHtml(text);
@@ -457,7 +462,7 @@ window.buyMarketItem = async function(seller, title, price) {
 };
 
 // ----------------------------------------------------
-// 4. 커뮤니티 시스템
+// 4. 커뮤니티 시스템 (폼 방식 수정 구현 완료)
 // ----------------------------------------------------
 function initCommunitySystem() {
   const communityListContainer = document.getElementById('community-list');
@@ -486,7 +491,15 @@ function initCommunitySystem() {
         window.location.href = 'login.html';
         return;
       }
-      formContainer.style.display = formContainer.style.display === 'none' ? 'block' : 'none';
+      
+      const isHidden = formContainer.style.display === 'none' || formContainer.style.display === '';
+      if (isHidden) {
+        resetCommunityForm();
+        formContainer.style.display = 'block';
+        toggleBtn.textContent = '닫기';
+      } else {
+        resetCommunityForm();
+      }
     });
   }
 
@@ -512,29 +525,64 @@ function initCommunitySystem() {
       }
 
       const category = document.getElementById('post-category-select').value;
-      if (category === '공지게시판' && currentUser.role !== '관리자') {
+      if (category === '공지게시판' && currentUser.role !== '관리자' && currentUser.role !== 'admin') {
         alert('공지게시판은 관리자만 작성할 수 있습니다.');
         return;
       }
 
-      const title = document.getElementById('community-post-title').value;
-      const content = document.getElementById('community-post-content').value;
+      const title = document.getElementById('community-post-title').value.trim();
+      const content = document.getElementById('community-post-content').value.trim();
 
-      const { error } = await supabaseClient.from('community_posts').insert([
-        { category, title, content, author_name: currentUser.username }
-      ]);
-
-      if (error) {
-        alert('글 작성 중 오류가 발생했습니다.');
-        return;
+      if (!title || !content) {
+        return alert('제목과 내용을 모두 입력해주세요.');
       }
 
-      alert('글이 성공적으로 등록되었습니다.');
-      postForm.reset();
-      if (formContainer) formContainer.style.display = 'none';
+      if (currentEditingCommunityPostId) {
+        const { error } = await supabaseClient
+          .from('community_posts')
+          .update({ category, title, content })
+          .eq('id', currentEditingCommunityPostId);
+
+        if (error) {
+          alert('글 수정 중 오류가 발생했습니다.');
+          return;
+        }
+        alert('글이 성공적으로 수정되었습니다.');
+      } else {
+        const { error } = await supabaseClient.from('community_posts').insert([
+          { category, title, content, author_name: currentUser.username }
+        ]);
+
+        if (error) {
+          alert('글 작성 중 오류가 발생했습니다.');
+          return;
+        }
+        alert('글이 성공적으로 등록되었습니다.');
+      }
+
+      resetCommunityForm();
       renderCommunityPosts(currentCategory);
     });
   }
+}
+
+function resetCommunityForm() {
+  currentEditingCommunityPostId = null;
+  const postForm = document.getElementById('community-post-form');
+  if (postForm) postForm.reset();
+
+  const formContainer = document.getElementById('community-form-container');
+  const toggleBtn = document.getElementById('toggle-community-form-btn');
+  if (formContainer) {
+    const titleEl = formContainer.querySelector('h2, h3');
+    if (titleEl) titleEl.textContent = '게시글 작성';
+
+    const submitBtn = formContainer.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.textContent = '등록 완료';
+
+    formContainer.style.display = 'none';
+  }
+  if (toggleBtn) toggleBtn.textContent = '글쓰기';
 }
 
 async function renderCommunityPosts(category, keyword = '') {
@@ -565,7 +613,7 @@ async function renderCommunityPosts(category, keyword = '') {
     card.style.marginBottom = '15px';
 
     let authorBtns = '';
-    if (currentUser && (currentUser.username === post.author_name || currentUser.role === '관리자')) {
+    if (currentUser && (currentUser.username === post.author_name || currentUser.role === '관리자' || currentUser.role === 'admin')) {
       authorBtns = `
         <button onclick="editCommunityPost('${post.id}')" class="btn btn-outline" style="margin-top:10px; margin-right:5px;">수정</button>
         <button onclick="deleteCommunityPost('${post.id}')" class="btn btn-outline" style="margin-top:10px; color:red; border-color:red;">삭제</button>
@@ -574,8 +622,8 @@ async function renderCommunityPosts(category, keyword = '') {
 
     card.innerHTML = `
       <h3>[${escapeHtml(post.category)}] ${escapeHtml(post.title)}</h3>
-      <p><strong>작성자:</strong> ${escapeHtml(post.author_name)}</p>
-      <div class="community-content" style="margin-top:10px; line-height:1.6;">
+      <p style="font-size:13px; color:gray; margin-top:4px;"><strong>작성자:</strong> ${escapeHtml(post.author_name)}</p>
+      <div class="community-content" style="margin-top:12px;">
         ${parseMarkdown(post.content)}
       </div>
       ${authorBtns}
@@ -601,20 +649,29 @@ window.editCommunityPost = async function(id) {
 
   if (!isAuthor && !isAdmin) return alert('수정 권한이 없습니다.');
 
-  const newTitle = prompt('수정할 제목을 입력하세요:', post.title);
-  if (newTitle === null) return;
+  currentEditingCommunityPostId = id;
+  
+  const categorySelect = document.getElementById('post-category-select');
+  if (categorySelect) categorySelect.value = post.category;
+  
+  document.getElementById('community-post-title').value = post.title;
+  document.getElementById('community-post-content').value = post.content;
 
-  const newContent = prompt('수정할 내용을 입력하세요:', post.content);
-  if (newContent === null) return;
+  const formContainer = document.getElementById('community-form-container');
+  const toggleBtn = document.getElementById('toggle-community-form-btn');
 
-  const { error: updateError } = await supabaseClient.from('community_posts').update({
-    title: newTitle,
-    content: newContent
-  }).eq('id', id);
+  if (formContainer) {
+    const titleEl = formContainer.querySelector('h2, h3');
+    if (titleEl) titleEl.textContent = '게시글 수정';
 
-  if (updateError) return alert('수정 중 오류가 발생했습니다.');
-  alert('글이 수정되었습니다.');
-  renderCommunityPosts(post.category);
+    const submitBtn = formContainer.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.textContent = '수정 완료';
+
+    formContainer.style.display = 'block';
+    formContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  if (toggleBtn) toggleBtn.textContent = '닫기';
 };
 
 window.deleteCommunityPost = async function(id) {

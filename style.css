@@ -324,3 +324,47 @@ th {
     font-size: 1rem;
   }
 }
+
+/* 커뮤니티 마크다운 스타일 보정 */
+.community-content {
+  line-height: 1.7;
+  color: var(--text-color);
+}
+.community-content h1, 
+.community-content h2, 
+.community-content h3 {
+  margin-top: 18px;
+  margin-bottom: 8px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+.community-content h1 { font-size: 1.4rem; border-bottom: 1px solid var(--input-border); padding-bottom: 4px; }
+.community-content h2 { font-size: 1.25rem; }
+.community-content h3 { font-size: 1.1rem; }
+.community-content p { margin-bottom: 10px; }
+.community-content ul, 
+.community-content ol {
+  padding-left: 22px;
+  margin-bottom: 12px;
+}
+.community-content li { margin-bottom: 4px; }
+.community-content blockquote {
+  border-left: 4px solid #356fd4;
+  background: rgba(53, 111, 212, 0.05);
+  margin: 12px 0;
+  padding: 10px 14px;
+  border-radius: 0 6px 6px 0;
+  color: var(--text-color);
+}
+.community-content hr {
+  border: none;
+  border-top: 1px solid var(--input-border);
+  margin: 16px 0;
+}
+.community-content code {
+  background: rgba(0, 0, 0, 0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.9em;
+}
