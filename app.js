@@ -154,7 +154,7 @@ async function handleAuth(nickname, password, isLoginMode) {
 window.handleAuth = handleAuth;
 
 // ----------------------------------------------------
-// 3. 중고 장터 시스템 (작성자명 복구 및 수정/삭제 권한 포함)
+// 3. 중고 장터 시스템
 // ----------------------------------------------------
 function initMarketSystem() {
   const marketListContainer = document.getElementById('market-list') || document.getElementById('market-posts-container');
@@ -261,10 +261,7 @@ async function renderMarketPosts(keyword = '') {
   }
 
   marketContainer.innerHTML = filteredPosts.map(post => {
-    // 다양한 작성자 컬럼 대응
     const authorName = post.author_name || post.username || post.author || post.writer || '익명';
-    
-    // 본인 또는 관리자 권한 체크
     const isAdmin = currentUser && (currentUser.role === 'admin' || currentUser.role === '관리자');
     const isAuthor = currentUser && currentUser.username === authorName;
     const canManage = isAuthor || isAdmin;
@@ -280,8 +277,8 @@ async function renderMarketPosts(keyword = '') {
           <span>작성자: <strong>${escapeHtml(authorName)}</strong> | 등록일: ${new Date(post.created_at).toLocaleDateString()}</span>
           <div>
             ${canManage ? `
-              <button onclick="editMarketPost(${post.id})" class="btn btn-outline" style="padding: 3px 8px; font-size: 12px; margin-right: 4px;">수정</button>
-              <button onclick="deleteMarketPost(${post.id})" class="btn btn-outline" style="padding: 3px 8px; font-size: 12px; color: #d9534f; border-color: #d9534f;">삭제</button>
+              <button onclick="editMarketPost('${post.id}')" class="btn btn-outline" style="padding: 3px 8px; font-size: 12px; margin-right: 4px;">수정</button>
+              <button onclick="deleteMarketPost('${post.id}')" class="btn btn-outline" style="padding: 3px 8px; font-size: 12px; color: #d9534f; border-color: #d9534f;">삭제</button>
             ` : ''}
             <button onclick="buyMarketItem('${escapeHtml(authorName)}', '${escapeHtml(post.title)}', '${escapeHtml(post.price)}')" class="btn btn-primary" style="padding: 3px 8px; font-size: 12px; margin-left: 4px;">구매하기</button>
           </div>
@@ -335,7 +332,7 @@ window.editMarketPost = async function(id) {
     return;
   }
 
-  alert('게시글이 успешно 수정되었습니다.');
+  alert('게시글이 성공적으로 수정되었습니다.');
   renderMarketPosts();
 };
 
@@ -519,7 +516,7 @@ async function renderCommunityPosts(category, keyword = '') {
     let authorBtns = '';
     if (currentUser && (currentUser.username === post.author_name || currentUser.role === '관리자')) {
       authorBtns = `
-        <button onclick="editCommunityPost('${post.id}', '${escapeHtml(post.title)}', '${escapeHtml(post.content)}')" class="btn btn-outline" style="margin-top:10px; margin-right:5px;">수정</button>
+        <button onclick="editCommunityPost('${post.id}')" class="btn btn-outline" style="margin-top:10px; margin-right:5px;">수정</button>
         <button onclick="deleteCommunityPost('${post.id}')" class="btn btn-outline" style="margin-top:10px; color:red; border-color:red;">삭제</button>
       `;
     }
@@ -534,27 +531,60 @@ async function renderCommunityPosts(category, keyword = '') {
   });
 }
 
-window.editCommunityPost = async function(id, oldTitle, oldContent) {
-  const newTitle = prompt('수정할 제목을 입력하세요:', oldTitle);
+window.editCommunityPost = async function(id) {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) return alert('로그인이 필요합니다.');
+
+  const { data: post, error } = await supabaseClient
+    .from('community_posts')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error || !post) return alert('글 정보를 불러오지 못했습니다.');
+
+  const isAdmin = currentUser.role === 'admin' || currentUser.role === '관리자';
+  const isAuthor = currentUser.username === post.author_name;
+
+  if (!isAuthor && !isAdmin) return alert('수정 권한이 없습니다.');
+
+  const newTitle = prompt('수정할 제목을 입력하세요:', post.title);
   if (newTitle === null) return;
-  const newContent = prompt('수정할 내용을 입력하세요:', oldContent);
+
+  const newContent = prompt('수정할 내용을 입력하세요:', post.content);
   if (newContent === null) return;
 
-  const { error } = await supabaseClient.from('community_posts').update({
+  const { error: updateError } = await supabaseClient.from('community_posts').update({
     title: newTitle,
     content: newContent
   }).eq('id', id);
 
-  if (error) return alert('수정 중 오류가 발생했습니다.');
+  if (updateError) return alert('수정 중 오류가 발생했습니다.');
   alert('글이 수정되었습니다.');
-  location.reload();
+  renderCommunityPosts(post.category);
 };
 
 window.deleteCommunityPost = async function(id) {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) return alert('로그인이 필요합니다.');
+
   if (!confirm('삭제하시겠습니까?')) return;
-  await supabaseClient.from('community_posts').delete().eq('id', id);
+
+  const { data: post } = await supabaseClient
+    .from('community_posts')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  const { error } = await supabaseClient.from('community_posts').delete().eq('id', id);
+  if (error) return alert('삭제 중 오류가 발생했습니다.');
+
   alert('삭제되었습니다.');
-  location.reload();
+  if (post && post.category) {
+    renderCommunityPosts(post.category);
+  } else {
+    location.reload();
+  }
 };
 
 // ----------------------------------------------------
