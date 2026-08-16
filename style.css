@@ -368,3 +368,64 @@ th {
   font-family: monospace;
   font-size: 0.9em;
 }
+
+/* 사진 미리보기 및 게시글 이미지 갤러리 스타일 */
+.image-preview-container {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.image-preview-item {
+  position: relative;
+  width: 75px;
+  height: 75px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--input-border);
+}
+.image-preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.image-preview-item .remove-btn {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  background: rgba(0, 0, 0, 0.65);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.image-preview-item .remove-btn:hover {
+  background: rgba(217, 83, 79, 0.9);
+}
+
+.post-gallery {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.post-gallery-img {
+  width: 110px;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--input-border);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.post-gallery-img:hover {
+  transform: scale(1.04);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}

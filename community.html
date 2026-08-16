@@ -72,6 +72,11 @@
           <option value="수집/자랑게시판">수집/자랑게시판</option>
         </select>
         <input type="text" id="community-post-title" placeholder="제목을 입력하세요" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
+        <div style="margin-bottom: 12px;">
+  <label style="display:block; margin-bottom:5px; font-weight:bold;">사진 첨부 (최대 5장)</label>
+  <input type="file" id="community-images" accept="image/*" multiple class="input-field">
+  <div id="community-image-preview" class="image-preview-container"></div>
+</div>
         <textarea id="community-post-content" placeholder="내용을 입력하세요" rows="4" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;"></textarea>
         <button type="submit" class="btn btn-primary" style="align-self: flex-start;">작성 완료</button>
       </form>

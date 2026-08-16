@@ -60,6 +60,11 @@
       <form id="market-post-form" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
         <input type="text" id="post-title" placeholder="상품명을 입력하세요" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
         <input type="text" id="post-price" placeholder="가격을 입력하세요" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;">
+        <div style="margin-bottom: 12px;">
+  <label style="display:block; margin-bottom:5px; font-weight:bold;">사진 첨부 (최대 5장)</label>
+  <input type="file" id="market-images" accept="image/*" multiple class="input-field">
+  <div id="market-image-preview" class="image-preview-container"></div>
+</div>
         <textarea id="post-content" placeholder="상품 설명을 입력하세요" rows="4" required style="padding: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); border-radius: 4px;"></textarea>
         <button type="submit" class="btn btn-primary" style="align-self: flex-start;">등록 완료</button>
       </form>

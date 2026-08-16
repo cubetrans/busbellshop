@@ -10,9 +10,11 @@ if (window.supabase && typeof window.supabase.createClient === 'function') {
   console.error('Supabase SDK가 로드되지 않았습니다.');
 }
 
-// 수정 모드 상태 관리를 위한 변수
+// 수정 모드 및 이미지 상태 관리 변수
 let currentEditingPostId = null;
 let currentEditingCommunityPostId = null;
+let marketImages = [];
+let communityImages = [];
 
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
@@ -26,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ----------------------------------------------------
-// 1. 유틸리티 및 기본 UI
+// 1. 유틸리티 및 이미지 처리 함수
 // ----------------------------------------------------
 function escapeHtml(str) {
   if (!str) return '';
@@ -38,7 +40,6 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
-// 커뮤니티 전용 마크다운 파서 (자동 줄바꿈 break 옵션 활성화)
 function parseMarkdown(text) {
   if (!text) return '';
   if (window.marked && window.DOMPurify) {
@@ -50,6 +51,65 @@ function parseMarkdown(text) {
   }
   return escapeHtml(text);
 }
+
+// 이미지 자동 압축 (최대 해상도 1200px, 용량 최적화)
+function compressImage(file, maxWidth = 1200, quality = 0.75) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// 프리뷰 렌더링
+function renderImagePreviews(containerId, imageArray, removeFunctionName) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = imageArray.map((imgSrc, index) => `
+    <div class="image-preview-item">
+      <img src="${imgSrc}" alt="미리보기 ${index + 1}">
+      <button type="button" class="remove-btn" onclick="${removeFunctionName}(${index})">✕</button>
+    </div>
+  `).join('');
+}
+
+// 사진 클릭 시 원본 보기 모달
+window.openImageModal = function(src) {
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:99999;cursor:pointer;padding:20px;box-sizing:border-box;';
+  modal.onclick = () => modal.remove();
+  modal.innerHTML = `<img src="${src}" style="max-width:90%;max-height:90%;object-fit:contain;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.5);">`;
+  document.body.appendChild(modal);
+};
+
+window.removeMarketImage = function(index) {
+  marketImages.splice(index, 1);
+  renderImagePreviews('market-image-preview', marketImages, 'removeMarketImage');
+};
+
+window.removeCommunityImage = function(index) {
+  communityImages.splice(index, 1);
+  renderImagePreviews('community-image-preview', communityImages, 'removeCommunityImage');
+};
 
 function initTheme() {
   const savedTheme = localStorage.getItem('theme') || 'light';
@@ -171,7 +231,7 @@ async function handleAuth(nickname, password, isLoginMode) {
 window.handleAuth = handleAuth;
 
 // ----------------------------------------------------
-// 3. 중고 장터 시스템
+// 3. 중고 장터 시스템 (사진 첨부 기능 추가)
 // ----------------------------------------------------
 function initMarketSystem() {
   const marketListContainer = document.getElementById('market-list') || document.getElementById('market-posts-container');
@@ -197,6 +257,30 @@ function initMarketSystem() {
       } else {
         resetMarketForm();
       }
+    });
+  }
+
+  // 장터 이미지 선택 이벤드
+  const marketImageInput = document.getElementById('market-images');
+  if (marketImageInput) {
+    marketImageInput.addEventListener('change', async (e) => {
+      const files = Array.from(e.target.files);
+      if (marketImages.length + files.length > 5) {
+        alert('사진은 최대 5장까지 등록 가능합니다.');
+        e.target.value = '';
+        return;
+      }
+      for (const file of files) {
+        if (marketImages.length >= 5) break;
+        try {
+          const compressed = await compressImage(file);
+          marketImages.push(compressed);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      e.target.value = '';
+      renderImagePreviews('market-image-preview', marketImages, 'removeMarketImage');
     });
   }
 
@@ -234,15 +318,10 @@ function initMarketSystem() {
       if (currentEditingPostId) {
         const { error } = await supabaseClient
           .from('market_posts')
-          .update({ title, price, content })
+          .update({ title, price, content, images: marketImages })
           .eq('id', currentEditingPostId);
 
-        if (error) {
-          console.error('수정 실패:', error);
-          alert(`수정 실패: ${error.message}`);
-          return;
-        }
-
+        if (error) return alert(`수정 실패: ${error.message}`);
         alert('상품이 성공적으로 수정되었습니다.');
       } else {
         const { error } = await supabaseClient.from('market_posts').insert([
@@ -250,16 +329,12 @@ function initMarketSystem() {
             title: title,
             price: price,
             content: content,
-            author_name: currentUser.username
+            author_name: currentUser.username,
+            images: marketImages
           }
         ]);
 
-        if (error) {
-          console.error('등록 실패:', error);
-          alert(`등록 실패: ${error.message}`);
-          return;
-        }
-
+        if (error) return alert(`등록 실패: ${error.message}`);
         alert('상품이 성공적으로 등록되었습니다.');
       }
 
@@ -271,6 +346,9 @@ function initMarketSystem() {
 
 function resetMarketForm() {
   currentEditingPostId = null;
+  marketImages = [];
+  renderImagePreviews('market-image-preview', marketImages, 'removeMarketImage');
+
   const postForm = document.getElementById('market-post-form');
   if (postForm) postForm.reset();
 
@@ -302,7 +380,6 @@ async function renderMarketPosts(keyword = '') {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('장터 조회 실패:', error);
     marketContainer.innerHTML = '<p style="text-align: center; color: red;">글을 불러오지 못했습니다.</p>';
     return;
   }
@@ -328,6 +405,13 @@ async function renderMarketPosts(keyword = '') {
     const isAuthor = currentUser && currentUser.username === authorName;
     const canManage = isAuthor || isAdmin;
 
+    const postImgs = Array.isArray(post.images) ? post.images : (post.images ? JSON.parse(post.images) : []);
+    const galleryHtml = postImgs.length > 0 ? `
+      <div class="post-gallery">
+        ${postImgs.map(img => `<img src="${img}" class="post-gallery-img" onclick="openImageModal('${img}')" alt="상품 사진">`).join('')}
+      </div>
+    ` : '';
+
     return `
       <div class="card" style="margin-bottom: 15px; padding: 15px; border: 1px solid var(--input-border);">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -335,6 +419,7 @@ async function renderMarketPosts(keyword = '') {
           <span style="font-weight: bold; color: #356fd4; font-size: 18px;">${escapeHtml(post.price)}</span>
         </div>
         <p style="margin: 12px 0; white-space: pre-wrap;">${escapeHtml(post.content)}</p>
+        ${galleryHtml}
         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: gray; margin-top: 10px; border-top: 1px solid var(--input-border); padding-top: 8px;">
           <span>작성자: <strong>${escapeHtml(authorName)}</strong> | 등록일: ${new Date(post.created_at).toLocaleDateString()}</span>
           <div>
@@ -366,14 +451,15 @@ window.editMarketPost = async function(id) {
   const isAdmin = currentUser.role === 'admin' || currentUser.role === '관리자';
   const isAuthor = currentUser.username === authorName;
 
-  if (!isAuthor && !isAdmin) {
-    return alert('수정 권한이 없습니다.');
-  }
+  if (!isAuthor && !isAdmin) return alert('수정 권한이 없습니다.');
 
   currentEditingPostId = id;
   document.getElementById('post-title').value = post.title;
   document.getElementById('post-price').value = post.price;
   document.getElementById('post-content').value = post.content;
+
+  marketImages = Array.isArray(post.images) ? [...post.images] : (post.images ? JSON.parse(post.images) : []);
+  renderImagePreviews('market-image-preview', marketImages, 'removeMarketImage');
 
   const formContainer = document.getElementById('market-form-container');
   const toggleBtn = document.getElementById('toggle-market-form-btn');
@@ -396,22 +482,6 @@ window.deleteMarketPost = async function(id) {
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
   if (!currentUser) return alert('로그인이 필요합니다.');
 
-  const { data: post, error } = await supabaseClient
-    .from('market_posts')
-    .select('*')
-    .eq('id', id)
-    .single();
-
-  if (error || !post) return alert('게시글 정보를 가져오지 못했습니다.');
-
-  const authorName = post.author_name || post.username || post.author || post.writer;
-  const isAdmin = currentUser.role === 'admin' || currentUser.role === '관리자';
-  const isAuthor = currentUser.username === authorName;
-
-  if (!isAuthor && !isAdmin) {
-    return alert('삭제 권한이 없습니다.');
-  }
-
   if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) return;
 
   const { error: deleteError } = await supabaseClient
@@ -419,10 +489,7 @@ window.deleteMarketPost = async function(id) {
     .delete()
     .eq('id', id);
 
-  if (deleteError) {
-    alert('삭제 중 오류가 발생했습니다.');
-    return;
-  }
+  if (deleteError) return alert('삭제 중 오류가 발생했습니다.');
 
   alert('삭제되었습니다.');
   renderMarketPosts();
@@ -462,7 +529,7 @@ window.buyMarketItem = async function(seller, title, price) {
 };
 
 // ----------------------------------------------------
-// 4. 커뮤니티 시스템 (폼 방식 수정 구현 완료)
+// 4. 커뮤니티 시스템 (사진 첨부 기능 추가)
 // ----------------------------------------------------
 function initCommunitySystem() {
   const communityListContainer = document.getElementById('community-list');
@@ -503,6 +570,30 @@ function initCommunitySystem() {
     });
   }
 
+  // 커뮤니티 이미지 선택 이벤트
+  const communityImageInput = document.getElementById('community-images');
+  if (communityImageInput) {
+    communityImageInput.addEventListener('change', async (e) => {
+      const files = Array.from(e.target.files);
+      if (communityImages.length + files.length > 5) {
+        alert('사진은 최대 5장까지 등록 가능합니다.');
+        e.target.value = '';
+        return;
+      }
+      for (const file of files) {
+        if (communityImages.length >= 5) break;
+        try {
+          const compressed = await compressImage(file);
+          communityImages.push(compressed);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      e.target.value = '';
+      renderImagePreviews('community-image-preview', communityImages, 'removeCommunityImage');
+    });
+  }
+
   renderCommunityPosts(currentCategory);
 
   const searchInput = document.getElementById('search-input');
@@ -540,23 +631,17 @@ function initCommunitySystem() {
       if (currentEditingCommunityPostId) {
         const { error } = await supabaseClient
           .from('community_posts')
-          .update({ category, title, content })
+          .update({ category, title, content, images: communityImages })
           .eq('id', currentEditingCommunityPostId);
 
-        if (error) {
-          alert('글 수정 중 오류가 발생했습니다.');
-          return;
-        }
+        if (error) return alert('글 수정 중 오류가 발생했습니다.');
         alert('글이 성공적으로 수정되었습니다.');
       } else {
         const { error } = await supabaseClient.from('community_posts').insert([
-          { category, title, content, author_name: currentUser.username }
+          { category, title, content, author_name: currentUser.username, images: communityImages }
         ]);
 
-        if (error) {
-          alert('글 작성 중 오류가 발생했습니다.');
-          return;
-        }
+        if (error) return alert('글 작성 중 오류가 발생했습니다.');
         alert('글이 성공적으로 등록되었습니다.');
       }
 
@@ -568,6 +653,9 @@ function initCommunitySystem() {
 
 function resetCommunityForm() {
   currentEditingCommunityPostId = null;
+  communityImages = [];
+  renderImagePreviews('community-image-preview', communityImages, 'removeCommunityImage');
+
   const postForm = document.getElementById('community-post-form');
   if (postForm) postForm.reset();
 
@@ -620,12 +708,20 @@ async function renderCommunityPosts(category, keyword = '') {
       `;
     }
 
+    const postImgs = Array.isArray(post.images) ? post.images : (post.images ? JSON.parse(post.images) : []);
+    const galleryHtml = postImgs.length > 0 ? `
+      <div class="post-gallery">
+        ${postImgs.map(img => `<img src="${img}" class="post-gallery-img" onclick="openImageModal('${img}')" alt="첨부 사진">`).join('')}
+      </div>
+    ` : '';
+
     card.innerHTML = `
       <h3>[${escapeHtml(post.category)}] ${escapeHtml(post.title)}</h3>
       <p style="font-size:13px; color:gray; margin-top:4px;"><strong>작성자:</strong> ${escapeHtml(post.author_name)}</p>
       <div class="community-content" style="margin-top:12px;">
         ${parseMarkdown(post.content)}
       </div>
+      ${galleryHtml}
       ${authorBtns}
     `;
     container.appendChild(card);
@@ -656,6 +752,9 @@ window.editCommunityPost = async function(id) {
   
   document.getElementById('community-post-title').value = post.title;
   document.getElementById('community-post-content').value = post.content;
+
+  communityImages = Array.isArray(post.images) ? [...post.images] : (post.images ? JSON.parse(post.images) : []);
+  renderImagePreviews('community-image-preview', communityImages, 'removeCommunityImage');
 
   const formContainer = document.getElementById('community-form-container');
   const toggleBtn = document.getElementById('toggle-community-form-btn');
