@@ -428,8 +428,6 @@ async function renderMarketPosts(keyword = '') {
               <button onclick="deleteMarketPost('${post.id}')" class="btn btn-outline" style="padding: 3px 8px; font-size: 12px; color: #d9534f; border-color: #d9534f;">삭제</button>
             ` : ''}
             <button onclick="buyMarketItem('${escapeHtml(authorName)}', '${escapeHtml(post.title)}', '${escapeHtml(post.price)}')" class="btn btn-primary" style="padding: 3px 8px; font-size: 12px; margin-left: 4px;">구매하기</button>
-            // renderMarketPosts 함수 안에서...
-            <button onclick="openChatModal('${escapeHtml(authorName)}')" class="btn btn-outline" style="padding: 3px 8px; font-size: 12px; margin-left: 4px;">채팅하기</button>
           </div>
         </div>
       </div>
@@ -1146,28 +1144,74 @@ window.sendMessage = async function(sender, receiver, content) {
 
 let activeChatPartner = null;
 
-// 채팅창 열기 및 로드
-window.openChatModal = async function(otherUser) {
+// 채팅창 열기 (어떤 상대인지 인자로 받음)
+window.openChatModal = async function(receiver) {
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-  if (!currentUser) return alert('로그인이 필요합니다.');
+  if (!currentUser) {
+    alert('로그인이 필요합니다.');
+    return window.location.href = 'login.html';
+  }
   
-  activeChatPartner = otherUser;
-  document.getElementById('chat-title').textContent = `${otherUser}님과의 대화`;
+  // 관리자 채팅인지, 판매자 채팅인지 구분
+  activeChatPartner = receiver; 
+  document.getElementById('chat-title').textContent = receiver === 'admin' ? '관리자 문의' : `${receiver}님과 대화`;
   document.getElementById('chat-modal').style.display = 'flex';
-  document.getElementById('chat-messages').innerHTML = '';
+  document.getElementById('chat-messages').innerHTML = '<div style="text-align:center; color:gray;">메시지 로딩중...</div>';
   
-  // 기존 대화 불러오기
-  const { data, error } = await supabaseClient
+  // 메시지 불러오기
+  const { data } = await supabaseClient
     .from('messages')
     .select('*')
-    .or(`and(sender.eq.${currentUser.username},receiver.eq.${otherUser}),and(sender.eq.${otherUser},receiver.eq.${currentUser.username})`)
+    .or(`and(sender.eq.${currentUser.username},receiver.eq.${receiver}),and(sender.eq.${receiver},receiver.eq.${currentUser.username})`)
     .order('created_at', { ascending: true });
     
+  document.getElementById('chat-messages').innerHTML = '';
   if (data) data.forEach(appendMessage);
   
-  // 실시간 구독 시작
-  subscribeToChat(currentUser.username, otherUser);
+  // 실시간 구독
+  subscribeToChat(currentUser.username, receiver);
 };
+
+// 메시지 전송
+window.sendChatMessage = async function() {
+  const input = document.getElementById('chat-input');
+  const content = input.value;
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!content || !activeChatPartner) return;
+  
+  await supabaseClient.from('messages').insert([{
+    sender: currentUser.username,
+    receiver: activeChatPartner,
+    content: content
+  }]);
+  
+  input.value = '';
+};
+
+function appendMessage(msg) {
+  const list = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.style.margin = '8px 0';
+  div.style.padding = '5px';
+  div.style.borderRadius = '5px';
+  // 내가 보낸 건 오른쪽, 받은 건 왼쪽 느낌으로
+  const isMine = msg.sender === JSON.parse(localStorage.getItem('currentUser')).username;
+  div.style.textAlign = isMine ? 'right' : 'left';
+  div.innerHTML = `<div style="font-size:11px; color:gray;">${msg.sender}</div><span style="background:${isMine ? '#d1e7dd' : '#eee'}; padding:5px 10px; border-radius:10px;">${msg.content}</span>`;
+  list.appendChild(div);
+  list.scrollTop = list.scrollHeight;
+}
+
+function subscribeToChat(my, other) {
+  supabaseClient.channel('chat_room').unsubscribe();
+  supabaseClient.channel('chat_room')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+      const msg = payload.new;
+      if ((msg.sender === my && msg.receiver === other) || (msg.sender === other && msg.receiver === my)) {
+        appendMessage(msg);
+      }
+    }).subscribe();
+}
 
 // 메시지 전송
 window.sendChatMessage = async function() {
