@@ -1248,3 +1248,33 @@ function subscribeToChat(my, other) {
       }
     }).subscribe();
 }
+// 관리자용: 채팅 온 사람들 리스트 가져오기
+window.renderAdminChatList = async function() {
+  const adminContainer = document.getElementById('admin-chat-list');
+  if (!adminContainer) return;
+
+  // 관리자에게 온 메시지들 중 sender만 추출 (중복 제거)
+  const { data: messages } = await supabaseClient
+    .from('messages')
+    .select('sender')
+    .eq('receiver', 'admin')
+    .order('created_at', { ascending: false });
+
+  if (!messages || messages.length === 0) {
+    adminContainer.innerHTML = '<p>아직 온 메시지가 없습니다.</p>';
+    return;
+  }
+
+  // 중복된 발신자 제거
+  const uniqueSenders = [...new Set(messages.map(m => m.sender))];
+
+  adminContainer.innerHTML = '<h3>대화 중인 회원 목록</h3>';
+  uniqueSenders.forEach(sender => {
+    adminContainer.innerHTML += `
+      <div style="border:1px solid #ddd; padding:10px; margin:5px; border-radius:5px; display:flex; justify-content:space-between; align-items:center;">
+        <span><strong>${sender}</strong> 님</span>
+        <button onclick="openChatModal('${sender}')" class="btn btn-primary" style="padding:5px 10px;">답장하기</button>
+      </div>
+    `;
+  });
+};

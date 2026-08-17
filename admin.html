@@ -97,6 +97,20 @@
     </div>
   </div>
 
+  <!-- 관리자 채팅 관리 섹션 -->
+<div id="admin-chat-section" style="margin-top:30px; padding:20px; border:1px solid #eee;">
+  <h2>채팅 관리함</h2>
+  <div id="admin-chat-list"></div>
+</div>
+
+<script>
+  // 페이지 로드 시 관리자 채팅 목록 실행
+  document.addEventListener('DOMContentLoaded', () => {
+    // 관리자 여부 확인 후 실행
+    renderAdminChatList();
+  });
+</script>
+
   <!-- 우측 하단 동그란 채팅 버튼 -->
 <button id="floating-chat-btn" onclick="openChatModal('admin')" 
   style="position:fixed; bottom:20px; right:20px; width:60px; height:60px; border-radius:50%; background:#356fd4; color:white; border:none; font-size:24px; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.3); z-index:9999;">
