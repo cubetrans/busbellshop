@@ -1144,8 +1144,7 @@ window.sendMessage = async function(sender, receiver, content) {
 
 let activeChatPartner = null;
 
-// 채팅창 열기 (어떤 상대인지 인자로 받음)
-// 채팅창 열기 (수정된 안전한 버전)
+// 채팅창 열기
 window.openChatModal = async function(receiver) {
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
   if (!currentUser) {
@@ -1153,34 +1152,162 @@ window.openChatModal = async function(receiver) {
     return window.location.href = 'login.html';
   }
   
+  const isAdmin = currentUser.role === 'admin' || currentUser.role === '관리자';
   activeChatPartner = receiver; 
-  document.getElementById('chat-title').textContent = receiver === 'admin' ? '관리자 문의' : `${receiver}님과 대화`;
+  
+  const titleText = isAdmin ? `${receiver}님과 대화` : '관리자 문의';
+  document.getElementById('chat-title').textContent = titleText;
   document.getElementById('chat-modal').style.display = 'flex';
   document.getElementById('chat-messages').innerHTML = '<div style="text-align:center; color:gray;">메시지 로딩중...</div>';
   
-  // [수정됨] 복잡한 조건 대신, 나와 상대방(또는 admin) 간의 모든 메시지를 가져와서 클라이언트에서 필터링
+  // 관리자면 선택한 회원 닉네임, 유저면 내 닉네임
+  const targetUser = isAdmin ? receiver : currentUser.username;
+  
+  // 해당 유저와 관련된 모든 메시지 조회 (어떤 관리자가 보냈든 모두 포함)
   const { data, error } = await supabaseClient
     .from('messages')
     .select('*')
-    .or(`sender.eq.${receiver},receiver.eq.${receiver}`)
+    .or(`sender.eq.${targetUser},receiver.eq.${targetUser}`)
     .order('created_at', { ascending: true });
     
   document.getElementById('chat-messages').innerHTML = '';
-  
   if (data) {
-    // 현재 대화방 상대(receiver 혹은 admin)와 관련된 메시지만 정확히 필터링
-    const filteredData = data.filter(msg => {
-      const isMyMessage = (msg.sender === currentUser.username && (msg.receiver === receiver || msg.receiver === 'admin'));
-      const isOtherMessage = (msg.sender === receiver && (msg.receiver === currentUser.username || msg.receiver === 'admin'));
-      return isMyMessage || isOtherMessage;
-    });
-
-    filteredData.forEach(appendMessage);
+    data.forEach(appendMessage);
   }
   
   // 실시간 구독
-  subscribeToChat(currentUser.username, receiver);
+  subscribeToChat(targetUser);
 };
+
+// 메시지 전송
+window.sendChatMessage = async function() {
+  const input = document.getElementById('chat-input');
+  const content = input.value.trim();
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!content || !activeChatPartner) return;
+  
+  const isAdmin = currentUser.role === 'admin' || currentUser.role === '관리자';
+  
+  // 보낸 사람은 항상 현재 로그인한 사람의 닉네임 (서울교덕, 평택버덕, 혹은 유저 닉네임)
+  const sender = currentUser.username;
+  
+  // 유저가 보내면 receiver는 'admin', 관리자가 보내면 receiver는 상대 유저 닉네임
+  const receiver = isAdmin ? activeChatPartner : 'admin';
+  
+  const { error } = await supabaseClient.from('messages').insert([{
+    sender: sender,
+    receiver: receiver,
+    content: content
+  }]);
+  
+  if (error) {
+    alert('전송 실패');
+    return;
+  }
+  
+  input.value = '';
+};
+
+// 화면에 메시지 말풍선 그리기
+function appendMessage(msg) {
+  const list = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.style.margin = '8px 0';
+  div.style.padding = '2px';
+  
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  
+  // 내가 보낸 메시지인지 판별 (sender가 내 닉네임과 같으면 내 말풍선)
+  const isMine = msg.sender === currentUser.username;
+  div.style.textAlign = isMine ? 'right' : 'left';
+  
+  // 보낸 사람 이름 표시 (서울교덕, 평택버덕 등 실제 닉네임이 그대로 표시됨)
+  const senderLabel = msg.sender;
+  div.innerHTML = `
+    <div style="font-size:11px; color:gray; margin-bottom:2px;">${escapeHtml(senderLabel)}</div>
+    <span style="background:${isMine ? '#d1e7dd' : '#eee'}; padding:6px 12px; border-radius:10px; display:inline-block; text-align:left; max-width:80%; word-break:break-all;">${escapeHtml(msg.content)}</span>
+  `;
+  list.appendChild(div);
+  list.scrollTop = list.scrollHeight;
+}
+
+// 실시간 감지
+function subscribeToChat(targetUser) {
+  supabaseClient.channel('chat_room').unsubscribe();
+  supabaseClient.channel('chat_room')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+      const msg = payload.new;
+      // targetUser와 관련된 메시지면 실시간으로 화면에 추가
+      if (msg.sender === targetUser || msg.receiver === targetUser) {
+        appendMessage(msg);
+      }
+    }).subscribe();
+}
+
+// 메시지 전송
+window.sendChatMessage = async function() {
+  const input = document.getElementById('chat-input');
+  const content = input.value.trim();
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!content || !activeChatPartner) return;
+  
+  const isAdmin = currentUser.role === 'admin' || currentUser.role === '관리자';
+  
+  // 관리자가 보내면 sender가 'admin', receiver가 상대 회원
+  // 유저가 보내면 sender가 내 이름, receiver가 'admin'
+  const sender = isAdmin ? 'admin' : currentUser.username;
+  const receiver = isAdmin ? activeChatPartner : 'admin';
+  
+  const { error } = await supabaseClient.from('messages').insert([{
+    sender: sender,
+    receiver: receiver,
+    content: content
+  }]);
+  
+  if (error) {
+    alert('전송 실패');
+    return;
+  }
+  
+  input.value = '';
+};
+
+// 화면에 메시지 말풍선 그리기
+function appendMessage(msg) {
+  const list = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.style.margin = '8px 0';
+  div.style.padding = '2px';
+  
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  const isAdmin = currentUser.role === 'admin' || currentUser.role === '관리자';
+  
+  // 내가 보낸 메시지인지 판별 (관리자면 sender가 'admin'일 때 내 것, 유저면 sender가 내 이름일 때 내 것)
+  const isMine = isAdmin ? (msg.sender === 'admin') : (msg.sender === currentUser.username);
+  
+  div.style.textAlign = isMine ? 'right' : 'left';
+  
+  const senderLabel = msg.sender === 'admin' ? '관리자' : msg.sender;
+  div.innerHTML = `
+    <div style="font-size:11px; color:gray; margin-bottom:2px;">${senderLabel}</div>
+    <span style="background:${isMine ? '#d1e7dd' : '#eee'}; padding:6px 12px; border-radius:10px; display:inline-block; text-align:left; max-width:80%; word-break:break-all;">${escapeHtml(msg.content)}</span>
+  `;
+  list.appendChild(div);
+  list.scrollTop = list.scrollHeight;
+}
+
+// 실시간 감지
+function subscribeToChat(targetUser) {
+  supabaseClient.channel('chat_room').unsubscribe();
+  supabaseClient.channel('chat_room')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+      const msg = payload.new;
+      // 현재 보고 있는 대화방(targetUser와 admin 사이)의 메시지일 때만 실시간 반영
+      if ((msg.sender === targetUser && msg.receiver === 'admin') || (msg.sender === 'admin' && msg.receiver === targetUser)) {
+        appendMessage(msg);
+      }
+    }).subscribe();
+}
 
 // 메시지 전송
 window.sendChatMessage = async function() {
