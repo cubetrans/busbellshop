@@ -1145,6 +1145,7 @@ window.sendMessage = async function(sender, receiver, content) {
 let activeChatPartner = null;
 
 // 채팅창 열기 (어떤 상대인지 인자로 받음)
+// 채팅창 열기 (수정된 안전한 버전)
 window.openChatModal = async function(receiver) {
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
   if (!currentUser) {
@@ -1152,21 +1153,30 @@ window.openChatModal = async function(receiver) {
     return window.location.href = 'login.html';
   }
   
-  // 관리자 채팅인지, 판매자 채팅인지 구분
   activeChatPartner = receiver; 
   document.getElementById('chat-title').textContent = receiver === 'admin' ? '관리자 문의' : `${receiver}님과 대화`;
   document.getElementById('chat-modal').style.display = 'flex';
   document.getElementById('chat-messages').innerHTML = '<div style="text-align:center; color:gray;">메시지 로딩중...</div>';
   
-  // 메시지 불러오기
-  const { data } = await supabaseClient
+  // [수정됨] 복잡한 조건 대신, 나와 상대방(또는 admin) 간의 모든 메시지를 가져와서 클라이언트에서 필터링
+  const { data, error } = await supabaseClient
     .from('messages')
     .select('*')
-    .or(`and(sender.eq.${currentUser.username},receiver.eq.${receiver}),and(sender.eq.${receiver},receiver.eq.${currentUser.username})`)
+    .or(`sender.eq.${receiver},receiver.eq.${receiver}`)
     .order('created_at', { ascending: true });
     
   document.getElementById('chat-messages').innerHTML = '';
-  if (data) data.forEach(appendMessage);
+  
+  if (data) {
+    // 현재 대화방 상대(receiver 혹은 admin)와 관련된 메시지만 정확히 필터링
+    const filteredData = data.filter(msg => {
+      const isMyMessage = (msg.sender === currentUser.username && (msg.receiver === receiver || msg.receiver === 'admin'));
+      const isOtherMessage = (msg.sender === receiver && (msg.receiver === currentUser.username || msg.receiver === 'admin'));
+      return isMyMessage || isOtherMessage;
+    });
+
+    filteredData.forEach(appendMessage);
+  }
   
   // 실시간 구독
   subscribeToChat(currentUser.username, receiver);
