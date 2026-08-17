@@ -1,85 +1,65 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>버스벨샵 (Bus Bell Shop)</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>서비스 재정비 안내</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+        .notice-card {
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            max-width: 480px;
+            width: 90%;
+        }
+        h1 {
+            font-size: 22px;
+            color: #d9534f;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 15px;
+        }
+        .highlight {
+            color: #0275d8;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 25px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #444;
+        }
+    </style>
 </head>
 <body>
 
-  <div id="emergency-banner" style="display: none; background-color: #d9534f; color: white; padding: 10px; text-align: center; font-weight: bold; width: 100%; z-index: 1000;">
-    🚨 <span id="emergency-text"></span>
-  </div>
-
-  <header>
-    <div class="header-left">
-      <a href="index.html" class="logo">
-        <img src="icon.png" alt="logo" onerror="this.style.display='none'">
-      </a>
-      <ul class="nav-menu">
-        <li><a href="index.html">홈</a></li>
-        <li><a href="market.html">장터</a></li>
-        <li><a href="community.html">커뮤니티</a></li>
-        <li><a href="support.html">고객센터</a></li>
-      </ul>
+    <div class="notice-card">
+        <h1>사이트 서비스 잠정 중단 안내</h1>
+        <p>먼저, 저희 서비스를 아껴주신 이용자 여러분께 실망을 끼쳐 드려 진심으로 고개 숙여 사과드립니다.</p>
+        <p>본 사이트는 대한민국 관련 법률(전자금융거래법, 전자상거래법 등) 준수 여부 및 운영 규정의 면밀한 검토를 위해 모든 서비스 운영을 잠정 중단하게 되었습니다.</p>
+        <p>이에 따라 사이트 내 모든 거래 및 관련 기능은 잠시 중단됩니다.</p>
+        <p>이번 일을 계기로 더욱 철저히 보완하여, <span class="highlight">더 안전하고 알찬 모습으로 빠르게 돌아오겠습니다.</span></p>
+        <div class="footer">
+            버스벨샵 관리진 일동
+        </div>
     </div>
 
-    <div class="header-right">
-      <span class="user-info user-greeting">로그인이 필요합니다</span>
-      <button class="theme-toggle-btn">🌙</button>
-      <a href="mypage.html" class="btn btn-outline mypage-btn">마이페이지</a>
-      <a href="login.html" class="btn btn-primary auth-action">로그인</a>
-      <button class="hamburger">☰</button>
-    </div>
-
-    <div class="mobile-menu">
-      <div class="user-greeting mobile-user-greeting">로그인이 필요합니다</div>
-      <ul>
-        <li><a href="index.html">홈</a></li>
-        <li><a href="market.html">장터</a></li>
-        <li><a href="community.html">커뮤니티</a></li>
-        <li><a href="support.html">고객센터</a></li>
-        <li><a href="mypage.html" class="mobile-mypage-btn">마이페이지</a></li>
-        <li><a href="login.html" class="mobile-auth-action">로그인</a></li>
-      </ul>
-    </div>
-  </header>
-
-  <div class="container">
-    <div class="banner">
-      <img src="KakaoTalk_20260807_185231527.jpg" alt="Bus Bell Shop Banner">
-      <div class="banner-content">
-        <h1>버스벨샵</h1>
-        <p>대한민국 최고의 버스 부품 및 교통 동호인 커뮤니티 쇼핑몰</p>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>환영합니다!</h2>
-      <p style="margin-top: 10px;">망가진 하차벨 수집 세계관을 바로잡고 거품없는 수집 세계관을 위해 만든,<br><strong>버스벨샵</strong> 입니다!</p>
-    </div>
-  </div>
-
-  <!-- 우측 하단 동그란 채팅 버튼 -->
-<button id="floating-chat-btn" onclick="openChatModal('admin')" 
-  style="position:fixed; bottom:20px; right:20px; width:60px; height:60px; border-radius:50%; background:#356fd4; color:white; border:none; font-size:24px; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.3); z-index:9999;">
-  💬
-</button>
-
-<!-- 채팅창 모달 (기존과 동일) -->
-<div id="chat-modal" style="display:none; position:fixed; bottom:90px; right:20px; width:300px; height:400px; background:white; border:1px solid #ccc; box-shadow:0 0 10px rgba(0,0,0,0.2); z-index:9998; border-radius:8px; flex-direction:column;">
-  <div style="padding:10px; background:#356fd4; color:white; border-bottom:1px solid #ddd; display:flex; justify-content:space-between; border-radius:8px 8px 0 0;">
-    <span id="chat-title">채팅</span>
-    <button onclick="document.getElementById('chat-modal').style.display='none'" style="background:none; border:none; color:white; cursor:pointer;">X</button>
-  </div>
-  <div id="chat-messages" style="flex:1; overflow-y:auto; padding:10px; font-size:14px; background:#f9f9f9;"></div>
-  <div style="padding:10px; border-top:1px solid #ddd; display:flex;">
-    <input type="text" id="chat-input" style="flex:1; padding:5px; border:1px solid #ccc;">
-    <button onclick="sendChatMessage()" style="margin-left:5px; background:#356fd4; color:white; border:none; padding:5px 10px;">전송</button>
-  </div>
-</div>
-  <script src="app.js"></script>
 </body>
 </html>
