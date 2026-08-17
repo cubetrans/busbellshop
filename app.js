@@ -416,7 +416,7 @@ async function renderMarketPosts(keyword = '') {
       <div class="card" style="margin-bottom: 15px; padding: 15px; border: 1px solid var(--input-border);">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <h3 style="margin: 0;">${escapeHtml(post.title)}</h3>
-          <span style="font-weight: bold; color: #356fd4; font-size: 18px;">${escapeHtml(post.price)}</span>
+          <span style="font-weight: bold; color: #356fd4; font-size: 18px;">${Number(post.price).toLocaleString()}원</span>
         </div>
         <p style="margin: 12px 0; white-space: pre-wrap;">${escapeHtml(post.content)}</p>
         ${galleryHtml}
@@ -428,6 +428,8 @@ async function renderMarketPosts(keyword = '') {
               <button onclick="deleteMarketPost('${post.id}')" class="btn btn-outline" style="padding: 3px 8px; font-size: 12px; color: #d9534f; border-color: #d9534f;">삭제</button>
             ` : ''}
             <button onclick="buyMarketItem('${escapeHtml(authorName)}', '${escapeHtml(post.title)}', '${escapeHtml(post.price)}')" class="btn btn-primary" style="padding: 3px 8px; font-size: 12px; margin-left: 4px;">구매하기</button>
+            // renderMarketPosts 함수 안에서...
+            <button onclick="openChatModal('${escapeHtml(authorName)}')" class="btn btn-outline" style="padding: 3px 8px; font-size: 12px; margin-left: 4px;">채팅하기</button>
           </div>
         </div>
       </div>
@@ -1132,4 +1134,73 @@ async function initEmergencyBanner() {
       location.reload();
     });
   }
+}
+
+window.sendMessage = async function(sender, receiver, content) {
+  const { data, error } = await supabaseClient
+    .from('messages')
+    .insert([{ sender, receiver, content }]);
+  
+  if (error) alert('메시지 전송 실패!');
+};
+
+let activeChatPartner = null;
+
+// 채팅창 열기 및 로드
+window.openChatModal = async function(otherUser) {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) return alert('로그인이 필요합니다.');
+  
+  activeChatPartner = otherUser;
+  document.getElementById('chat-title').textContent = `${otherUser}님과의 대화`;
+  document.getElementById('chat-modal').style.display = 'flex';
+  document.getElementById('chat-messages').innerHTML = '';
+  
+  // 기존 대화 불러오기
+  const { data, error } = await supabaseClient
+    .from('messages')
+    .select('*')
+    .or(`and(sender.eq.${currentUser.username},receiver.eq.${otherUser}),and(sender.eq.${otherUser},receiver.eq.${currentUser.username})`)
+    .order('created_at', { ascending: true });
+    
+  if (data) data.forEach(appendMessage);
+  
+  // 실시간 구독 시작
+  subscribeToChat(currentUser.username, otherUser);
+};
+
+// 메시지 전송
+window.sendChatMessage = async function() {
+  const content = document.getElementById('chat-input').value;
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!content || !activeChatPartner) return;
+  
+  await supabaseClient.from('messages').insert([{
+    sender: currentUser.username,
+    receiver: activeChatPartner,
+    content: content
+  }]);
+  
+  document.getElementById('chat-input').value = '';
+};
+
+// 화면에 메시지 표시
+function appendMessage(msg) {
+  const div = document.createElement('div');
+  div.style.margin = '5px 0';
+  div.innerHTML = `<strong>${msg.sender}:</strong> ${msg.content}`;
+  document.getElementById('chat-messages').appendChild(div);
+  document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
+}
+
+// 실시간 감지
+function subscribeToChat(my, other) {
+  supabaseClient.channel('chat_room').unsubscribe();
+  supabaseClient.channel('chat_room')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+      const msg = payload.new;
+      if ((msg.sender === my && msg.receiver === other) || (msg.sender === other && msg.receiver === my)) {
+        appendMessage(msg);
+      }
+    }).subscribe();
 }
