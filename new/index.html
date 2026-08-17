@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>버스벨 마켓 - 내 근처 P2P 직거래</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+</head>
+<body>
+
+  <!-- 헤더 -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand" onclick="app.resetFilter()">
+        <span class="logo-icon">🔔</span>
+        <span class="logo-text">busbell</span>
+      </div>
+
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="물품명, 카테고리 등 검색" onkeyup="app.handleSearch(event)">
+        <button onclick="app.triggerSearch()">검색</button>
+      </div>
+
+      <div class="nav-actions">
+        <button class="btn-primary" onclick="app.openModal('writeModal')">+ 글쓰기</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 메인 컨텐츠 영역 -->
+  <main class="container">
+    <!-- 카테고리 탭 -->
+    <nav class="category-list" id="categoryList">
+      <button class="cat-btn active" onclick="app.filterCategory('전체')">전체</button>
+      <button class="cat-btn" onclick="app.filterCategory('전자기기')">전자기기</button>
+      <button class="cat-btn" onclick="app.filterCategory('의류/잡화')">의류/잡화</button>
+      <button class="cat-btn" onclick="app.filterCategory('도서/티켓')">도서/티켓</button>
+      <button class="cat-btn" onclick="app.filterCategory('취미/취미용품')">취미/용품</button>
+      <button class="cat-btn" onclick="app.filterCategory('기타')">기타</button>
+    </nav>
+
+    <!-- 게시글 목록 그리드 -->
+    <section class="product-grid" id="productGrid">
+      <!-- JS로 dynamic rendering -->
+    </section>
+  </main>
+
+  <!-- 판매글 작성 모달 -->
+  <div class="modal-backdrop" id="writeModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>판매글 등록하기</h2>
+        <button class="close-btn" onclick="app.closeModal('writeModal')">&times;</button>
+      </div>
+      <form id="writeForm" onsubmit="app.handleCreatePost(event)">
+        <div class="form-group">
+          <label>글 제목</label>
+          <input type="text" id="postTitle" placeholder="예: 아이패드 에어 5세대 64GB" required />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>가격 (원)</label>
+            <input type="number" id="postPrice" placeholder="숫자만 입력 (0원 = 나눔)" required />
+          </div>
+          <div class="form-group">
+            <label>카테고리</label>
+            <select id="postCategory" required>
+              <option value="전자기기">전자기기</option>
+              <option value="의류/잡화">의류/잡화</option>
+              <option value="도서/티켓">도서/티켓</option>
+              <option value="취미/취미용품">취미/용품</option>
+              <option value="기타">기타</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>연락수단 (카카오톡 오픈채팅 URL 등)</label>
+          <input type="url" id="postContact" placeholder="https://open.kakao.com/o/..." required />
+          <small class="help-text">안전을 위해 개인 전화번호 대신 오픈채팅 링크 사용을 권장합니다.</small>
+        </div>
+        <div class="form-group">
+          <label>이미지 URL (선택)</label>
+          <input type="url" id="postImage" placeholder="https://images.unsplash.com/..." />
+        </div>
+        <div class="form-group">
+          <label>상품 설명</label>
+          <textarea id="postContent" rows="5" placeholder="구매 시기, 하자 여부, 거래 희망 장소 등을 자세히 작성해주세요." required></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" onclick="app.closeModal('writeModal')">취소</button>
+          <button type="submit" class="btn-primary">작성 완료</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 게시글 상세 보기 모달 -->
+  <div class="modal-backdrop" id="detailModal">
+    <div class="modal-card detail-card">
+      <button class="close-btn float-close" onclick="app.closeModal('detailModal')">&times;</button>
+      <div id="detailContent">
+        <!-- JS로 동적 채움 -->
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
